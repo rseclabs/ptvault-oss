@@ -84,10 +84,10 @@ All endpoints require authentication. Admin role required for write operations.
 
 ```bash
 # List all clients
-curl -b cookies.txt http://localhost:5000/api/clients
+curl -b cookies.txt http://localhost:5001/api/clients
 
 # Create a client
-curl -b cookies.txt -X POST http://localhost:5000/api/clients \
+curl -b cookies.txt -X POST http://localhost:5001/api/clients \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Acme Corporation",

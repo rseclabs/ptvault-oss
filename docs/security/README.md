@@ -111,7 +111,7 @@ See [DEPLOYMENT.md](../../DEPLOYMENT.md) for production deployment guidance.
 2. **Use full-disk encryption** on the machine running PTVault
 3. **Export and delete** old engagement data after delivery and sign-off
 4. **Back up securely** — keep database and key files in separate, encrypted locations
-5. **Use strong passwords** — PTVault's Argon2id hashing is strong, but a weak master password is still a vulnerability
+5. **Use strong passwords** — PTVault's Argon2id hashing is strong, but a weak password is still a vulnerability
 6. **Keep PTVault updated** — new versions include security improvements
 
 ---

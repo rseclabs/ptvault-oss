@@ -265,15 +265,3 @@ PTVault uses a **desktop-first** approach with a primary breakpoint at 768px:
 }
 ```
 
-### License Warning Banner
-
-```css
-.license-warning-banner {
-    background: var(--color-warning-bg);
-    border-left: 4px solid var(--color-warning);
-    padding: var(--spacing-md);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-```

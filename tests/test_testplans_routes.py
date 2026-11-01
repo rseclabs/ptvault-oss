@@ -9,7 +9,7 @@ Covers three previously broken paths:
   3. GET /atomics pagination: the UI relies on `total`, `limit`, `offset`
      to page through the whole library.
 
-Auth/license decorators need a real session, so the handlers are called
+Auth decorators need a real session, so the handlers are called
 with their decorators stripped via inspect.unwrap, inside a request context
 that carries the same `g` values the decorators would set.
 """

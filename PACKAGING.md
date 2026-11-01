@@ -20,7 +20,7 @@ PTVault can be packaged for Linux deployment using two methods:
 ```bash
 ./build_docker.sh build
 ./build_docker.sh run
-# Or: docker-compose up -d
+# Or: docker compose up -d
 ```
 
 **When to use:**
@@ -116,9 +116,9 @@ sudo systemctl enable ptvault
 ./build_docker.sh stop
 
 # Or use docker-compose
-docker-compose up -d
-docker-compose logs -f
-docker-compose down
+docker compose up -d
+docker compose logs -f
+docker compose down
 ```
 
 ## 🆘 Getting Help

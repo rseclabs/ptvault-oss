@@ -1,15 +1,8 @@
-# Optional: SQLCipher database encryption support
-# Install these dependencies to enable encrypted-at-rest database storage.
+# SQLCipher database encryption support.
 #
-# The binary package includes SQLCipher — no system libraries needed:
-#   pip install sqlcipher3-binary
-#
-# Or install with system SQLCipher (requires libsqlcipher-dev):
-#   pip install sqlcipher3
-#
-# System prerequisites (only needed for non-binary install):
-#   Debian/Ubuntu/Kali: sudo apt-get install -y sqlcipher libsqlcipher-dev
-#   macOS:              brew install sqlcipher
-#   Fedora/RHEL:        sudo dnf install -y sqlcipher sqlcipher-devel
+# sqlcipher3 is already listed in requirements.txt; this file is kept for
+# installs that only want the encryption driver. Version 0.6.4+ ships wheels
+# with SQLCipher built in for Linux (x86_64/aarch64), macOS and Windows, so no
+# system SQLCipher library is needed.
 
-sqlcipher3-binary>=0.5.0
+sqlcipher3>=0.6.4

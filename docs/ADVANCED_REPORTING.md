@@ -485,7 +485,7 @@ template = {
 }
 
 response = requests.post(
-    'http://localhost:5000/api/reporting/templates',
+    'http://localhost:5001/api/reporting/templates',
     json=template,
     cookies={'session': session_cookie}
 )
@@ -497,7 +497,7 @@ template_id = response.json()['id']
 
 ```python
 response = requests.post(
-    f'http://localhost:5000/api/reporting/templates/{template_id}/apply',
+    f'http://localhost:5001/api/reporting/templates/{template_id}/apply',
     json={
         "engagement_id": 123,
         "report_name": "Q1 Security Assessment"
@@ -512,7 +512,7 @@ report_id = response.json()['report_id']
 
 ```python
 response = requests.post(
-    'http://localhost:5000/api/reporting/compare',
+    'http://localhost:5001/api/reporting/compare',
     json={
         "engagement_ids": [1, 2, 3, 4]
     },

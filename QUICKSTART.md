@@ -3,7 +3,8 @@
 ## Prerequisites
 
 - Python 3.10+ (`python3 --version`)
-- Linux or macOS. Database encryption uses the `sqlcipher3-binary` wheel from `requirements.txt`, so no system SQLCipher packages are needed.
+- Linux, macOS or Windows. Database encryption uses the `sqlcipher3` package from `requirements.txt`, which ships prebuilt wheels with SQLCipher included, so no system SQLCipher packages are needed.
+- Optional, for server-side PDF export: the Pango library (`sudo apt install libpango-1.0-0 libpangoft2-1.0-0` on Debian/Ubuntu/Kali, `brew install pango` on macOS). Without it, PDF export falls back to the browser's print dialog.
 
 ## Installation
 
@@ -104,11 +105,10 @@ curl -b cookies.txt -X POST http://localhost:5001/api/evidence \
   -H "X-CSRF-Token: $CSRF" \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "note",
+    "evidence_type": "note",
     "title": "SQL Injection in Login Form",
     "content": "Found SQL injection vulnerability in /admin/login endpoint. Payload: '\'' OR '\''1'\''='\''1 bypasses authentication.",
-    "tags": "critical,sql-injection,authentication",
-    "metadata": "{\"severity_level\":\"critical\",\"cvss\":9.8}"
+    "tags": "critical,sql-injection,authentication"
   }'
 
 # Add command output
@@ -116,17 +116,17 @@ curl -b cookies.txt -X POST http://localhost:5001/api/evidence \
   -H "X-CSRF-Token: $CSRF" \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "command_output",
+    "evidence_type": "command_output",
     "title": "Nmap Scan Results",
     "content": "PORT     STATE SERVICE\n22/tcp   open  ssh\n80/tcp   open  http\n443/tcp  open  https\n3306/tcp open  mysql",
     "tags": "nmap,reconnaissance,high",
-    "metadata": "{\"tool_name\":\"nmap\",\"severity_level\":\"high\"}"
+    "metadata": "{\"tool\":\"nmap\"}"
   }'
 
 # Upload a file (screenshot or tool output)
 curl -b cookies.txt -X POST http://localhost:5001/api/evidence \
   -H "X-CSRF-Token: $CSRF" \
-  -F "type=screenshot" \
+  -F "evidence_type=screenshot" \
   -F "title=Admin Panel Access" \
   -F "content=Successfully accessed admin panel without authentication" \
   -F "tags=critical,authentication-bypass" \
@@ -139,17 +139,17 @@ curl -b cookies.txt -X POST http://localhost:5001/api/evidence \
 # Search by keyword
 curl -b cookies.txt "http://localhost:5001/api/evidence/search?q=sql+injection"
 
-# Filter by tag
-curl -b cookies.txt "http://localhost:5001/api/evidence/search?tags=critical"
+# Filter by tag (comma-separated tags must all match; use tags_any= for OR)
+curl -b cookies.txt "http://localhost:5001/api/evidence/filter?tags=critical"
 
-# Filter by severity
-curl -b cookies.txt "http://localhost:5001/api/evidence/search?severity=critical"
+# Filter by severity (derived from parsed scanner results such as Nessus)
+curl -b cookies.txt "http://localhost:5001/api/evidence/filter?severity=critical"
 
 # Filter by tool
-curl -b cookies.txt "http://localhost:5001/api/evidence/search?tool=nmap"
+curl -b cookies.txt "http://localhost:5001/api/evidence/filter?tool=nmap"
 
 # Combined filters
-curl -b cookies.txt "http://localhost:5001/api/evidence/search?q=login&tags=critical&severity=high"
+curl -b cookies.txt "http://localhost:5001/api/evidence/filter?type=note&tags=critical"
 ```
 
 ### 8. Export Engagement Data
@@ -182,7 +182,7 @@ curl -b cookies.txt http://localhost:5001/api/engagements/1/export/template/exec
 # Upload nmap scan results
 curl -b cookies.txt -X POST http://localhost:5001/api/evidence \
   -H "X-CSRF-Token: $CSRF" \
-  -F "type=tool_output" \
+  -F "evidence_type=tool_output" \
   -F "title=Complete Network Scan" \
   -F "content=Full network scan results" \
   -F "tags=nmap,scan" \
@@ -200,7 +200,7 @@ PTVault will automatically:
 ```bash
 curl -b cookies.txt -X POST http://localhost:5001/api/evidence \
   -H "X-CSRF-Token: $CSRF" \
-  -F "type=tool_output" \
+  -F "evidence_type=tool_output" \
   -F "title=Web Application Scan" \
   -F "content=Burp Suite findings" \
   -F "tags=burp,web" \
@@ -212,7 +212,7 @@ curl -b cookies.txt -X POST http://localhost:5001/api/evidence \
 ```bash
 curl -b cookies.txt -X POST http://localhost:5001/api/evidence \
   -H "X-CSRF-Token: $CSRF" \
-  -F "type=tool_output" \
+  -F "evidence_type=tool_output" \
   -F "title=Vulnerability Scan" \
   -F "content=Nessus scan results" \
   -F "tags=nessus,scan" \
@@ -227,22 +227,20 @@ curl -b cookies.txt -X POST http://localhost:5001/api/evidence \
   -H "X-CSRF-Token: $CSRF" \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "note",
+    "evidence_type": "note",
     "title": "XSS in Contact Form",
     "content": "Reflected XSS vulnerability found in contact form",
-    "tags": "medium,xss,web",
-    "metadata": "{\"severity_level\":\"medium\"}"
+    "tags": "medium,xss,web"
   }'
 
 curl -b cookies.txt -X POST http://localhost:5001/api/evidence \
   -H "X-CSRF-Token: $CSRF" \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "note",
+    "evidence_type": "note",
     "title": "Weak Password Policy",
     "content": "No complexity requirements, allows password123",
-    "tags": "low,password,policy",
-    "metadata": "{\"severity_level\":\"low\"}"
+    "tags": "low,password,policy"
   }'
 
 # Test full-text search
@@ -250,10 +248,10 @@ curl -b cookies.txt "http://localhost:5001/api/evidence/search?q=password"
 
 # Test tag autocomplete
 curl -b cookies.txt "http://localhost:5001/api/tags/autocomplete?q=cr"
-# Returns: ["critical"]
+# Returns tags used in the active engagement, e.g. {"suggestions": [{"name": "critical", "count": 2}]}
 
 # Test filtering by multiple tags (AND logic)
-curl -b cookies.txt "http://localhost:5001/api/evidence/search?tags=critical,sql-injection"
+curl -b cookies.txt "http://localhost:5001/api/evidence/filter?tags=critical,sql-injection"
 ```
 
 ## Viewing Your Data
@@ -300,7 +298,7 @@ chmod 755 data/ data/uploads/
 ```bash
 # PTVault logs "SQLCipher encryption: DISABLED" when the driver is missing
 python3 -c "import sqlcipher3; print('OK')"
-pip install -r requirements.txt   # installs sqlcipher3-binary
+pip install -r requirements.txt   # installs sqlcipher3
 ```
 
 ### Port Already in Use

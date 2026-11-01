@@ -24,7 +24,7 @@ All 6 frontend-design skill files have been generated. Here's a summary of what 
 - 5 grid patterns: main layout, engagement cards, stats, features, color selector
 - Spacing scale with concrete use cases
 - Desktop-first responsive approach with mobile bottom nav
-- Specialized layouts: auth page gradient, port grid sticky headers, license warning banner
+- Specialized layouts: auth page gradient, port grid sticky headers
 
 ### references/motion.md (260 lines)
 - 3 transition speeds with use case guidance

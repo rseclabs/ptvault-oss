@@ -25,13 +25,11 @@ The left sidebar shows available admin pages:
 | **Engagements** | Admin only |
 | **Clients** | Admin only |
 | **Shell One-Liners** | Admin only |
-| **License** | All users (view); Admin only (activate/remove) |
 
 ## Admin vs. Non-Admin
 
 | Feature | Admin | Non-Admin |
 |---------|:-----:|:---------:|
-| View license status | ✓ | ✓ |
 | Create/edit users | ✓ | — |
 | Create/edit teams | ✓ | — |
 | Edit/delete engagements | ✓ | — |

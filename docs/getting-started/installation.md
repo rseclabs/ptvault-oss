@@ -1,6 +1,6 @@
 # Installation
 
-PTVault requires Python 3.10+ and can be installed with a few commands. Choose the method that fits your environment.
+PTVault requires Python 3.10+ (or Docker) and runs on Linux, macOS and Windows. Choose the method that fits your environment.
 
 ## Method 1: Python (Recommended for Local Use)
 
@@ -40,10 +40,13 @@ The server starts on `http://localhost:5001`. Open that URL in your browser to c
 If you prefer an isolated container environment:
 
 ```bash
-docker-compose up -d
+git clone https://github.com/rseclabs/ptvault-oss.git
+cd ptvault-oss
+cp .env.example .env          # docker-compose.yml mounts this file
+docker compose up -d
 ```
 
-Access PTVault at `http://localhost:5000`.
+Access PTVault at `http://localhost:5000`. Data is stored in `./data` on the host. On macOS, port 5000 may already be used by AirPlay Receiver; change the mapping in `docker-compose.yml` (for example `"5050:5000"`).
 
 See the [Deployment Guide](../../DEPLOYMENT.md) for full Docker configuration options.
 
@@ -51,14 +54,14 @@ See the [Deployment Guide](../../DEPLOYMENT.md) for full Docker configuration op
 
 ## Method 3: PyInstaller Binary
 
-A pre-built standalone executable is available for Linux:
+Build a standalone executable from source (on the same OS and architecture you will run it on):
 
 ```bash
 ./build_pyinstaller.sh
 ./dist/ptvault
 ```
 
-No Python installation required on the target machine. Ideal for pentesting laptops.
+The resulting binary needs no Python installation on the target machine. Ideal for pentesting laptops.
 
 ---
 
@@ -71,21 +74,26 @@ No Python installation required on the target machine. Ideal for pentesting lapt
 | Disk | 200 MB (plus evidence storage) |
 | Browser | Chrome 90+, Firefox 88+, Edge 90+ |
 
-### Optional: SQLCipher for Database Encryption
+### Database Encryption
 
-Database encryption requires the `pysqlcipher3` package and the `sqlcipher` system library:
+Encryption works out of the box: `requirements.txt` installs `sqlcipher3`, whose prebuilt wheels include SQLCipher for Linux, macOS and Windows. The database is encrypted when you create the first admin account. If `sqlcipher3` cannot be installed, PTVault still runs with an unencrypted SQLite database and logs `SQLCipher encryption: DISABLED`.
+
+### Optional: PDF Export Libraries
+
+Server-side PDF export uses WeasyPrint, which needs the Pango library:
 
 ```bash
 # Debian / Ubuntu / Kali
-sudo apt-get install -y sqlcipher libsqlcipher-dev python3-dev
-pip install pysqlcipher3
+sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0
 
 # Fedora / RHEL
-sudo dnf install -y sqlcipher sqlcipher-devel python3-devel
-pip install pysqlcipher3
+sudo dnf install -y pango
+
+# macOS
+brew install pango
 ```
 
-Without SQLCipher, PTVault runs normally with an unencrypted SQLite database. The encryption option in Admin settings will show as unavailable.
+Without Pango, PDF export falls back to the browser's print dialog. The Docker image already includes it.
 
 ---
 

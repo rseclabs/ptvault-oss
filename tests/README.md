@@ -62,7 +62,8 @@ assertion.
 | `test_relationships.py` | RelationshipDAO + AttackPathDAO |
 | `test_report_templates.py` | TemplateDAO + ReportAutoPopulator + TemplateRenderer |
 | `test_encryption.py` | SQLCipher encryption layer |
-| `test_license.py` | License expiry checks |
+| `test_features.py` | Every feature blueprint registers; no license gating |
+| `test_config.py` | Encryption key/salt paths follow `DATABASE_PATH` |
 | `test_nmap_parser.py`, `parsers/` | Tool parsers (Nmap, Nessus, Burp, ZAP, etc.) |
 | `test_rbac.py`, `test_security.py` | RBAC, CSRF, security headers |
 | `dao/`, `fixtures/` | DAO unit tests and parser fixture data |

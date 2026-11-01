@@ -304,8 +304,8 @@ class TestEncryptedOperations:
         # Verify plain sqlite3 can't read it anymore
         assert not encryption._is_plaintext_db(db_path)
 
-        # Verify backup was created
-        assert os.path.exists(db_path + '.backup_preencrypt')
+        # No plaintext copy of the data may be left behind
+        assert not os.path.exists(db_path + '.backup_preencrypt')
 
     def test_setup_encryption_full_flow(self, tmp_data_dir):
         """Full setup flow: create plaintext DB, then encrypt it."""
@@ -330,3 +330,114 @@ class TestEncryptedOperations:
         row = conn.execute("SELECT name FROM users WHERE id = 1").fetchone()
         assert row[0] == 'admin'
         conn.close()
+
+
+def _schema_db_with_evidence(db_path):
+    """Plaintext DB built from the real schema, with one evidence row."""
+    schema_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'schema.sql')
+    conn = sqlite3.connect(db_path)
+    with open(schema_path) as f:
+        conn.executescript(f.read())
+    conn.execute(
+        "INSERT INTO engagements (id, name) VALUES (1, 'Test Engagement')"
+    )
+    conn.execute(
+        "INSERT INTO evidence (engagement_id, title, content, evidence_type) "
+        "VALUES (1, 'SQL injection', 'login form bypass', 'note')"
+    )
+    conn.commit()
+    conn.close()
+
+
+def _assert_fts_intact(conn):
+    """evidence_fts must be a real FTS virtual table, searchable, and the
+    sync triggers must work for new evidence rows."""
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE name = 'evidence_fts'"
+    ).fetchone()
+    assert row is not None, "evidence_fts virtual table was lost"
+    assert row[0].upper().startswith('CREATE VIRTUAL TABLE')
+
+    hits = conn.execute(
+        "SELECT docid FROM evidence_fts WHERE evidence_fts MATCH 'injection'"
+    ).fetchall()
+    assert len(hits) == 1, "existing evidence was not indexed"
+
+    # The insert trigger writes to evidence_fts; this failed with
+    # "no such table: main.evidence_fts" before the fix.
+    conn.execute(
+        "INSERT INTO evidence (engagement_id, title, content, evidence_type) "
+        "VALUES (1, 'XSS', 'reflected payload', 'note')"
+    )
+    hits = conn.execute(
+        "SELECT docid FROM evidence_fts WHERE evidence_fts MATCH 'reflected'"
+    ).fetchall()
+    assert len(hits) == 1, "new evidence was not indexed by the trigger"
+
+
+@pytest.mark.skipif(not _has_sqlcipher, reason="sqlcipher3 not installed")
+class TestMigrationPreservesFts:
+    """Regression: encrypt/decrypt migration used to drop the FTS4 table."""
+
+    def test_encrypt_keeps_evidence_fts(self, tmp_data_dir):
+        db_path = str(tmp_data_dir / 'fts.db')
+        _schema_db_with_evidence(db_path)
+        encryption._write_key_file(
+            encryption.derive_key('pw', encryption.generate_salt()))
+
+        encryption.migrate_to_encrypted(db_path)
+
+        conn = encryption.get_connection(db_path)
+        _assert_fts_intact(conn)
+        conn.close()
+
+    def test_decrypt_keeps_evidence_fts(self, tmp_data_dir):
+        db_path = str(tmp_data_dir / 'fts.db')
+        _schema_db_with_evidence(db_path)
+        encryption._write_key_file(
+            encryption.derive_key('pw', encryption.generate_salt()))
+        encryption.migrate_to_encrypted(db_path)
+
+        encryption.migrate_to_plaintext(db_path)
+
+        assert encryption._is_plaintext_db(db_path)
+        conn = sqlite3.connect(db_path)
+        _assert_fts_intact(conn)
+        conn.close()
+
+
+def test_migration_030_repairs_lost_evidence_fts(tmp_path):
+    """Recreate the broken state left by the old iterdump() replay (shadow
+    tables and triggers copied, virtual table dropped) and check that
+    migration 030 rebuilds a working, populated FTS index."""
+    import importlib.util
+
+    good = str(tmp_path / 'good.db')
+    broken = str(tmp_path / 'broken.db')
+    _schema_db_with_evidence(good)
+
+    src = sqlite3.connect(good)
+    dump = list(src.iterdump())
+    src.close()
+    dst = sqlite3.connect(broken)
+    for stmt in dump:  # the old replay logic, bug included
+        if 'evidence_fts' in stmt and stmt.strip().upper().startswith('INSERT'):
+            continue
+        dst.execute(stmt)
+    dst.commit()
+    assert dst.execute(
+        "SELECT 1 FROM sqlite_master WHERE name='evidence_fts'").fetchone() is None
+    with pytest.raises(sqlite3.OperationalError, match='evidence_fts'):
+        dst.execute("INSERT INTO evidence (engagement_id, title, content, evidence_type) "
+                    "VALUES (1, 'x', 'y', 'note')")
+
+    path = os.path.join(os.path.dirname(__file__), '..', 'models', 'migrations',
+                        'versions', '030_rebuild_evidence_fts.py')
+    spec = importlib.util.spec_from_file_location('m030', path)
+    m030 = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m030)
+    m030.upgrade(dst)
+    m030.upgrade(dst)  # idempotent on a healthy database
+
+    _assert_fts_intact(dst)
+    dst.close()

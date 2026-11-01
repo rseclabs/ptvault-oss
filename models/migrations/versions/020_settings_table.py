@@ -2,7 +2,7 @@
 Migration 020: Settings table
 
 Adds a key-value settings table for storing application configuration
-such as license keys, preferences, and other admin-controlled values.
+such as preferences and other admin-controlled values.
 
 Created: 2026-02-24
 """

@@ -82,7 +82,6 @@ See [Team Management](../admin/team-management.md) for details on creating and m
 | Manage users | ✓ | — | — | — | — |
 | Manage teams | ✓ | — | — | — | — |
 | Configure settings | ✓ | — | — | — | — |
-| Manage license | ✓ | — | — | — | — |
 
 ---
 

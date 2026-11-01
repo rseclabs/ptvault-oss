@@ -238,4 +238,4 @@ if not cursor.fetchone():
 
 ### WARNING: Unprotected Routes
 
-`/api/auth/setup`, `/api/auth/login`, `/api/auth/logout`, `/api/health`, and `/api/license-status` are intentionally unauthenticated. NEVER add sensitive data to these endpoints. The setup endpoint checks `SELECT COUNT(*) FROM users` to prevent re-setup.
+`/api/auth/setup`, `/api/auth/login`, `/api/auth/logout`, and `/api/health` are intentionally unauthenticated. NEVER add sensitive data to these endpoints. The setup endpoint checks `SELECT COUNT(*) FROM users` to prevent re-setup.

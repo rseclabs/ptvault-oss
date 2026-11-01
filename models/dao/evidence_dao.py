@@ -154,7 +154,7 @@ class EvidenceDAO(BaseDAO):
             SELECT e.*
             FROM evidence e
             JOIN evidence_fts fts ON e.id = fts.docid
-            WHERE e.engagement_id = ? AND fts MATCH ?
+            WHERE e.engagement_id = ? AND fts.evidence_fts MATCH ?
             LIMIT ?
         ''', (self.engagement_id, query, limit))
 

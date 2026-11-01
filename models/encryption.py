@@ -282,6 +282,43 @@ def migrate_to_encrypted(db_path):
     _migrate_to_encrypted_with_key(db_path, key)
 
 
+def _export_db(src_path, src_key, dst_path, dst_key):
+    """
+    Copy a whole database into a new file with SQLCipher's sqlcipher_export().
+
+    sqlcipher_export() is SQLCipher's supported way to convert between
+    plaintext and encrypted databases. Unlike replaying iterdump() output it
+    recreates virtual tables (evidence_fts) properly instead of copying their
+    shadow tables, so full-text search and its triggers survive the move.
+
+    Args:
+        src_path: Existing database to read.
+        src_key: 64 hex char key for src_path, or None if it is plaintext.
+        dst_path: New database file to create (must not exist).
+        dst_key: 64 hex char key for dst_path, or None for plaintext.
+    """
+    conn = _sqlcipher.connect(src_path)
+    try:
+        if src_key:
+            conn.execute(f"PRAGMA key = \"x'{src_key}'\"")
+        conn.execute("SELECT count(*) FROM sqlite_master")  # verify key works
+        conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        attach_key = f"x'{dst_key}'" if dst_key else ''
+        conn.execute("ATTACH DATABASE ? AS export KEY ?", (dst_path, attach_key))
+        conn.execute("SELECT sqlcipher_export('export')")
+        conn.execute("DETACH DATABASE export")
+    finally:
+        conn.close()
+
+    dst = _sqlcipher.connect(dst_path)
+    try:
+        if dst_key:
+            dst.execute(f"PRAGMA key = \"x'{dst_key}'\"")
+        dst.execute("PRAGMA journal_mode=WAL")
+    finally:
+        dst.close()
+
+
 def _migrate_to_encrypted_with_key(db_path, key):
     """
     Migrate a plaintext SQLite database to an encrypted SQLCipher database
@@ -312,46 +349,7 @@ def _migrate_to_encrypted_with_key(db_path, key):
         if os.path.exists(encrypted_tmp):
             os.remove(encrypted_tmp)
 
-        # Read all schema and data from the plaintext DB using plain sqlite3
-        src = sqlite3.connect(db_path)
-        # Checkpoint WAL to ensure all data is in the main file
-        src.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-        sql_dump = list(src.iterdump())
-        src.close()
-
-        # Create new encrypted database
-        dst = _sqlcipher.connect(encrypted_tmp)
-        dst.execute(f"PRAGMA key = \"x'{key}'\"")
-        dst.execute("PRAGMA journal_mode=WAL")
-
-        # Replay the dump into the encrypted DB.
-        # iterdump() emits INSERT statements for FTS4 shadow tables
-        # (evidence_fts_content, etc.) which must be skipped — the FTS
-        # triggers will repopulate the index once the schema is in place.
-        # CREATE VIRTUAL TABLE statements are NOT skipped; if FTS4 is
-        # unavailable the explicit repopulation step below will warn.
-        for statement in sql_dump:
-            if 'evidence_fts' in statement and statement.strip().upper().startswith('INSERT'):
-                continue
-            try:
-                dst.execute(statement)
-            except Exception as stmt_err:
-                # Log schema failures loudly so they are visible in the log
-                logger.warning(f"Skipping statement during migration: {stmt_err} | stmt={statement[:120]}")
-                continue
-        dst.commit()
-
-        # Repopulate FTS index from existing evidence data
-        try:
-            dst.execute("""
-                INSERT INTO evidence_fts(docid, title, content, metadata)
-                SELECT id, title, content, metadata FROM evidence
-            """)
-            dst.commit()
-        except Exception as fts_err:
-            logger.warning(f"FTS repopulation skipped: {fts_err}")
-
-        dst.close()
+        _export_db(db_path, None, encrypted_tmp, key)
 
         # Remove WAL/SHM files from the old plaintext DB
         for suffix in ['-wal', '-shm']:
@@ -362,6 +360,17 @@ def _migrate_to_encrypted_with_key(db_path, key):
         # Atomically replace the original with the encrypted version
         os.replace(encrypted_tmp, db_path)
         logger.info("Database successfully migrated to encrypted format")
+
+        # The backup is a full plaintext copy of the data. Once the encrypted
+        # file opens with the key, keep no unencrypted copy on disk.
+        verify = _sqlcipher.connect(db_path)
+        try:
+            verify.execute(f"PRAGMA key = \"x'{key}'\"")
+            verify.execute("SELECT count(*) FROM sqlite_master")
+        finally:
+            verify.close()
+        os.remove(backup_path)
+        logger.info("Removed plaintext backup after verifying encrypted database")
 
     except Exception as e:
         # Clean up temp file on failure
@@ -375,8 +384,7 @@ def migrate_to_plaintext(db_path):
     """
     Migrate an encrypted SQLCipher database back to plaintext SQLite.
 
-    Reads the encrypted DB with sqlcipher3 using iterdump(), then replays
-    into a new plaintext DB using plain sqlite3.
+    Copies the encrypted DB into a new plaintext file with sqlcipher_export().
 
     Args:
         db_path: Path to the encrypted database.
@@ -406,39 +414,7 @@ def migrate_to_plaintext(db_path):
         if os.path.exists(plaintext_tmp):
             os.remove(plaintext_tmp)
 
-        # Read all schema and data from the encrypted DB
-        src = _sqlcipher.connect(db_path)
-        src.execute(f"PRAGMA key = \"x'{key}'\"")
-        src.execute("SELECT count(*) FROM sqlite_master")  # verify key works
-        sql_dump = list(src.iterdump())
-        src.close()
-
-        # Create new plaintext database using plain sqlite3
-        # Skip FTS INSERT statements — triggers will handle repopulation.
-        # CREATE VIRTUAL TABLE statements are NOT skipped.
-        dst = sqlite3.connect(plaintext_tmp)
-        for statement in sql_dump:
-            if 'evidence_fts' in statement and statement.strip().upper().startswith('INSERT'):
-                continue
-            try:
-                dst.execute(statement)
-            except Exception as stmt_err:
-                logger.warning(f"Skipping statement during migration: {stmt_err} | stmt={statement[:120]}")
-                continue
-        dst.commit()
-
-        # Repopulate FTS index from existing evidence data
-        try:
-            dst.execute("""
-                INSERT INTO evidence_fts(docid, title, content, metadata)
-                SELECT id, title, content, metadata FROM evidence
-            """)
-            dst.commit()
-        except Exception as fts_err:
-            logger.warning(f"FTS repopulation skipped: {fts_err}")
-
-        dst.execute("PRAGMA journal_mode=WAL")
-        dst.close()
+        _export_db(db_path, key, plaintext_tmp, None)
 
         # Remove WAL/SHM files from encrypted DB
         for suffix in ['-wal', '-shm']:

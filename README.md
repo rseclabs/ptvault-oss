@@ -31,7 +31,7 @@
   A visual dashboard shows all target systems, which ports are open, what credentials have been discovered, and the current status of each system (compromised, interesting, out of scope, etc.).
 
 #### Tool Integration
-  PTVault automatically imports and parses results from industry-standard tools like Nmap, Burp Suite, and Nessus—eliminating manual data entry.
+  PTVault automatically imports and parses results from industry-standard tools like Nmap, Nessus, Burp Suite, OWASP ZAP, Nuclei and BloodHound—eliminating manual data entry.
 ### Professional Report Generation
   A drag-and-drop report builder lets testers create polished, client-ready reports in minutes rather than hours. Reports can be exported to HTML, PDF, Word, or Markdown.
 ### Built-in Utilities
@@ -101,7 +101,7 @@ All data is stored locally in an encrypted SQLite database, ensuring your sensit
 | **Evidence Collection** | Store notes, screenshots, command output, and tool results |
 | **Vulnerability Tracking** | Document findings with CVSS scoring and remediation |
 | **Report Generation** | Build professional reports with drag-and-drop formatting |
-| **Tool Integration** | Import results from Nmap, Burp Suite, and Nessus |
+| **Tool Integration** | Import results from 11 tools, including Nmap, Nessus, Burp Suite and BloodHound |
 | **Test Planning** | MITRE ATT&CK Navigator and Atomic Red Team integration |
 
 ### Security Features
@@ -119,34 +119,46 @@ All data is stored locally in an encrypted SQLite database, ensuring your sensit
 ### Requirements
 
 - Python 3.10+
-- Linux (Kali/Parrot recommended)
+- Linux (Kali/Parrot work well), macOS or Windows
+- Optional: the Pango library for server-side PDF export (`sudo apt install libpango-1.0-0 libpangoft2-1.0-0` or `brew install pango`). Without it, PDF export uses the browser's print dialog.
 
-### Setup
+Database encryption needs no extra setup: the `sqlcipher3` package in `requirements.txt` ships with SQLCipher built in.
 
-1. Create a virtual environment (recommended):
+### Option 1: Python
+
 ```bash
+git clone https://github.com/rseclabs/ptvault-oss.git
+cd ptvault-oss
 python3 -m venv venv
-source venv/bin/activate
-```
-
-2. Install Python dependencies:
-```bash
+source venv/bin/activate        # Windows: .\venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-3. Run the application:
-```bash
 python app.py
 ```
 
-The application will be available at http://localhost:5001 (Docker: http://localhost:5000).
+PTVault is now running at http://localhost:5001. It only listens on localhost; use `python app.py -i 0.0.0.0 -p 5001` to allow other machines, ideally behind HTTPS (see [DEPLOYMENT.md](DEPLOYMENT.md)).
+
+### Option 2: Docker
+
+```bash
+git clone https://github.com/rseclabs/ptvault-oss.git
+cd ptvault-oss
+cp .env.example .env
+docker compose up -d
+```
+
+PTVault is now running at http://localhost:5000, with the database and uploads stored in `./data`. On macOS, port 5000 may be taken by AirPlay Receiver; change the port mapping in `docker-compose.yml` (for example `"5050:5000"`) if so.
+
+The container runs with `ENVIRONMENT=production`, so login cookies are marked Secure. Browsers accept them on `http://localhost`, but to reach the container from another machine put it behind HTTPS.
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for PyInstaller builds, systemd and reverse-proxy setups.
 
 ### First-Time Setup
 
-1. Navigate to `http://localhost:5001`
-2. Create the initial admin account (username, email, password) — this also sets up database encryption
-3. Log in with that account
-4. Create your first engagement to begin
+1. Open `http://localhost:5001` (Docker: `http://localhost:5000`). With no users yet, you are taken to the setup wizard.
+2. Create the admin account: full name, email and a password of at least 8 characters. Your username is the part of the email before the `@` (for example `admin@example.com` gives `admin`). This step also encrypts the database.
+3. Log in with that email (or username) and password.
+4. Back up `data/encryption.key` and `data/encryption.salt` along with the database. The database cannot be opened without them.
+5. Create your first engagement to begin.
 
 ---
 
@@ -265,9 +277,19 @@ The "General" entry in the host list provides engagement-wide storage:
 
 PTVault can parse and import results from:
 
-- **Nmap** (XML format): Imports hosts, ports, services
-- **Burp Suite** (XML format): Imports findings and requests
-- **Nessus** (XML format): Imports vulnerabilities
+| Tool | Format | Imports |
+|------|--------|---------|
+| Nmap | XML | Hosts, ports, services |
+| Nessus | `.nessus` XML | Vulnerabilities |
+| Qualys | XML | Vulnerabilities |
+| InsightVM / Nexpose | XML | Vulnerabilities |
+| Burp Suite | XML | Web findings |
+| OWASP ZAP | XML | Web findings |
+| Acunetix | XML | Web findings |
+| Nuclei | JSON | Findings |
+| Metasploit | XML | Hosts, sessions, vulnerabilities |
+| BloodHound | JSON | Active Directory objects and paths |
+| CrackMapExec | JSON | Credentials and shares |
 
 To import:
 1. Click the **Import** button in the sidebar

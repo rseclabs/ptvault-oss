@@ -15,7 +15,7 @@ This guide covers two methods for packaging and deploying PTVault as a portable 
 PyInstaller packages PTVault into a single executable file that includes Python and all dependencies.
 
 ### Prerequisites
-- Python 3.9+
+- Python 3.10+
 - pip
 
 ### Building the Executable
@@ -188,18 +188,22 @@ sudo usermod -aG docker $USER
 
 2. **Build and start**:
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 3. **View logs**:
    ```bash
-   docker-compose logs -f
+   docker compose logs -f
    ```
 
 4. **Stop**:
    ```bash
-   docker-compose down
+   docker compose down
    ```
+
+> **Notes**
+> - The container runs with `ENVIRONMENT=production`, so session cookies are marked Secure and the Flask debugger is off. Browsers accept Secure cookies on `http://localhost`; to use PTVault from other machines, put it behind HTTPS (see [Behind Nginx Reverse Proxy](#behind-nginx-reverse-proxy)).
+> - On macOS, port 5000 is often taken by AirPlay Receiver. Change the mapping in `docker-compose.yml` (for example `"5050:5000"`) if the container fails to bind.
 
 #### Option 2: Using build script
 
@@ -385,7 +389,7 @@ docker run -p 8080:5000 ...
 **Problem: Database persists old data after rebuild**
 ```bash
 # Remove the data volume
-docker-compose down -v
+docker compose down -v
 
 # Or manually remove data directory
 rm -rf ./data
@@ -462,8 +466,8 @@ For Docker:
 
    # Docker: Rebuild image
    git pull
-   docker-compose build
-   docker-compose up -d
+   docker compose build
+   docker compose up -d
    ```
 
 ---

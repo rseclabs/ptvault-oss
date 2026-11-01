@@ -35,7 +35,7 @@ python app.py
 
 **First-time setup:** Navigate to http://localhost:5001, create the initial admin account (email + password, min 8 characters), then log in.
 
-**Docker:** `docker-compose up -d` -- Access at http://localhost:5000
+**Docker:** `docker compose up -d` -- Access at http://localhost:5000
 
 ## Project Structure
 
@@ -291,7 +291,7 @@ def get_hosts():
 | `python app.py` | Dev server on port 5001 |
 | `flask run` | Alternative (port 5000 by default) |
 | `python -m pytest tests/ -v` | Run test suite |
-| `docker-compose up -d` | Docker deployment (port 5000) |
+| `docker compose up -d` | Docker deployment (port 5000) |
 | `./build_docker.sh build` | Build Docker image |
 | `./build_pyinstaller.sh` | Build standalone binary |
 

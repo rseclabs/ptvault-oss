@@ -4,23 +4,9 @@ PTVault optionally encrypts the SQLite database using **SQLCipher**, providing A
 
 ## Requirements
 
-Database encryption requires:
-1. The `sqlcipher` system library
-2. The `pysqlcipher3` Python package
+Database encryption uses the `sqlcipher3` Python package, which `pip install -r requirements.txt` installs automatically. Its prebuilt wheels include SQLCipher for Linux, macOS and Windows, so no system libraries are needed. The Docker image includes it too.
 
-Install these before enabling encryption:
-
-```bash
-# Debian / Ubuntu / Kali
-sudo apt-get install -y sqlcipher libsqlcipher-dev python3-dev
-pip install pysqlcipher3
-
-# Fedora / RHEL
-sudo dnf install -y sqlcipher sqlcipher-devel python3-devel
-pip install pysqlcipher3
-```
-
-If these are not installed, the encryption option in Admin Settings shows as **Unavailable**.
+If `sqlcipher3` is not installed, the encryption option in Admin Settings shows as **Unavailable**, and `pip install sqlcipher3` fixes it.
 
 ## Checking Encryption Status
 

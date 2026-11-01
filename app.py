@@ -257,9 +257,17 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--port', type=int, default=5001,
                         help='Port to listen on (default: 5001)')
     args = parser.parse_args()
+    # The Werkzeug debugger executes code typed into the browser, so only
+    # enable it for local development, never in production or when the
+    # server is reachable from other machines.
+    debug = (not is_frozen
+             and Config.ENVIRONMENT != 'production'
+             and args.interface in ('localhost', '127.0.0.1', '::1'))
+    if not debug and not is_frozen:
+        logger.info("Debug mode off (production or non-loopback interface)")
     app.run(
         host=args.interface,
         port=args.port,
-        debug=not is_frozen,
-        use_reloader=not is_frozen,
+        debug=debug,
+        use_reloader=debug,
     )

@@ -1,5 +1,7 @@
 """Tag management routes for PTVault."""
 
+from collections import Counter
+
 from flask import Blueprint, request, jsonify, g
 from middleware.auth import require_auth
 from utils.error_handler import handle_errors
@@ -19,34 +21,26 @@ def autocomplete_tags():
     prefix = request.args.get('q', '').strip().lower()
     limit = min(int(request.args.get('limit', 10)), 50)
 
+    # Suggest only tags used in the active engagement, counted from the
+    # comma-separated evidence.tags column that every write path maintains.
+    # (The global tags table is only filled by engagement import, and would
+    # leak tag names from engagements the user cannot access.)
+    engagement_id = getattr(g, 'active_engagement_id', None)
+    if not engagement_id:
+        return jsonify({'suggestions': []})
+
     cursor = g.db.cursor()
+    cursor.execute(
+        "SELECT tags FROM evidence WHERE engagement_id = ? AND tags IS NOT NULL AND tags != ''",
+        (engagement_id,)
+    )
+    counts = Counter()
+    for (tags,) in cursor.fetchall():
+        counts.update({t.strip() for t in tags.split(',') if t.strip()})
 
-    if not prefix:
-        # Return most used tags if no prefix
-        query = '''
-            SELECT t.name, COUNT(et.evidence_id) as usage_count
-            FROM tags t
-            LEFT JOIN evidence_tags et ON t.id = et.tag_id
-            GROUP BY t.id
-            ORDER BY usage_count DESC
-            LIMIT ?
-        '''
-        params = [limit]
-    else:
-        # Prefix search with usage count
-        query = '''
-            SELECT t.name, COUNT(et.evidence_id) as usage_count
-            FROM tags t
-            LEFT JOIN evidence_tags et ON t.id = et.tag_id
-            WHERE t.name LIKE ?
-            GROUP BY t.id
-            ORDER BY usage_count DESC
-            LIMIT ?
-        '''
-        params = [f'{prefix}%', limit]
-
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
+    matches = [(name, n) for name, n in counts.items() if name.lower().startswith(prefix)]
+    matches.sort(key=lambda item: (-item[1], item[0]))
+    rows = matches[:limit]
 
     return jsonify({
         'suggestions': [

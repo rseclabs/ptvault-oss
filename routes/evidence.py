@@ -783,7 +783,7 @@ def search_evidence():
         FROM evidence e
         JOIN evidence_fts fts ON e.id = fts.docid
         WHERE e.engagement_id = ?
-          AND fts MATCH ?
+          AND fts.evidence_fts MATCH ?
         LIMIT ?
     ''', (engagement_id, query, limit))
 
@@ -874,31 +874,27 @@ def filter_evidence():
         where_clauses.append('e.severity_level = ?')
         params.append(severity)
 
+    # Tag filters match against the comma-separated evidence.tags string,
+    # which is what every write path maintains. Wrapping it in commas lets
+    # one LIKE match a whole tag; % and _ in the tag itself are escaped.
+    def _tag_param(tag):
+        escaped = tag.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+        return f'%,{escaped},%'
+    tag_clause = "(',' || e.tags || ',') LIKE ? ESCAPE '\\'"
+
     # Tag filter AND (all tags must match)
     if tags_and:
         tags_and = [t.strip() for t in tags_and if t.strip()]
-        if tags_and:
-            from_clause += '''
-                JOIN evidence_tags et ON e.id = et.evidence_id
-                JOIN tags t ON et.tag_id = t.id
-            '''
-            placeholders = ','.join('?' * len(tags_and))
-            where_clauses.append(f't.name IN ({placeholders})')
-            params.extend(tags_and)
-            group_by = ' GROUP BY e.id'
-            having_clause = f' HAVING COUNT(DISTINCT t.id) = {len(tags_and)}'
+        for tag in tags_and:
+            where_clauses.append(tag_clause)
+            params.append(_tag_param(tag))
 
-    # Tag filter OR (any tag matches) - use simpler approach if no AND tags
+    # Tag filter OR (any tag matches)
     elif tags_or:
         tags_or = [t.strip() for t in tags_or if t.strip()]
         if tags_or:
-            from_clause += '''
-                JOIN evidence_tags et ON e.id = et.evidence_id
-                JOIN tags t ON et.tag_id = t.id
-            '''
-            placeholders = ','.join('?' * len(tags_or))
-            where_clauses.append(f't.name IN ({placeholders})')
-            params.extend(tags_or)
+            where_clauses.append('(' + ' OR '.join([tag_clause] * len(tags_or)) + ')')
+            params.extend(_tag_param(tag) for tag in tags_or)
 
     # Build final query
     where_sql = ' WHERE ' + ' AND '.join(where_clauses) if where_clauses else ''

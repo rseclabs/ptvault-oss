@@ -2,8 +2,6 @@
 
 The Dashboard tab provides a visual summary of the active engagement's data. It uses D3 v7 charts to surface key metrics at a glance so you can track progress and coverage without navigating across multiple tabs.
 
-**License:** Core (available on all installs)
-
 ---
 
 ## Accessing the Dashboard

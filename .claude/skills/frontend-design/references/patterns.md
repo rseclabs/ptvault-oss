@@ -168,7 +168,6 @@ PTVault's signature visual: 4px colored left border on feedback elements.
 ```css
 .toast.success { border-left: 4px solid var(--color-success); }
 .error-message { border-left: 4px solid var(--color-error); }
-.license-warning-banner { border-left: 4px solid var(--color-warning); }
 ```
 
 ### Icon Sizing (Lucide Icons)
