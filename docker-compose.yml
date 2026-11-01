@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  ptvault:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ptvault
+    ports:
+      - "5000:5000"
+    volumes:
+      # Persist database and uploads
+      - ./data:/app/data
+      # Mount .env file for configuration
+      - ./.env:/app/.env:ro
+    environment:
+      - FLASK_APP=app.py
+      - PYTHONUNBUFFERED=1
+      - DATABASE_PATH=/app/data/ptvault.db
+      - ENVIRONMENT=production
+      # Encryption: key/salt files stored in persistent data volume by default
+      # - PTVAULT_ENCRYPTION_REQUIRED=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - ptvault-network
+
+networks:
+  ptvault-network:
+    driver: bridge

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTVault - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>PTVault</h1>
+                <p class="tagline">Secure Evidence Management for Penetration Testers</p>
+            </div>
+
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="loginIdentity">Email or Username</label>
+                    <input
+                        type="text"
+                        id="loginIdentity"
+                        name="identity"
+                        placeholder="you@example.com or username"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+
+                <div id="idleMessage" class="info-message" style="display: none;
+                    padding: 0.75rem; margin-bottom: 1rem; border-radius: 6px;
+                    background: var(--warning-bg, #fef3c7); color: var(--warning-text, #92400e);
+                    border: 1px solid var(--warning-border, #fcd34d); font-size: 0.875rem;">
+                    You were logged out due to inactivity.
+                </div>
+
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loading" style="display: none;">Authenticating...</span>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p class="help-text">
+                    First time here?
+                    <a href="/setup" class="link">Set up PTVault</a>
+                </p>
+                <p class="version">v1.0</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/static/js/api.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        // Show idle timeout message if redirected with ?reason=idle
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const reason = params.get('reason');
+            if (reason === 'idle') {
+                const msg = document.getElementById('idleMessage');
+                if (msg) msg.style.display = 'block';
+            }
+        })();
+    </script>
+</body>
+</html>

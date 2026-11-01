@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Note - PTVault</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <script>
+        // Apply theme before first paint to prevent flash
+        (function() {
+            var theme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <style>
+        .note-editor-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: var(--text-2xl);
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .editor-container {
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* EasyMDE overrides */
+        .EasyMDEContainer .editor-toolbar {
+            /* Reset main.css .editor-toolbar flex interference */
+            display: block !important;
+            gap: unset !important;
+            background: var(--color-bg-tertiary) !important;
+            border-top: 1px solid var(--color-border) !important;
+            border-left: 1px solid var(--color-border) !important;
+            border-right: 1px solid var(--color-border) !important;
+            border-bottom: none !important;
+            border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
+            padding: 6px 8px !important;
+        }
+
+        .EasyMDEContainer .editor-toolbar button {
+            color: var(--color-text-primary) !important;
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            border-radius: var(--radius-sm) !important;
+        }
+
+        .EasyMDEContainer .editor-toolbar button:hover,
+        .EasyMDEContainer .editor-toolbar button.active {
+            background: var(--color-primary-muted) !important;
+            border-color: var(--color-primary) !important;
+            color: var(--color-primary) !important;
+        }
+
+        .EasyMDEContainer .editor-toolbar i.separator {
+            border-left-color: var(--color-border) !important;
+        }
+
+        .EasyMDEContainer .CodeMirror {
+            background: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            border-color: var(--color-border);
+            border-top: none;
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 520px;
+            padding: 8px 4px;
+        }
+
+        .EasyMDEContainer .CodeMirror-scroll {
+            min-height: 520px;
+        }
+
+        .EasyMDEContainer .CodeMirror-cursor {
+            border-left-color: var(--color-primary);
+        }
+
+        .EasyMDEContainer .editor-preview,
+        .EasyMDEContainer .editor-preview-side {
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            border-color: var(--color-border);
+            padding: 16px;
+        }
+
+        .EasyMDEContainer .editor-preview p { margin: 0 0 0.75em 0; }
+        .EasyMDEContainer .editor-preview h1,
+        .EasyMDEContainer .editor-preview h2,
+        .EasyMDEContainer .editor-preview h3 { margin: 1em 0 0.4em 0; font-weight: 600; }
+        .EasyMDEContainer .editor-preview pre { background: var(--color-surface-code); color: #e2e8f0; padding: 0.75em; border-radius: var(--radius-md); overflow-x: auto; margin: 0 0 0.75em 0; }
+        .EasyMDEContainer .editor-preview code { background: var(--color-bg-tertiary); padding: 0.1em 0.3em; border-radius: var(--radius-sm); font-size: 0.875em; }
+        .EasyMDEContainer .editor-preview pre code { background: none; padding: 0; }
+        .EasyMDEContainer .editor-preview blockquote { border-left: 3px solid var(--color-primary); padding: 0.25em 0.75em; color: var(--color-text-secondary); margin: 0 0 0.75em 0; }
+        .EasyMDEContainer .editor-preview table { border-collapse: collapse; width: 100%; margin: 0 0 0.75em 0; }
+        .EasyMDEContainer .editor-preview th,
+        .EasyMDEContainer .editor-preview td { border: 1px solid var(--color-border); padding: 0.4em 0.6em; }
+        .EasyMDEContainer .editor-preview th { background: var(--color-bg-tertiary); font-weight: 600; }
+
+        /* Dark mode CodeMirror syntax */
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-comment { color: #6a9955; }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-header { color: #569cd6; font-weight: 600; }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-strong { color: #dcdcaa; }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-em { color: #ce9178; }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-link { color: #4fc3f7; }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-url { color: #4fc3f7; }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-string { color: #ce9178; }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-keyword { color: #c586c0; }
+
+        /* Image upload hint */
+        .upload-hint {
+            margin-top: 8px;
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="note-editor-page">
+        <div class="page-header">
+            <h1>Add Note</h1>
+            <div class="page-actions">
+                <button onclick="cancelNote()" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveNote()" class="btn btn-primary">Save Note</button>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <textarea id="noteContent"></textarea>
+            <p class="upload-hint">Paste screenshots with Ctrl+V &nbsp;·&nbsp; Upload images via toolbar &nbsp;·&nbsp; Markdown supported</p>
+        </div>
+    </div>
+
+    <!-- Hidden file input for image upload -->
+    <input type="file" id="noteImageInput" accept="image/*" style="display:none" onchange="handleNoteImage()">
+
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <script src="/static/js/clipboard_image_paste.js?v=2"></script>
+    <script type="module" src="/static/js/api.js"></script>
+    <script src="/static/js/utils.js"></script>
+    <script>
+        // Get parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const hostId = urlParams.get('host_id');
+        const noteType = urlParams.get('type') || 'host'; // 'host' or 'engagement'
+        const noteId = urlParams.get('note_id') ? parseInt(urlParams.get('note_id')) : null;
+        const returnHost = urlParams.get('return_host');
+        const returnTab = urlParams.get('return_tab');
+        // When the tree's add-sibling / add-child buttons land here, they
+        // pass the intended parent_id so the new note slots into the tree
+        // correctly. Null/absent => root-level note.
+        const parentIdParam = urlParams.get('parent_id');
+        const parentId = parentIdParam ? parseInt(parentIdParam) : null;
+
+        // Set page title and button text based on mode
+        if (noteId) {
+            document.querySelector('.page-header h1').textContent = 'Edit Note';
+            document.querySelector('button[onclick="saveNote()"]').textContent = 'Save Changes';
+        }
+
+        function getDashboardReturnUrl() {
+            const params = new URLSearchParams();
+            if (returnHost) params.set('host', returnHost);
+            if (returnTab) params.set('tab', returnTab);
+            const qs = params.toString();
+            return '/dashboard' + (qs ? '?' + qs : '');
+        }
+
+        // Initialize EasyMDE
+        const easyMDE = new EasyMDE({
+            element: document.getElementById('noteContent'),
+            placeholder: '# My Note\n\nAdd content here...\n\n**Bold**, *italic*, `code`',
+            spellChecker: false,
+            autosave: { enabled: false },
+            minHeight: '520px',
+            toolbar: [
+                'bold', 'italic', 'heading', '|',
+                'quote', 'code', 'unordered-list', 'ordered-list', '|',
+                'link',
+                {
+                    name: 'upload-image',
+                    action: () => document.getElementById('noteImageInput').click(),
+                    className: 'fa fa-image',
+                    title: 'Upload Image'
+                },
+                '|',
+                'preview', 'side-by-side', 'fullscreen', '|',
+                'guide'
+            ],
+            previewRender: function(plainText) {
+                // Use marked if available, otherwise return as-is
+                if (typeof marked !== 'undefined') {
+                    return marked.parse(plainText);
+                }
+                return plainText;
+            }
+        });
+
+        // Clipboard image paste — see static/js/clipboard_image_paste.js
+        attachClipboardImagePaste(easyMDE, {
+            engagementId: function () {
+                return window.AppState && window.AppState.activeEngagement
+                    ? window.AppState.activeEngagement.id
+                    : null;
+            },
+            hostId: function () {
+                // hostId is parsed from the URL (host_id param) at the top of this script.
+                // noteType is 'host' when this editor is serving a host-scoped note.
+                return noteType === 'host' && hostId ? parseInt(hostId) : null;
+            },
+            onError: function (msg) {
+                if (window.showToast) window.showToast(msg, 'error');
+                else console.warn(msg);
+            },
+
+        });
+
+        // Initialize theme and load existing content
+        document.addEventListener('DOMContentLoaded', async function() {
+            ThemeManager.init();
+
+            if (noteId) {
+                try {
+                    let note;
+                    if (noteType === 'engagement') {
+                        const activeData = await API.engagements.getActive();
+                        const engId = activeData.id || activeData.active_engagement_id;
+                        note = await API.engagements.getNote(engId, noteId);
+                    } else {
+                        note = await API.hosts.getNote(parseInt(hostId), noteId);
+                    }
+                    if (note && note.content !== undefined) {
+                        easyMDE.value(note.content);
+                    }
+                } catch (error) {
+                    console.error('Failed to load note for editing:', error);
+                }
+            }
+        });
+
+        // Handle image file upload via hidden input
+        function handleNoteImage() {
+            const fileInput = document.getElementById('noteImageInput');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const markdown = `\n![image](${e.target.result})\n`;
+                easyMDE.codemirror.replaceSelection(markdown);
+                fileInput.value = '';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function saveNote() {
+            const content = easyMDE.value().trim();
+
+            if (!content) {
+                alert('Please enter some content for the note');
+                return;
+            }
+
+            try {
+                if (noteId) {
+                    // Edit mode — update existing note
+                    if (noteType === 'engagement') {
+                        const activeData = await API.engagements.getActive();
+                        const engId = activeData.id || activeData.active_engagement_id;
+                        await API.engagements.updateNote(engId, noteId, content);
+                    } else {
+                        await API.hosts.updateNote(parseInt(hostId), noteId, content);
+                    }
+                } else {
+                    // Create mode — new note
+                    const activeData = await API.engagements.getActive();
+                    const activeEngagementId = activeData.id || activeData.active_engagement_id || null;
+
+                    if (!activeEngagementId) {
+                        alert('No active engagement. Please select an engagement first.');
+                        window.location.href = '/dashboard';
+                        return;
+                    }
+
+                    const payload = parentId
+                        ? { content, parent_id: parentId }
+                        : { content };
+                    if (noteType === 'engagement') {
+                        await API.engagements.createNote(activeEngagementId, payload);
+                    } else {
+                        if (!hostId) {
+                            alert('No host selected');
+                            return;
+                        }
+                        await API.hosts.createNote(parseInt(hostId), payload);
+                    }
+                }
+
+                window.location.href = getDashboardReturnUrl();
+            } catch (error) {
+                console.error('Failed to save note:', error);
+                alert('Failed to save note. Please try again.');
+            }
+        }
+
+        function cancelNote() {
+            if (confirm('Discard this note?')) {
+                window.location.href = getDashboardReturnUrl();
+            }
+        }
+    </script>
+</body>
+</html>

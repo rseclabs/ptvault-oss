@@ -1,0 +1,52 @@
+__pycache__/
+*.pyc
+.env
+data/
+venv/
+.venv/
+
+# Database (contains encrypted user data)
+*.db
+
+# Logs
+*.log
+
+# Session/cookies
+cookies.txt
+
+# Editor configs
+.obsidian/
+
+# Test outputs
+test_output.log
+export_*.json
+export_*.md
+
+# Encryption key material
+keys/
+*.key
+*.salt
+*.pem
+
+# Internal history (planning notes, status reports) — kept locally only
+docs/history/
+
+# Build artifacts
+build/
+dist/
+
+# Local sample/client data — never commit
+Sample Data/
+*.nessus
+
+# Tooling / OS / editor clutter
+.DS_Store
+.vscode/
+.idea/
+.pytest_cache/
+.impeccable/
+.playwright-mcp/
+docs/.playwright-mcp/
+
+# Ad-hoc screenshots at the repo root
+/*.png

@@ -1,0 +1,395 @@
+/* PTVault Engagement Dashboard
+ * Themed via existing CSS variables in main.css.
+ * No hardcoded color literals — every surface, border, and text color
+ * resolves through --color-* tokens so dark/light themes share styling.
+ */
+
+/* Section root */
+#section-dashboard {
+    background: var(--color-bg-secondary);
+    min-height: 100%;
+    padding: 0;
+}
+
+/* Toolbar (header strip) */
+.dashboard-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    background: var(--color-bg-primary);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dashboard-toolbar-titles {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+}
+
+.dashboard-toolbar-titles h2 {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1.2;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.dashboard-toolbar-meta {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.dashboard-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.dashboard-refresh-btn:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background: var(--color-primary-subtle);
+}
+
+.dashboard-refresh-btn:active {
+    transform: scale(0.96);
+}
+
+/* Error banner */
+.dashboard-error {
+    margin: var(--spacing-md) var(--spacing-xl) 0;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-error-bg);
+    color: var(--color-error);
+    border: 1px solid var(--color-error);
+    border-radius: var(--radius-lg);
+    font-size: var(--text-sm);
+}
+
+/* Empty state */
+.dashboard-empty {
+    padding: var(--spacing-2xl) var(--spacing-xl);
+    text-align: center;
+    color: var(--color-text-tertiary);
+    font-size: var(--text-base);
+}
+
+/* Grid layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl);
+}
+
+.dashboard-grid > .dashboard-card {
+    grid-column: span 6;
+}
+
+.dashboard-grid > .dashboard-card.full {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+    .dashboard-grid > .dashboard-card { grid-column: 1 / -1; }
+}
+
+/* Card chrome — matches existing .engagement-card design language */
+.dashboard-card {
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.dashboard-card-header h3 {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+    letter-spacing: -0.005em;
+}
+
+.dashboard-card-header .card-subtitle {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.dashboard-card-body {
+    padding: var(--spacing-lg);
+    flex: 1;
+    min-height: 0;
+}
+
+.dashboard-card-body.compact {
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+/* KPI strip */
+.kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+}
+
+.kpi-tile {
+    position: relative;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.kpi-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--color-primary);
+    opacity: 0.6;
+}
+
+.kpi-tile.accent-critical::before { background: var(--color-critical); opacity: 0.85; }
+.kpi-tile.accent-success::before  { background: var(--color-success);  opacity: 0.85; }
+
+.kpi-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--spacing-2xs);
+}
+
+.kpi-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+}
+
+.kpi-value.muted {
+    color: var(--color-text-tertiary);
+}
+
+/* Chart container helpers */
+.chart-frame {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.chart-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+/* Chart axis text */
+.chart-frame .axis text,
+.chart-frame .domain,
+.chart-frame .tick line {
+    fill: var(--color-text-tertiary);
+    color: var(--color-text-tertiary);
+    stroke: var(--color-border);
+}
+
+.chart-frame .axis path.domain {
+    stroke: var(--color-border);
+}
+
+.chart-frame .axis text {
+    fill: var(--color-text-tertiary);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl) var(--spacing-md);
+    color: var(--color-text-tertiary);
+    font-size: var(--text-sm);
+    text-align: center;
+    min-height: 180px;
+}
+
+/* Donut center label */
+.donut-center-value {
+    fill: var(--color-text-primary);
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.donut-center-label {
+    fill: var(--color-text-tertiary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Legend (shared across charts) */
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm) var(--spacing-md);
+    margin-top: var(--spacing-md);
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border-light);
+}
+
+.legend-count {
+    color: var(--color-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Stacked bar (host status, color categories, test exec) */
+.stacked-bar {
+    display: flex;
+    width: 100%;
+    height: 28px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--color-border-light);
+    background: var(--color-bg-tertiary);
+}
+
+.stacked-bar-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: filter var(--transition-fast);
+    cursor: default;
+}
+
+.stacked-bar-segment:hover {
+    filter: brightness(1.1);
+}
+
+/* Test execution summary line under the bar */
+.test-exec-summary {
+    margin-top: var(--spacing-sm);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.test-exec-summary strong {
+    color: var(--color-text-primary);
+    font-weight: 700;
+}
+
+/* Scan Vulnerabilities — 4 severity tiles, parallels the Findings donut card */
+.scan-vuln-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-md);
+}
+
+.scan-vuln-tile {
+    position: relative;
+    padding: var(--spacing-md);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.scan-vuln-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+}
+
+.scan-vuln-tile.sev-critical::before { background: var(--color-critical); }
+.scan-vuln-tile.sev-high::before     { background: var(--color-high); }
+.scan-vuln-tile.sev-medium::before   { background: var(--color-medium); }
+.scan-vuln-tile.sev-low::before      { background: var(--color-low); }
+
+.scan-vuln-value {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+}
+
+.scan-vuln-label {
+    margin-top: 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-tertiary);
+}
+
+.scan-vuln-tile.sev-critical .scan-vuln-label { color: var(--color-critical); }
+.scan-vuln-tile.sev-high .scan-vuln-label     { color: var(--color-high); }
+.scan-vuln-tile.sev-medium .scan-vuln-label   { color: var(--color-medium); }
+.scan-vuln-tile.sev-low .scan-vuln-label      { color: var(--color-low); }
+
+.scan-vuln-total {
+    margin-top: var(--spacing-md);
+    text-align: center;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}

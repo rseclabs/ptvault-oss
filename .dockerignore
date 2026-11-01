@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+tests/
+test_*.py
+test_*.sh
+
+# Documentation
+*.md
+docs/
+
+# Secrets / local data
+keys/
+*.key
+*.salt
+*.pem
+Sample Data/
+*.nessus
+
+# Data (will be mounted as volume)
+data/
+
+# Environment (will be mounted separately)
+.env
+
+# Build artifacts
+*.log

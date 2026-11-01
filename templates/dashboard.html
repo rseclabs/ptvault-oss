@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTVault - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- EasyMDE for inline note editor -->
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>🔐 PTVault</h1>
+            <span id="activeEngagement" class="active-engagement"></span>
+        </div>
+
+        <!-- Main Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-section="engagements">
+                <span class="nav-tab-icon">📁</span>
+                <span class="nav-tab-label">Engagements</span>
+            </button>
+            <button class="nav-tab" data-section="dashboard">
+                <span class="nav-tab-icon">📊</span>
+                <span class="nav-tab-label">Dashboard</span>
+            </button>
+            <button class="nav-tab" data-section="general">
+                <span class="nav-tab-icon">📝</span>
+                <span class="nav-tab-label">General</span>
+            </button>
+            <button class="nav-tab" data-section="hosts">
+                <span class="nav-tab-icon">📋</span>
+                <span class="nav-tab-label">Hosts</span>
+            </button>
+            <button class="nav-tab" data-section="portgrid">
+                <span class="nav-tab-icon">🔲</span>
+                <span class="nav-tab-label">Port Grid</span>
+            </button>
+            <button class="nav-tab" data-section="tools">
+                <span class="nav-tab-icon">🛠️</span>
+                <span class="nav-tab-label">Tools</span>
+            </button>
+            <button class="nav-tab" data-section="reporting">
+                <span class="nav-tab-icon">📄</span>
+                <span class="nav-tab-label">Reporting</span>
+            </button>
+            <button class="nav-tab" data-section="testplans">
+                <span class="nav-tab-icon">🎯</span>
+                <span class="nav-tab-label">Test Plans</span>
+            </button>
+            <button class="nav-tab" data-section="admin">
+                <span class="nav-tab-icon">⚙️</span>
+                <span class="nav-tab-label">Admin</span>
+            </button>
+        </div>
+
+        <div class="nav-actions">
+            <button id="toggleTheme" class="btn btn-icon" title="Toggle Dark Mode">
+                <span class="theme-icon">🌙</span>
+            </button>
+            <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Section: Dashboard -->
+    <div id="section-dashboard" class="app-section">
+        <div class="dashboard-toolbar">
+            <div class="dashboard-toolbar-titles">
+                <h2>Engagement Dashboard</h2>
+                <div id="dashboardLastUpdated" class="dashboard-toolbar-meta"></div>
+            </div>
+            <button id="dashboardRefreshBtn" class="dashboard-refresh-btn" title="Refresh">
+                <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i>
+            </button>
+        </div>
+        <div id="dashboardError" class="dashboard-error" style="display:none;"></div>
+        <div id="dashboardEmpty" class="dashboard-empty" style="display:none;">
+            Select an engagement to view its dashboard.
+        </div>
+        <div id="dashboardGrid" class="dashboard-grid">
+            <div class="dashboard-card full" id="cardKpis">
+                <div id="kpiStrip" class="kpi-strip"></div>
+            </div>
+            <div class="dashboard-card" id="cardSeverity">
+                <div class="dashboard-card-header">
+                    <h3>Findings by Severity</h3>
+                    <span class="card-subtitle">Curated</span>
+                </div>
+                <div class="dashboard-card-body" id="chartSeverity"></div>
+            </div>
+            <div class="dashboard-card" id="cardScanVulns">
+                <div class="dashboard-card-header">
+                    <h3>Scan Vulnerabilities</h3>
+                    <span class="card-subtitle">From imports</span>
+                </div>
+                <div class="dashboard-card-body" id="chartScanVulns"></div>
+            </div>
+            <div class="dashboard-card" id="cardTopPorts">
+                <div class="dashboard-card-header"><h3>Top 15 Ports</h3></div>
+                <div class="dashboard-card-body" id="chartTopPorts"></div>
+            </div>
+            <div class="dashboard-card" id="cardHostStatus">
+                <div class="dashboard-card-header"><h3>Host Status</h3></div>
+                <div class="dashboard-card-body compact" id="chartHostStatus"></div>
+            </div>
+            <div class="dashboard-card" id="cardTopServices">
+                <div class="dashboard-card-header"><h3>Top Services</h3></div>
+                <div class="dashboard-card-body" id="chartTopServices"></div>
+            </div>
+            <div class="dashboard-card" id="cardFindingsTime">
+                <div class="dashboard-card-header"><h3>Findings Over Time</h3></div>
+                <div class="dashboard-card-body" id="chartFindingsTime"></div>
+            </div>
+            <div class="dashboard-card" id="cardColors">
+                <div class="dashboard-card-header"><h3>Color Categories</h3></div>
+                <div class="dashboard-card-body compact" id="chartColors"></div>
+            </div>
+            <div class="dashboard-card full" id="cardTestExec" style="display:none;">
+                <div class="dashboard-card-header"><h3>Test Execution Progress</h3></div>
+                <div class="dashboard-card-body compact" id="chartTestExec"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Engagements (default view) -->
+    <div id="section-engagements" class="app-section active">
+        <div class="engagements-page">
+            <div class="engagements-header">
+                <h2>Engagements</h2>
+                <button id="newEngagementBtn" class="btn btn-primary">+ New Engagement</button>
+            </div>
+            <div id="engagementsGrid" class="engagements-grid">
+                <div class="loading">Loading engagements...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Hosts -->
+    <div id="section-hosts" class="app-section">
+        <div class="container" id="evidenceContainer">
+            <!-- Host Ribbon (replaces former left sidebar) -->
+            <div class="host-ribbon" id="hostRibbon">
+                <div class="host-ribbon-header">
+                    <button class="host-ribbon-toggle" id="hostRibbonToggle" title="Toggle filters" aria-label="Toggle filters" aria-expanded="true">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <span class="host-ribbon-collapsed-label">Host Filters</span>
+                </div>
+
+                <div class="host-ribbon-rows">
+                    <!-- Row 1: stats, saved searches, active filter, clear all -->
+                    <div class="host-ribbon-row host-ribbon-row-primary">
+                        <div class="host-ribbon-section">
+                            <span class="host-ribbon-section-label">Vulnerabilities</span>
+                            <div id="evidenceStats" class="ribbon-stats">
+                                <button class="ribbon-stat" onclick="HostManager.filterBySeverity('critical')" title="Critical vulnerabilities">
+                                    <span class="stat-dot stat-dot-critical"></span>
+                                    <span class="ribbon-stat-value" id="statCritical">0</span>
+                                    <span class="ribbon-stat-label">Critical</span>
+                                </button>
+                                <button class="ribbon-stat" onclick="HostManager.filterBySeverity('high')" title="High vulnerabilities">
+                                    <span class="stat-dot stat-dot-high"></span>
+                                    <span class="ribbon-stat-value" id="statHigh">0</span>
+                                    <span class="ribbon-stat-label">High</span>
+                                </button>
+                                <button class="ribbon-stat" onclick="HostManager.filterBySeverity('medium')" title="Medium vulnerabilities">
+                                    <span class="stat-dot stat-dot-medium"></span>
+                                    <span class="ribbon-stat-value" id="statMedium">0</span>
+                                    <span class="ribbon-stat-label">Medium</span>
+                                </button>
+                                <button class="ribbon-stat" onclick="HostManager.filterBySeverity('low')" title="Low vulnerabilities">
+                                    <span class="stat-dot stat-dot-low"></span>
+                                    <span class="ribbon-stat-value" id="statLow">0</span>
+                                    <span class="ribbon-stat-label">Low</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="host-ribbon-divider"></div>
+
+                        <div class="host-ribbon-section">
+                            <span class="host-ribbon-section-label">Color</span>
+                            <div class="color-selector ribbon-colors">
+                                <button class="color-option" data-color="white"  data-filter-color="white"  onclick="HostManager.toggleColorFilter('white')"  title="White"></button>
+                                <button class="color-option" data-color="yellow" data-filter-color="yellow" onclick="HostManager.toggleColorFilter('yellow')" title="Yellow"></button>
+                                <button class="color-option" data-color="green"  data-filter-color="green"  onclick="HostManager.toggleColorFilter('green')"  title="Green"></button>
+                                <button class="color-option" data-color="blue"   data-filter-color="blue"   onclick="HostManager.toggleColorFilter('blue')"   title="Blue"></button>
+                                <button class="color-option" data-color="red"    data-filter-color="red"    onclick="HostManager.toggleColorFilter('red')"    title="Red"></button>
+                                <button class="color-option" data-color="purple" data-filter-color="purple" onclick="HostManager.toggleColorFilter('purple')" title="Purple"></button>
+                                <button class="color-option" data-color="orange" data-filter-color="orange" onclick="HostManager.toggleColorFilter('orange')" title="Orange"></button>
+                                <button class="color-option" data-color="teal"   data-filter-color="teal"   onclick="HostManager.toggleColorFilter('teal')"   title="Teal"></button>
+                                <button class="color-option" data-color="cyan"   data-filter-color="cyan"   onclick="HostManager.toggleColorFilter('cyan')"   title="Cyan"></button>
+                                <button class="color-option" data-color="brown"  data-filter-color="brown"  onclick="HostManager.toggleColorFilter('brown')"  title="Brown"></button>
+                            </div>
+                        </div>
+
+                        <div class="host-ribbon-spacer"></div>
+
+                        <div id="activeFilterName" class="ribbon-active-filter">Active Search: None</div>
+
+                        <button id="clearAllFiltersBtn"
+                                class="btn btn-sm btn-secondary ribbon-clear-all"
+                                onclick="HostManager.clearAllFilters()"
+                                title="Clear all search criteria"
+                                style="display: none;">
+                            <i data-lucide="x"></i>
+                            <span>Clear All</span>
+                        </button>
+                    </div>
+
+                    <!-- Row 2: search inputs, indicators, color -->
+                    <div class="host-ribbon-row host-ribbon-row-secondary">
+                        <div class="host-ribbon-section">
+                            <span class="host-ribbon-section-label">Search</span>
+                            <div class="ribbon-search-inputs">
+                                <div class="ribbon-input-wrap">
+                                    <i data-lucide="search" class="ribbon-input-icon"></i>
+                                    <input type="text"
+                                           id="search-keyword"
+                                           placeholder="Search notes, findings, scan data..."
+                                           class="ribbon-input ribbon-input-search"
+                                           oninput="HostManager.debounceKeywordSearch()">
+                                </div>
+                                <div class="ribbon-input-wrap">
+                                    <i data-lucide="grid" class="ribbon-input-icon"></i>
+                                    <input type="text"
+                                           id="filter-cidr"
+                                           placeholder="IP / CIDR (e.g., 192.168.1.0/24)"
+                                           class="ribbon-input ribbon-input-cidr"
+                                           oninput="HostManager.applyCIDRFilter()"
+                                           onkeypress="if(event.key === 'Enter') HostManager.applyFilters()">
+                                </div>
+                            </div>
+                            <div id="cidr-error" class="filters-error-msg"></div>
+                        </div>
+
+                        <div class="host-ribbon-divider"></div>
+
+                        <div class="host-ribbon-section">
+                            <span class="host-ribbon-section-label">Indicators</span>
+                            <div class="ribbon-indicators">
+                                <label class="ribbon-pill" title="Rooted">
+                                    <input type="checkbox" id="filter-rooted" onchange="HostManager.applyFilters()">
+                                    <i data-lucide="hash"></i>
+                                    <span>Rooted</span>
+                                </label>
+                                <label class="ribbon-pill" title="Shell">
+                                    <input type="checkbox" id="filter-shell" onchange="HostManager.applyFilters()">
+                                    <i data-lucide="terminal"></i>
+                                    <span>Shell</span>
+                                </label>
+                                <label class="ribbon-pill" title="Interested">
+                                    <input type="checkbox" id="filter-interested" onchange="HostManager.applyFilters()">
+                                    <i data-lucide="star"></i>
+                                    <span>Interested</span>
+                                </label>
+                                <label class="ribbon-pill" title="Not Interested">
+                                    <input type="checkbox" id="filter-not-interested" onchange="HostManager.applyFilters()">
+                                    <i data-lucide="x-circle"></i>
+                                    <span>Not Interested</span>
+                                </label>
+                                <label class="ribbon-pill" title="Out of Scope">
+                                    <input type="checkbox" id="filter-out-of-scope" onchange="HostManager.applyFilters()">
+                                    <i data-lucide="ban"></i>
+                                    <span>Out of Scope</span>
+                                </label>
+                                <label class="ribbon-pill" title="Flagged">
+                                    <input type="checkbox" id="filter-flagged" onchange="HostManager.applyFilters()">
+                                    <i data-lucide="flag"></i>
+                                    <span>Flagged</span>
+                                </label>
+                                <label class="ribbon-pill" title="Reviewed">
+                                    <input type="checkbox" id="filter-reviewed" onchange="HostManager.applyFilters()">
+                                    <i data-lucide="check-circle"></i>
+                                    <span>Reviewed</span>
+                                </label>
+                                <label class="ribbon-pill" title="Has Notes">
+                                    <input type="checkbox" id="filter-has-notes" onchange="HostManager.applyFilters()">
+                                    <i data-lucide="file-text"></i>
+                                    <span>Has Notes</span>
+                                </label>
+                                <label class="ribbon-pill" title="Has Findings">
+                                    <input type="checkbox" id="filter-has-findings" onchange="HostManager.applyFilters()">
+                                    <i data-lucide="bug"></i>
+                                    <span>Has Findings</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="host-ribbon-divider"></div>
+
+                        <div class="host-ribbon-section">
+                            <span class="host-ribbon-section-label">Saved Searches</span>
+                            <div class="ribbon-saved-row">
+                                <select id="savedFiltersDropdown"
+                                        onchange="HostManager.applySavedFilter(this.value)"
+                                        class="ribbon-input ribbon-saved-select">
+                                    <option value="">Select a saved search...</option>
+                                </select>
+                                <button id="saveFilterBtn"
+                                        onclick="HostManager.showSaveFilterModal()"
+                                        class="btn btn-sm btn-secondary ribbon-icon-btn"
+                                        title="Save current">
+                                    <i data-lucide="save"></i>
+                                </button>
+                                <button id="clearSavedFilterBtn"
+                                        onclick="HostManager.clearActiveSavedFilter()"
+                                        class="btn btn-sm btn-secondary ribbon-icon-btn"
+                                        title="Clear saved search">
+                                    <i data-lucide="x"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Main Content - Host-Centric View -->
+        <main class="main-content host-view-container">
+            <!-- Left Panel: Host List -->
+            <div class="host-list-panel">
+                <div class="panel-header">
+                    <h3>Hosts</h3>
+                    <button id="addHostBtn" class="btn btn-sm btn-primary" title="Add Host">+</button>
+                </div>
+
+                <!-- Host list -->
+                <div id="hostsList" class="hosts-list">
+                    <div class="loading">Loading hosts...</div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Host Details -->
+            <div class="evidence-details-panel">
+                <!-- Header -->
+                <div class="section-toolbar">
+                    <div class="toolbar-left" id="hostHeader">
+                        <h2>Host Details</h2>
+                    </div>
+                </div>
+
+                <!-- Bulk Action Toolbar -->
+                <div id="bulkActionToolbar" class="bulk-action-toolbar hidden">
+                    <div class="bulk-toolbar-left">
+                        <span class="bulk-selected-text">
+                            <strong id="bulkSelectedCount">0</strong> items selected
+                        </span>
+                    </div>
+                    <div class="bulk-toolbar-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="HostManager.selectAllEvidence()" title="Select all items">
+                            <i data-lucide="check-square" class="w-4 h-4"></i>
+                            Select All
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="HostManager.clearEvidenceSelection()" title="Clear selection">
+                            <i data-lucide="x-square" class="w-4 h-4"></i>
+                            Clear
+                        </button>
+                        <div class="bulk-actions-divider"></div>
+                        <button class="btn btn-sm btn-primary" onclick="HostManager.bulkTagEvidence()" title="Add tags to selected items">
+                            <i data-lucide="tag" class="w-4 h-4"></i>
+                            Tag
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="HostManager.bulkMoveToHost()" title="Move to host">
+                            <i data-lucide="move" class="w-4 h-4"></i>
+                            Move
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="HostManager.bulkExportEvidence()" title="Export selected items">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            Export
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="HostManager.bulkDeleteEvidence()" title="Delete selected items">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Host Sections Container (only visible when a host is selected, not for General) -->
+                <div id="hostSectionsContainer" class="host-sections-container">
+                    <!-- Persistent Host Indicators Bar (always visible when a host is selected) -->
+                    <div class="host-indicators-bar" id="hostIndicatorsBar">
+                        <div class="host-indicators-bar-section">
+                            <span class="host-indicators-bar-label">Indicators</span>
+                            <div class="host-indicators-bar-pills">
+                                <label class="ribbon-pill" title="Rooted">
+                                    <input type="checkbox" id="indicator-rooted" onchange="HostManager.updateIndicator('rooted', this.checked)">
+                                    <i data-lucide="hash"></i>
+                                    <span>Rooted</span>
+                                </label>
+                                <label class="ribbon-pill" title="Shell">
+                                    <input type="checkbox" id="indicator-shell" onchange="HostManager.updateIndicator('shell', this.checked)">
+                                    <i data-lucide="terminal"></i>
+                                    <span>Shell</span>
+                                </label>
+                                <label class="ribbon-pill" title="Interested">
+                                    <input type="checkbox" id="indicator-interested" onchange="HostManager.updateIndicator('interested', this.checked)">
+                                    <i data-lucide="star"></i>
+                                    <span>Interested</span>
+                                </label>
+                                <label class="ribbon-pill" title="Not Interested">
+                                    <input type="checkbox" id="indicator-not-interested" onchange="HostManager.updateIndicator('not_interested', this.checked)">
+                                    <i data-lucide="x-circle"></i>
+                                    <span>Not Interested</span>
+                                </label>
+                                <label class="ribbon-pill" title="Out of Scope">
+                                    <input type="checkbox" id="indicator-out-of-scope" onchange="HostManager.updateIndicator('out_of_scope', this.checked)">
+                                    <i data-lucide="ban"></i>
+                                    <span>Out of Scope</span>
+                                </label>
+                                <label class="ribbon-pill" title="Flagged">
+                                    <input type="checkbox" id="indicator-flagged" onchange="HostManager.updateIndicator('flagged', this.checked)">
+                                    <i data-lucide="flag"></i>
+                                    <span>Flagged</span>
+                                </label>
+                                <label class="ribbon-pill" title="Reviewed">
+                                    <input type="checkbox" id="indicator-reviewed" onchange="HostManager.updateIndicator('reviewed', this.checked)">
+                                    <i data-lucide="check-circle"></i>
+                                    <span>Reviewed</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="host-ribbon-divider"></div>
+                        <div class="host-indicators-bar-section">
+                            <span class="host-indicators-bar-label">Color</span>
+                            <div class="color-selector host-indicators-bar-colors">
+                                <button class="color-option" data-color="white"  onclick="HostManager.updateColorCategory('white')"  title="White"></button>
+                                <button class="color-option" data-color="yellow" onclick="HostManager.updateColorCategory('yellow')" title="Yellow"></button>
+                                <button class="color-option" data-color="green"  onclick="HostManager.updateColorCategory('green')"  title="Green"></button>
+                                <button class="color-option" data-color="blue"   onclick="HostManager.updateColorCategory('blue')"   title="Blue"></button>
+                                <button class="color-option" data-color="red"    onclick="HostManager.updateColorCategory('red')"    title="Red"></button>
+                                <button class="color-option" data-color="purple" onclick="HostManager.updateColorCategory('purple')" title="Purple"></button>
+                                <button class="color-option" data-color="orange" onclick="HostManager.updateColorCategory('orange')" title="Orange"></button>
+                                <button class="color-option" data-color="teal"   onclick="HostManager.updateColorCategory('teal')"   title="Teal"></button>
+                                <button class="color-option" data-color="cyan"   onclick="HostManager.updateColorCategory('cyan')"   title="Cyan"></button>
+                                <button class="color-option" data-color="brown"  onclick="HostManager.updateColorCategory('brown')"  title="Brown"></button>
+                                <button class="color-option clear" data-color="null" onclick="HostManager.updateColorCategory(null)" title="Clear">✕</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-navigation tabs (Indicators moved into the persistent bar above) -->
+                    <div class="host-sub-nav">
+                        <button class="host-sub-tab active" data-subtab="notes" onclick="HostManager.switchHostTab('notes')">
+                            <span class="sub-tab-icon">📝</span>
+                            <span class="sub-tab-label">Notes</span>
+                        </button>
+                        <button class="host-sub-tab" data-subtab="ports" onclick="HostManager.switchHostTab('ports')">
+                            <span class="sub-tab-icon">🔌</span>
+                            <span class="sub-tab-label">Ports</span>
+                        </button>
+                        <button class="host-sub-tab" data-subtab="findings" onclick="HostManager.switchHostTab('findings')">
+                            <span class="sub-tab-icon">⚠️</span>
+                            <span class="sub-tab-label">Findings</span>
+                        </button>
+                        <button class="host-sub-tab" data-subtab="credentials" onclick="HostManager.switchHostTab('credentials')">
+                            <span class="sub-tab-icon">🔑</span>
+                            <span class="sub-tab-label">Credentials</span>
+                        </button>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div id="notesSection" class="host-section">
+                        <div class="section-header">
+                            <h4>Notes</h4>
+                        </div>
+                        <div class="notes-split">
+                            <div class="notes-tree-pane">
+                                <div id="hostNotesToolbar" class="notes-tree-toolbar">
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="add-sibling" title="Add sibling note (under selected)"><i data-lucide="arrow-down"></i></button>
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="add-child"   title="Add child note (under selected)"><i data-lucide="arrow-right"></i></button>
+                                    <span class="notes-tree-toolbar-sep"></span>
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="move-up"   title="Move up among siblings"><i data-lucide="chevrons-up"></i></button>
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="move-down" title="Move down among siblings"><i data-lucide="chevrons-down"></i></button>
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="indent"    title="Indent (Tab)"><i data-lucide="indent"></i></button>
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="outdent"   title="Outdent (Shift+Tab)"><i data-lucide="outdent"></i></button>
+                                </div>
+                                <div id="notesList" class="notes-tree-list notes-tree">
+                                    <div class="empty-state"><p>No notes yet</p></div>
+                                </div>
+                            </div>
+                            <div id="hostNotesEditorPane" class="notes-editor-pane" data-empty="true">
+                                <div class="notes-editor-header">
+                                    <input class="notes-editor-title" type="text" placeholder="Title" disabled>
+                                    <span class="notes-editor-actions">
+                                        <span class="notes-editor-dirty" data-dirty-indicator>•</span>
+                                        <button class="btn btn-primary btn-sm" data-action="save" disabled>Save</button>
+                                    </span>
+                                </div>
+                                <textarea class="notes-editor-textarea"></textarea>
+                                <div class="notes-editor-empty">
+                                    Select a note from the tree, or use ↓ / → in the toolbar to create one.
+                                </div>
+                            </div>
+                        </div>
+                </div>
+
+                    <!-- Ports Section -->
+                    <div id="portsSection" class="host-section">
+                    <div class="section-header">
+                        <h4>Open Ports</h4>
+                        <button class="btn btn-sm btn-primary" onclick="HostManager.showAddPort()">+ Add Port</button>
+                    </div>
+                    <table class="data-table ports-table">
+                        <thead>
+                            <tr>
+                                <th>Port</th>
+                                <th>Protocol</th>
+                                <th>Service</th>
+                                <th>Version</th>
+                                <th>State</th>
+                                <th>Source</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portsTableBody">
+                            <tr><td colspan="7" class="empty-cell">No ports discovered</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                    <!-- Findings Section -->
+                    <div id="vulnerabilitiesSection" class="host-section">
+                    <div class="section-header">
+                        <h4>Findings</h4>
+                        <div class="section-header-actions">
+                            <button class="btn btn-sm btn-primary" onclick="HostManager.showAddHostFinding()">+ Add Finding</button>
+                            <div class="vuln-filter-buttons">
+                                <button class="btn btn-sm vuln-filter active" data-severity="all" onclick="HostManager.filterVulnerabilities('all')">All</button>
+                                <button class="btn btn-sm vuln-filter" data-severity="critical" onclick="HostManager.filterVulnerabilities('critical')">Critical</button>
+                                <button class="btn btn-sm vuln-filter" data-severity="high" onclick="HostManager.filterVulnerabilities('high')">High</button>
+                                <button class="btn btn-sm vuln-filter" data-severity="medium" onclick="HostManager.filterVulnerabilities('medium')">Medium</button>
+                                <button class="btn btn-sm vuln-filter" data-severity="low" onclick="HostManager.filterVulnerabilities('low')">Low</button>
+                                <button class="btn btn-sm vuln-filter" data-severity="info" onclick="HostManager.filterVulnerabilities('info')">Info</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="vulnerabilitiesList" class="vulnerabilities-list">
+                        <div class="empty-state"><p>No findings found</p></div>
+                    </div>
+                </div>
+
+                    <!-- Credentials Section -->
+                    <div id="credentialsSection" class="host-section">
+                    <div class="section-header">
+                        <h4>Credentials</h4>
+                        <button class="btn btn-sm btn-primary" onclick="HostManager.showAddCredential()">+ Add Credential</button>
+                    </div>
+                    <table class="data-table credentials-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Password</th>
+                                <th>Type</th>
+                                <th>Service</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="credentialsTableBody">
+                            <tr><td colspan="6" class="empty-cell">No credentials found</td></tr>
+                        </tbody>
+                    </table>
+                    </div>
+
+                </div>
+                <!-- End Host Sections Container -->
+
+                <!-- General Section Container (only visible when General is selected) -->
+                <div id="generalSectionContainer" class="general-section-container" style="display: none;">
+                    <!-- Sub-navigation tabs -->
+                    <div class="general-sub-nav">
+                        <button class="general-sub-tab active" data-subtab="notes" onclick="HostManager.switchGeneralTab('notes')">
+                            <span class="sub-tab-icon">📝</span>
+                            <span class="sub-tab-label">Notes</span>
+                        </button>
+                        <button class="general-sub-tab" data-subtab="credentials" onclick="HostManager.switchGeneralTab('credentials')">
+                            <span class="sub-tab-icon">🔑</span>
+                            <span class="sub-tab-label">Credentials</span>
+                        </button>
+                        <button class="general-sub-tab" data-subtab="terminal" onclick="HostManager.switchGeneralTab('terminal')">
+                            <span class="sub-tab-icon">💻</span>
+                            <span class="sub-tab-label">Terminal Dumps</span>
+                        </button>
+                        <button class="general-sub-tab" data-subtab="findings" onclick="HostManager.switchGeneralTab('findings')">
+                            <span class="sub-tab-icon">🎯</span>
+                            <span class="sub-tab-label">Findings</span>
+                        </button>
+                    </div>
+
+                    <!-- Notes Sub-page -->
+                    <div id="generalSubNotes" class="general-sub-page active">
+                        <div class="sub-page-header">
+                            <h4>Notes</h4>
+                        </div>
+                        <div class="notes-split">
+                            <div class="notes-tree-pane">
+                                <div id="engagementNotesToolbar" class="notes-tree-toolbar">
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="add-sibling" title="Add sibling note (under selected)"><i data-lucide="arrow-down"></i></button>
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="add-child"   title="Add child note (under selected)"><i data-lucide="arrow-right"></i></button>
+                                    <span class="notes-tree-toolbar-sep"></span>
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="move-up"   title="Move up among siblings"><i data-lucide="chevrons-up"></i></button>
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="move-down" title="Move down among siblings"><i data-lucide="chevrons-down"></i></button>
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="indent"    title="Indent (Tab)"><i data-lucide="indent"></i></button>
+                                    <button class="btn btn-sm btn-icon notes-toolbar-btn" data-action="outdent"   title="Outdent (Shift+Tab)"><i data-lucide="outdent"></i></button>
+                                </div>
+                                <div id="engagementNotesList" class="notes-tree-list notes-tree">
+                                    <div class="empty-state"><p>No notes yet</p></div>
+                                </div>
+                            </div>
+                            <div id="engagementNotesEditorPane" class="notes-editor-pane" data-empty="true">
+                                <div class="notes-editor-header">
+                                    <input class="notes-editor-title" type="text" placeholder="Title" disabled>
+                                    <span class="notes-editor-actions">
+                                        <span class="notes-editor-dirty" data-dirty-indicator>•</span>
+                                        <button class="btn btn-primary btn-sm" data-action="save" disabled>Save</button>
+                                    </span>
+                                </div>
+                                <textarea class="notes-editor-textarea"></textarea>
+                                <div class="notes-editor-empty">
+                                    Select a note from the tree, or use ↓ / → in the toolbar to create one.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Credentials Sub-page -->
+                    <div id="generalSubCredentials" class="general-sub-page">
+                        <div class="sub-page-header">
+                            <h4>Credentials</h4>
+                            <button class="btn btn-sm btn-primary" onclick="HostManager.showAddEngagementCredential()">+ Add Credential</button>
+                        </div>
+                        <table class="data-table credentials-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Password/Hash</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="engagementCredentialsTableBody">
+                                <tr><td colspan="5" class="empty-cell">No credentials found</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Terminal Dumps Sub-page -->
+                    <div id="generalSubTerminal" class="general-sub-page">
+                        <div class="sub-page-header">
+                            <h4>Terminal Dumps</h4>
+                            <button class="btn btn-sm btn-primary" onclick="HostManager.showAddTerminalDump()">+ Add Dump</button>
+                        </div>
+                        <div id="terminalDumpsList" class="terminal-dumps-list">
+                            <div class="empty-state"><p>No terminal dumps yet</p></div>
+                        </div>
+                    </div>
+
+                    <!-- Findings Sub-page -->
+                    <div id="generalSubFindings" class="general-sub-page">
+                        <div class="sub-page-header">
+                            <h4>Findings</h4>
+                            <button class="btn btn-sm btn-primary" onclick="HostManager.showAddEngagementFinding()">+ Add Finding</button>
+                        </div>
+                        <div id="engagementFindingsList" class="findings-list">
+                            <div class="empty-state"><p>No findings yet</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        </div>
+    </div>
+
+    <!-- Section: Port Grid -->
+    <div id="section-portgrid" class="app-section">
+        <div class="port-grid-page">
+            <div class="port-grid-header">
+                <h2>Port Grid</h2>
+                <p>Visual overview of open and filtered ports across all hosts</p>
+            </div>
+            <div class="port-grid-legend page-legend">
+                <span class="legend-item"><span class="port-dot port-open"></span> Open</span>
+                <span class="legend-item"><span class="port-dot port-filtered"></span> Filtered</span>
+            </div>
+            <div id="portGridPageContainer" class="port-grid-page-container">
+                <div class="empty-state"><p>Select an engagement to view the port grid</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Tools -->
+    <div id="section-tools" class="app-section">
+        <div class="section-content-full">
+            <div class="section-placeholder">
+                <div class="placeholder-icon">🛠️</div>
+                <h2>Loading Tools...</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Reporting -->
+    <div id="section-reporting" class="app-section">
+        <div class="section-content-full">
+            <div class="section-placeholder">
+                <div class="placeholder-icon">📄</div>
+                <h2>Loading Reporting...</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Test Plans -->
+    <div id="section-testplans" class="app-section">
+        <div class="section-content-full">
+            <div class="section-placeholder">
+                <div class="placeholder-icon">🎯</div>
+                <h2>Loading Test Plans...</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Admin -->
+    <div id="section-admin" class="app-section">
+        <div class="admin-page">
+            <aside class="admin-sidebar">
+                <div class="admin-sidebar-header">
+                    <h3>Admin</h3>
+                </div>
+                <nav class="admin-nav" id="adminNav">
+                    <!-- Rendered by AdminPanel.init() based on user role -->
+                </nav>
+            </aside>
+            <main class="admin-content" id="adminContent">
+                <div class="section-placeholder">
+                    <div class="placeholder-icon">⚙️</div>
+                    <h2>Loading Admin...</h2>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Section: Commands -->
+    <div id="section-commands" class="app-section">
+        <div class="commands-page">
+            <!-- Categories Sidebar -->
+            <aside class="commands-sidebar">
+                <div class="commands-sidebar-header">
+                    <h3>Categories</h3>
+                </div>
+                <div id="commandCategories" class="category-list">
+                    <div class="loading">Loading...</div>
+                </div>
+                <div class="commands-sidebar-footer">
+                    <button class="btn btn-primary btn-block" onclick="CommandManager.openAddModal()">
+                        + Add Command
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Commands Main Content -->
+            <main class="commands-main">
+                <div class="commands-header">
+                    <div class="commands-search">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" id="commandSearch" placeholder="Search commands..." autocomplete="off">
+                    </div>
+                    <div class="commands-header-actions">
+                        <button class="btn btn-icon" id="favoritesFilterBtn" onclick="CommandManager.toggleFavoritesFilter()" title="Show favorites only">
+                            <span id="favoritesFilterIcon">☆</span>
+                        </button>
+                        <span id="commandsCount" class="commands-count">0 commands</span>
+                    </div>
+                </div>
+                <div id="commandsList" class="commands-grid">
+                    <div class="loading">Loading commands...</div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Hidden file input for engagement restore (triggered from Tools → Data) -->
+    <input type="file" id="restoreFileInput" accept=".json" style="display: none;">
+
+    <!-- Modals -->
+    <!-- New/Edit Engagement Modal -->
+    <div id="engagementModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="engagementModalTitle">New Engagement</h3>
+                <button class="modal-close" onclick="closeModal('engagementModal')">&times;</button>
+            </div>
+            <form id="engagementForm">
+                <input type="hidden" id="engEditId" value="">
+                <div class="form-group">
+                    <label for="engName">Name *</label>
+                    <input type="text" id="engName" required placeholder="e.g., ACME Corp Pentest">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="engClientSelect">Client</label>
+                        <select id="engClientSelect" onchange="onEngagementClientChange(this)">
+                            <option value="">— Select client —</option>
+                            <option value="__new__">+ New Client…</option>
+                        </select>
+                        <input type="hidden" id="engClientId">
+                        <input type="hidden" id="engClient">
+                    </div>
+                    <div class="form-group">
+                        <label for="engStatus">Status</label>
+                        <select id="engStatus">
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="engNewClientCard" class="inline-form-card" style="display: none; margin-bottom: var(--spacing-md);">
+                    <h4>New Client</h4>
+                    <div class="form-row" style="display:flex;gap:var(--spacing-md);">
+                        <div class="form-group" style="flex:2;">
+                            <label for="engNewClientName">Name *</label>
+                            <input type="text" id="engNewClientName" placeholder="e.g., ACME Corporation">
+                        </div>
+                        <div class="form-group" style="flex:2;">
+                            <label for="engNewClientEmail">Admin contact email</label>
+                            <input type="email" id="engNewClientEmail" placeholder="optional">
+                        </div>
+                    </div>
+                    <div class="form-actions" style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="cancelEngagementNewClient()">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="createEngagementNewClient()">Create &amp; Select</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="engTeam">Team</label>
+                    <select id="engTeam">
+                        <option value="">No Team</option>
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="engStartDate">Start Date</label>
+                        <input type="date" id="engStartDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="engEndDate">End Date</label>
+                        <input type="date" id="engEndDate">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="engScope">Scope</label>
+                    <textarea id="engScope" rows="3" placeholder="e.g., External network penetration test"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="engContactName">Contact Name</label>
+                        <input type="text" id="engContactName" placeholder="e.g., John Smith">
+                    </div>
+                    <div class="form-group">
+                        <label for="engContactEmail">Contact Email</label>
+                        <input type="email" id="engContactEmail" placeholder="e.g., john@client.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="engNotes">Notes</label>
+                    <textarea id="engNotes" rows="3" placeholder="Additional notes..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('engagementModal')">Cancel</button>
+                    <button type="submit" id="engagementSubmitBtn" class="btn btn-primary">Create Engagement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- New Evidence Modal -->
+    <div id="evidenceModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>New Evidence</h3>
+                <button class="modal-close" onclick="closeModal('evidenceModal')">&times;</button>
+            </div>
+            <form id="evidenceForm">
+                <div class="form-group">
+                    <label for="evType">Type *</label>
+                    <select id="evType" required>
+                        <option value="note">Note</option>
+                        <option value="screenshot">Screenshot</option>
+                        <option value="command_output">Command Output</option>
+                        <option value="tool_output">Tool Output</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="evTitle">Title *</label>
+                    <input type="text" id="evTitle" required placeholder="e.g., SQL Injection in Login">
+                </div>
+                <div class="form-group">
+                    <label for="evContent">Content *</label>
+                    <textarea id="evContent" rows="6" required placeholder="Describe the finding..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="evTags">Tags</label>
+                    <input type="text" id="evTags" placeholder="e.g., critical,sql-injection,auth (comma-separated)">
+                    <small>Separate tags with commas</small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="evSeverity">Severity</label>
+                        <select id="evSeverity">
+                            <option value="">None</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="evFile">Attachment</label>
+                        <input type="file" id="evFile">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('evidenceModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Evidence</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Export Engagement</h3>
+                <button class="modal-close" onclick="closeModal('exportModal')">&times;</button>
+            </div>
+            <div class="export-options">
+                <button class="export-option" onclick="exportData('json')">
+                    <span class="export-icon">📄</span>
+                    <span class="export-label">JSON</span>
+                    <small>Complete data dump</small>
+                </button>
+                <button class="export-option" onclick="exportData('markdown')">
+                    <span class="export-icon">📝</span>
+                    <span class="export-label">Markdown</span>
+                    <small>Formatted report</small>
+                </button>
+                <button class="export-option" onclick="exportData('template', 'default')">
+                    <span class="export-icon">📋</span>
+                    <span class="export-label">Template: Default</span>
+                    <small>Comprehensive report</small>
+                </button>
+                <button class="export-option" onclick="exportData('template', 'executive')">
+                    <span class="export-icon">📊</span>
+                    <span class="export-label">Template: Executive</span>
+                    <small>Summary for leadership</small>
+                </button>
+                <button class="export-option" onclick="exportData('template', 'findings')">
+                    <span class="export-icon">🔍</span>
+                    <span class="export-label">Template: Findings</span>
+                    <small>Technical details</small>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Tool Modal -->
+    <div id="importToolModal" class="modal" style="display: none;">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>📥 Import Tool Output</h3>
+                <button class="modal-close" onclick="closeModal('importToolModal')">&times;</button>
+            </div>
+            <form id="importToolForm">
+                <!-- Q3: Tool Type Selection -->
+                <div class="form-group">
+                    <label for="toolType">Tool Type</label>
+                    <select id="toolType" class="form-control">
+                        <option value="auto">Auto-Detect</option>
+                        <optgroup label="Network Scanners">
+                            <option value="nmap">Nmap</option>
+                        </optgroup>
+                        <optgroup label="Vulnerability Scanners">
+                            <option value="nessus">Nessus</option>
+                            <option value="qualys">Qualys</option>
+                            <option value="insightvm">InsightVM/Nexpose</option>
+                        </optgroup>
+                        <optgroup label="Web Application">
+                            <option value="burp">Burp Suite</option>
+                            <option value="zap">OWASP ZAP</option>
+                            <option value="acunetix">Acunetix</option>
+                            <option value="nuclei">Nuclei</option>
+                        </optgroup>
+                        <optgroup label="Exploitation & Post-Exploitation">
+                            <option value="metasploit">Metasploit</option>
+                            <option value="crackmapexec">CrackMapExec</option>
+                        </optgroup>
+                        <optgroup label="Active Directory">
+                            <option value="bloodhound">BloodHound</option>
+                        </optgroup>
+                    </select>
+                    <small class="text-muted">Leave as "Auto-Detect" to automatically identify the tool</small>
+                </div>
+
+                <div class="import-dropzone" id="importDropzone">
+                    <input type="file" id="importFile" accept=".xml,.nessus,.json,.jsonl,.log,.txt" style="display: none;">
+                    <div class="dropzone-content">
+                        <span class="dropzone-icon">📂</span>
+                        <p>Drag & drop your scan file here</p>
+                        <p class="text-muted">or click to browse</p>
+                        <div class="supported-formats">
+                            <span class="format-badge">XML</span>
+                            <span class="format-badge">JSON</span>
+                            <span class="format-badge">JSONL</span>
+                            <span class="format-badge">Nessus</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File selected info -->
+                <div id="importFileInfo" class="import-file-info" style="display: none;">
+                    <div class="file-info-header">
+                        <span class="file-icon">📄</span>
+                        <div class="file-details">
+                            <span id="importFileName" class="file-name"></span>
+                            <span id="importFileSize" class="file-size"></span>
+                        </div>
+                        <button type="button" class="btn btn-icon btn-danger" onclick="clearImportFile()" title="Remove">×</button>
+                    </div>
+                    <div id="importDetectedTool" class="detected-tool" style="display: none;">
+                        <span class="detected-icon">✓</span>
+                        <span>Detected: <strong id="detectedToolName"></strong></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="importTitle">Title (optional)</label>
+                    <input type="text" id="importTitle" placeholder="Auto-generated from scan metadata if left blank">
+                </div>
+
+                <div class="form-group">
+                    <label for="importTags">Additional Tags</label>
+                    <input type="text" id="importTags" placeholder="e.g., internal, phase1">
+                    <small>Tags like 'nmap', 'port-scan' are added automatically</small>
+                </div>
+
+                <!-- Q3: Import Options -->
+                <div class="form-group">
+                    <label>Import Options</label>
+                    <div class="checkbox-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="createHosts" checked>
+                            <span>Automatically create hosts from scan results</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="createFindings" checked>
+                            <span>Import findings as evidence</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="extractCredentials" checked>
+                            <span>Extract and save credentials</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Import progress/results -->
+                <div id="importResults" class="import-results" style="display: none;">
+                    <div class="import-summary">
+                        <h4>Import Summary</h4>
+                        <div class="summary-stats">
+                            <div class="stat"><span id="importHostCount">0</span> Hosts</div>
+                            <div class="stat"><span id="importPortCount">0</span> Ports</div>
+                            <div class="stat"><span id="importVulnCount">0</span> Findings</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('importToolModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="importSubmitBtn" disabled>Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Host Modal -->
+    <div id="addHostModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Host</h3>
+                <button class="modal-close" onclick="closeModal('addHostModal')">&times;</button>
+            </div>
+            <form id="addHostForm" onsubmit="HostManager.handleAddHost(event)">
+                <div class="form-group">
+                    <label for="newHostIp">IP Address / Hostname *</label>
+                    <input type="text" id="newHostIp" required placeholder="e.g., 192.168.1.100 or server.local">
+                </div>
+                <div class="form-group">
+                    <label for="newHostHostname">Hostname (optional)</label>
+                    <input type="text" id="newHostHostname" placeholder="e.g., dc01.corp.local">
+                </div>
+                <div class="form-group">
+                    <label for="newHostOs">Operating System (optional)</label>
+                    <input type="text" id="newHostOs" placeholder="e.g., Windows Server 2019">
+                </div>
+                <div class="form-group">
+                    <label for="newHostNotes">Notes (optional)</label>
+                    <textarea id="newHostNotes" rows="2" placeholder="Additional notes..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addHostModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Host</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Host Modal -->
+    <div id="editHostModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Host</h3>
+                <button class="modal-close" onclick="closeModal('editHostModal')">&times;</button>
+            </div>
+            <form id="editHostForm" onsubmit="HostManager.handleEditHost(event)">
+                <input type="hidden" id="editHostId">
+                <div class="form-group">
+                    <label for="editHostIp">IP Address</label>
+                    <input type="text" id="editHostIp" readonly disabled>
+                    <small>IP cannot be changed</small>
+                </div>
+                <div class="form-group">
+                    <label for="editHostHostname">Hostname</label>
+                    <input type="text" id="editHostHostname" placeholder="e.g., dc01.corp.local">
+                </div>
+                <div class="form-group">
+                    <label for="editHostOs">Operating System</label>
+                    <input type="text" id="editHostOs" placeholder="e.g., Windows Server 2019">
+                </div>
+                <div class="form-group">
+                    <label for="editHostNotes">Notes</label>
+                    <textarea id="editHostNotes" rows="2" placeholder="Additional notes..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editHostModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Save Search Modal -->
+    <div id="saveFilterModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Save Current Search</h3>
+                <button class="modal-close" onclick="closeModal('saveFilterModal')">&times;</button>
+            </div>
+            <form id="saveFilterForm" onsubmit="HostManager.handleSaveFilter(event)">
+                <div class="form-group">
+                    <label for="filterName">Search Name *</label>
+                    <input type="text" id="filterName" required placeholder="e.g., Critical Web Vulnerabilities">
+                </div>
+                <div class="form-group">
+                    <label for="filterDescription">Description (optional)</label>
+                    <textarea id="filterDescription" rows="2" placeholder="Brief description of what this search shows..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('saveFilterModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Evidence Modal -->
+    <!-- Edit Evidence Slide-Over -->
+    <div id="editEvidenceBackdrop" class="slide-over-backdrop" onclick="SlideOver.close('editEvidence')"></div>
+    <div id="editEvidenceDrawer" class="slide-over" role="dialog" aria-modal="true" aria-labelledby="editEvidenceDrawerTitle">
+        <div class="slide-over-header">
+            <h2 class="slide-over-title" id="editEvidenceDrawerTitle">Edit Evidence</h2>
+            <button class="slide-over-close" onclick="SlideOver.close('editEvidence')" aria-label="Close">&times;</button>
+        </div>
+        <div class="slide-over-body">
+            <form id="editEvidenceForm" onsubmit="HostManager.handleEditEvidence(event)">
+                <input type="hidden" id="editEvId">
+                <div class="form-group">
+                    <label for="editEvTitle">Title *</label>
+                    <input type="text" id="editEvTitle" required placeholder="Evidence title">
+                </div>
+                <div class="form-group">
+                    <label for="editEvContent">Content</label>
+                    <textarea id="editEvContent" rows="10" placeholder="Evidence content..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editEvTags">Tags</label>
+                    <input type="text" id="editEvTags" placeholder="e.g., critical,sql-injection (comma-separated)">
+                </div>
+            </form>
+        </div>
+        <div class="slide-over-footer">
+            <button type="button" class="btn btn-secondary" onclick="SlideOver.close('editEvidence')">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('editEvidenceForm').requestSubmit()">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- Add Note Modal -->
+    <div id="addNoteModal" class="modal" style="display: none;">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Add Note</h3>
+                <button class="modal-close" onclick="closeModal('addNoteModal')">&times;</button>
+            </div>
+            <form id="addNoteForm" onsubmit="HostManager.handleAddNote(event)">
+                <div class="note-editor">
+                    <div class="editor-toolbar">
+                        <label class="btn btn-sm btn-secondary">
+                            <input type="file" id="noteImageInput" accept="image/*" style="display:none" onchange="HostManager.handleNoteImage('noteImageInput', 'noteContent')">
+                            📁 Upload Image
+                        </label>
+                        <span class="toolbar-hint">📋 Paste screenshots directly (Ctrl+V) | Markdown supported</span>
+                        <button type="button" class="btn btn-sm btn-secondary" title="Markdown Reference" onclick="document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); switchSection('tools'); setTimeout(() => ToolsManager.switchTool('markdown'), 100);">📝 Markdown Reference</button>
+                    </div>
+                    <div class="editor-split">
+                        <div class="editor-pane">
+                            <label for="noteContent">Content (Markdown)</label>
+                            <textarea id="noteContent" rows="12" placeholder="# My Note&#10;&#10;Add markdown content here...&#10;&#10;**Bold**, *italic*, `code`" oninput="HostManager.updateNotePreview('noteContent', 'notePreview')"></textarea>
+                        </div>
+                        <div class="preview-pane">
+                            <label>Preview</label>
+                            <div id="notePreview" class="markdown-preview"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addNoteModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Port Modal -->
+    <div id="addPortModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Port</h3>
+                <button class="modal-close" onclick="closeModal('addPortModal')">&times;</button>
+            </div>
+            <form id="addPortForm" onsubmit="HostManager.handleAddPort(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newPortNumber">Port Number *</label>
+                        <input type="number" id="newPortNumber" required min="1" max="65535" placeholder="e.g., 443">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPortProtocol">Protocol</label>
+                        <select id="newPortProtocol">
+                            <option value="tcp">TCP</option>
+                            <option value="udp">UDP</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newPortState">State</label>
+                        <select id="newPortState">
+                            <option value="open">Open</option>
+                            <option value="filtered">Filtered</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPortService">Service</label>
+                        <input type="text" id="newPortService" placeholder="e.g., HTTPS, SSH">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newPortVersion">Version</label>
+                    <input type="text" id="newPortVersion" placeholder="e.g., Apache 2.4.41">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addPortModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Port</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Port Modal -->
+    <div id="editPortModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Port</h3>
+                <button class="modal-close" onclick="closeModal('editPortModal')">&times;</button>
+            </div>
+            <form id="editPortForm" onsubmit="HostManager.handleEditPort(event)">
+                <input type="hidden" id="editPortId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editPortNumber">Port Number</label>
+                        <input type="number" id="editPortNumber" readonly disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPortProtocol">Protocol</label>
+                        <input type="text" id="editPortProtocol" readonly disabled>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editPortState">State</label>
+                        <select id="editPortState">
+                            <option value="open">Open</option>
+                            <option value="filtered">Filtered</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPortService">Service</label>
+                        <input type="text" id="editPortService" placeholder="e.g., HTTPS, SSH">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editPortVersion">Version</label>
+                    <input type="text" id="editPortVersion" placeholder="e.g., Apache 2.4.41">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editPortModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Credential Modal -->
+    <div id="addCredentialModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Credential</h3>
+                <button class="modal-close" onclick="closeModal('addCredentialModal')">&times;</button>
+            </div>
+            <form id="addCredentialForm" onsubmit="HostManager.handleAddCredential(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newCredUsername">Username</label>
+                        <input type="text" id="newCredUsername" placeholder="e.g., admin">
+                    </div>
+                    <div class="form-group">
+                        <label for="newCredService">Service</label>
+                        <input type="text" id="newCredService" placeholder="e.g., SSH, RDP, Web">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newCredPassword">Password / Hash</label>
+                    <input type="text" id="newCredPassword" placeholder="Password or hash value">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newCredPasswordType">Type</label>
+                        <select id="newCredPasswordType" onchange="HostManager.toggleHashType('newCredPasswordType', 'newCredHashTypeGroup')">
+                            <option value="cleartext">Cleartext</option>
+                            <option value="hash">Hash</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="newCredHashTypeGroup" style="display: none;">
+                        <label for="newCredHashType">Hash Type</label>
+                        <input type="text" id="newCredHashType" placeholder="e.g., NTLM, SHA256, MD5">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newCredNotes">Notes</label>
+                    <textarea id="newCredNotes" rows="2" placeholder="How was this credential discovered?"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addCredentialModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Credential</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Credential Modal -->
+    <div id="editCredentialModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Credential</h3>
+                <button class="modal-close" onclick="closeModal('editCredentialModal')">&times;</button>
+            </div>
+            <form id="editCredentialForm" onsubmit="HostManager.handleEditCredential(event)">
+                <input type="hidden" id="editCredId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editCredUsername">Username</label>
+                        <input type="text" id="editCredUsername" placeholder="e.g., admin">
+                    </div>
+                    <div class="form-group">
+                        <label for="editCredService">Service</label>
+                        <input type="text" id="editCredService" placeholder="e.g., SSH, RDP, Web">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editCredPassword">Password / Hash</label>
+                    <input type="text" id="editCredPassword" placeholder="Password or hash value">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editCredPasswordType">Type</label>
+                        <select id="editCredPasswordType" onchange="HostManager.toggleHashType('editCredPasswordType', 'editCredHashTypeGroup')">
+                            <option value="cleartext">Cleartext</option>
+                            <option value="hash">Hash</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="editCredHashTypeGroup" style="display: none;">
+                        <label for="editCredHashType">Hash Type</label>
+                        <input type="text" id="editCredHashType" placeholder="e.g., NTLM, SHA256, MD5">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editCredNotes">Notes</label>
+                    <textarea id="editCredNotes" rows="2" placeholder="How was this credential discovered?"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editCredentialModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Engagement Note Modal (for General section) -->
+    <div id="addEngagementNoteModal" class="modal" style="display: none;">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Add Note</h3>
+                <button class="modal-close" onclick="closeModal('addEngagementNoteModal')">&times;</button>
+            </div>
+            <form id="addEngagementNoteForm" onsubmit="HostManager.handleAddEngagementNote(event)">
+                <div class="note-editor">
+                    <div class="editor-toolbar">
+                        <label class="btn btn-sm btn-secondary">
+                            <input type="file" id="engagementNoteImageInput" accept="image/*" style="display:none" onchange="HostManager.handleNoteImage('engagementNoteImageInput', 'engagementNoteContent')">
+                            📁 Upload Image
+                        </label>
+                        <span class="toolbar-hint">📋 Paste screenshots directly (Ctrl+V) | Markdown supported</span>
+                        <button type="button" class="btn btn-sm btn-secondary" title="Markdown Reference" onclick="document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); switchSection('tools'); setTimeout(() => ToolsManager.switchTool('markdown'), 100);">📝 Markdown Reference</button>
+                    </div>
+                    <div class="editor-split">
+                        <div class="editor-pane">
+                            <label for="engagementNoteContent">Content (Markdown)</label>
+                            <textarea id="engagementNoteContent" rows="12" placeholder="# My Note&#10;&#10;Add markdown content here...&#10;&#10;**Bold**, *italic*, `code`" oninput="HostManager.updateNotePreview('engagementNoteContent', 'engagementNotePreview')"></textarea>
+                        </div>
+                        <div class="preview-pane">
+                            <label>Preview</label>
+                            <div id="engagementNotePreview" class="markdown-preview"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addEngagementNoteModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Engagement Credential Modal (for General section) -->
+    <div id="addEngagementCredentialModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Credential</h3>
+                <button class="modal-close" onclick="closeModal('addEngagementCredentialModal')">&times;</button>
+            </div>
+            <form id="addEngagementCredentialForm" onsubmit="HostManager.handleAddEngagementCredential(event)">
+                <div class="form-group">
+                    <label for="engCredUsername">Username</label>
+                    <input type="text" id="engCredUsername" placeholder="e.g., administrator">
+                </div>
+                <div class="form-group">
+                    <label for="engCredPasswordOrHash">Password / Hash</label>
+                    <input type="text" id="engCredPasswordOrHash" placeholder="Password or hash value">
+                </div>
+                <div class="form-group">
+                    <label for="engCredType">Credential Type</label>
+                    <select id="engCredType">
+                        <option value="clear_text">Clear Text</option>
+                        <option value="ntlm">NTLM</option>
+                        <option value="ntlmv2">NTLMv2</option>
+                        <option value="krbtgt">KRBTGT</option>
+                        <option value="md5">MD5</option>
+                        <option value="sha">SHA</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="engCredDescription">Description</label>
+                    <textarea id="engCredDescription" rows="2" placeholder="How was this credential discovered?"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addEngagementCredentialModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Credential</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Engagement Credential Modal (for General section) -->
+    <div id="editEngagementCredentialModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Credential</h3>
+                <button class="modal-close" onclick="closeModal('editEngagementCredentialModal')">&times;</button>
+            </div>
+            <form id="editEngagementCredentialForm" onsubmit="HostManager.handleEditEngagementCredential(event)">
+                <input type="hidden" id="editEngCredId">
+                <div class="form-group">
+                    <label for="editEngCredUsername">Username</label>
+                    <input type="text" id="editEngCredUsername" placeholder="e.g., administrator">
+                </div>
+                <div class="form-group">
+                    <label for="editEngCredPasswordOrHash">Password / Hash</label>
+                    <input type="text" id="editEngCredPasswordOrHash" placeholder="Password or hash value">
+                </div>
+                <div class="form-group">
+                    <label for="editEngCredType">Credential Type</label>
+                    <select id="editEngCredType">
+                        <option value="clear_text">Clear Text</option>
+                        <option value="ntlm">NTLM</option>
+                        <option value="ntlmv2">NTLMv2</option>
+                        <option value="krbtgt">KRBTGT</option>
+                        <option value="md5">MD5</option>
+                        <option value="sha">SHA</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editEngCredDescription">Description</label>
+                    <textarea id="editEngCredDescription" rows="2" placeholder="How was this credential discovered?"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editEngagementCredentialModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Terminal Dump Modal (for General section) -->
+    <div id="addTerminalDumpModal" class="modal" style="display: none;">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Add Terminal Dump</h3>
+                <button class="modal-close" onclick="closeModal('addTerminalDumpModal')">&times;</button>
+            </div>
+            <form id="addTerminalDumpForm" onsubmit="HostManager.handleAddTerminalDump(event)">
+                <div class="form-group">
+                    <label for="dumpTitle">Title *</label>
+                    <input type="text" id="dumpTitle" required placeholder="e.g., Initial Recon Session">
+                </div>
+                <div class="form-group">
+                    <label for="dumpSessionDatetime">Session Date/Time</label>
+                    <input type="datetime-local" id="dumpSessionDatetime">
+                    <small>When did this session occur?</small>
+                </div>
+                <div class="form-group">
+                    <label for="dumpContent">Terminal Output *</label>
+                    <textarea id="dumpContent" rows="15" required placeholder="Paste terminal output here..." class="monospace-textarea"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addTerminalDumpModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Terminal Dump</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Terminal Dump Modal (for General section) -->
+    <div id="editTerminalDumpModal" class="modal" style="display: none;">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Edit Terminal Dump</h3>
+                <button class="modal-close" onclick="closeModal('editTerminalDumpModal')">&times;</button>
+            </div>
+            <form id="editTerminalDumpForm" onsubmit="HostManager.handleEditTerminalDump(event)">
+                <input type="hidden" id="editDumpId">
+                <div class="form-group">
+                    <label for="editDumpTitle">Title *</label>
+                    <input type="text" id="editDumpTitle" required placeholder="e.g., Initial Recon Session">
+                </div>
+                <div class="form-group">
+                    <label for="editDumpSessionDatetime">Session Date/Time</label>
+                    <input type="datetime-local" id="editDumpSessionDatetime">
+                    <small>When did this session occur?</small>
+                </div>
+                <div class="form-group">
+                    <label for="editDumpContent">Terminal Output *</label>
+                    <textarea id="editDumpContent" rows="15" required placeholder="Paste terminal output here..." class="monospace-textarea"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editTerminalDumpModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Finding Modal (for General section) -->
+    <div id="editFindingModal" class="modal" style="display: none;">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Edit Finding</h3>
+                <button class="modal-close" onclick="closeModal('editFindingModal')">&times;</button>
+            </div>
+            <form id="editFindingForm" onsubmit="HostManager.handleEditEngagementFinding(event)">
+                <input type="hidden" id="editFindingId">
+                <div class="form-row">
+                    <div class="form-group flex-2">
+                        <label for="editFindingTitle">Title *</label>
+                        <input type="text" id="editFindingTitle" required placeholder="e.g., SQL Injection in Login Form">
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="editFindingCriticality">Criticality *</label>
+                        <select id="editFindingCriticality" required>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="editFindingCvss">CVSS Score</label>
+                        <input type="number" id="editFindingCvss" min="0" max="10" step="0.1" placeholder="0-10">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="editFindingIpAddress">IP Address</label>
+                        <input type="text" id="editFindingIpAddress" placeholder="e.g., 192.168.1.100">
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="editFindingHostname">Hostname</label>
+                        <input type="text" id="editFindingHostname" placeholder="e.g., dc01.domain.local">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editFindingContent">Finding Details (Markdown supported)</label>
+                    <div class="markdown-editor">
+                        <textarea id="editFindingContent" rows="8" placeholder="Describe the vulnerability, impact, and proof of concept..." oninput="HostManager.updateFindingPreview('editFindingContent', 'editFindingContentPreview')"></textarea>
+                        <div class="markdown-preview" id="editFindingContentPreview">
+                            <p class="preview-placeholder">Preview will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editRemediationContent">Remediation Notes (Markdown supported)</label>
+                    <div class="markdown-editor">
+                        <textarea id="editRemediationContent" rows="6" placeholder="Describe recommended fixes and mitigations..." oninput="HostManager.updateFindingPreview('editRemediationContent', 'editRemediationContentPreview')"></textarea>
+                        <div class="markdown-preview" id="editRemediationContentPreview">
+                            <p class="preview-placeholder">Preview will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="editFindingIncludeReport">
+                        <span>Include in final report</span>
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editFindingModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Writeup forms are now rendered inline by ReportingManager.showWriteupForm() -->
+
+    <!-- Sensitive Info Warning Modal -->
+    <div id="sensitiveWarningModal" class="modal" style="display: none;">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3>Save to Writeups Database</h3>
+                <button class="modal-close" onclick="closeModal('sensitiveWarningModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="warning-content">
+                    <span class="warning-icon large">&#9888;</span>
+                    <p><strong>Important:</strong> Writeups in the database are shared across all engagements.</p>
+                    <p>Before saving, please ensure you have removed:</p>
+                    <ul>
+                        <li>Client names and identifying information</li>
+                        <li>IP addresses and hostnames</li>
+                        <li>Specific URLs or paths</li>
+                        <li>Any sensitive data</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('sensitiveWarningModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="ReportingManager.confirmSaveToWriteups()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Switch Engagement Confirmation Modal -->
+    <div id="switchEngagementModal" class="modal" style="display: none;">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3>Switch Engagement</h3>
+                <button class="modal-close" onclick="closeModal('switchEngagementModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Switch to engagement:</p>
+                <p id="switchEngagementName" class="engagement-switch-name"></p>
+                <p class="text-muted">This will change the active engagement context.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('switchEngagementModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmSwitchBtn">Switch</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Command Modal (Add/Edit) -->
+    <div id="commandModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="commandModalTitle">New Command</h3>
+                <button class="modal-close" onclick="closeModal('commandModal')">&times;</button>
+            </div>
+            <form id="commandForm">
+                <input type="hidden" id="cmdId">
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="cmdCategory">Category *</label>
+                        <select id="cmdCategory" required>
+                            <option value="Recon">Recon</option>
+                            <option value="Enumeration">Enumeration</option>
+                            <option value="Exploitation">Exploitation</option>
+                            <option value="Post-exploitation">Post-exploitation</option>
+                            <option value="Reporting">Reporting</option>
+                        </select>
+                    </div>
+                    <div class="form-group flex-2">
+                        <label for="cmdName">Name *</label>
+                        <input type="text" id="cmdName" required placeholder="e.g., Nmap Full Scan">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="cmdCommand">Command *</label>
+                    <textarea id="cmdCommand" rows="3" required placeholder="e.g., nmap -sS -p- {IP}" class="monospace-textarea"></textarea>
+                    <small>Use {VARIABLE} syntax for placeholders (e.g., {IP}, {PORT}, {WORDLIST})</small>
+                </div>
+                <div class="form-group">
+                    <label for="cmdDescription">Description</label>
+                    <textarea id="cmdDescription" rows="2" placeholder="Brief description of what this command does..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('commandModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Command</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Variable Substitution Modal -->
+    <div id="variableModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Fill in Variables</h3>
+                <button class="modal-close" onclick="closeModal('variableModal')">&times;</button>
+            </div>
+            <form id="variableForm">
+                <div id="variableInputs" class="variable-inputs">
+                    <!-- Variable inputs will be inserted here -->
+                </div>
+                <div class="form-group">
+                    <label>Preview</label>
+                    <pre id="commandPreview" class="command-preview"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('variableModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Copy to Clipboard</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Engagement Member Modal -->
+    <div id="memberModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Team Member</h3>
+                <button class="modal-close" onclick="closeModal('memberModal')">&times;</button>
+            </div>
+            <form id="memberForm" class="modal-body">
+                <div class="form-group">
+                    <label for="memberUserId">User *</label>
+                    <select id="memberUserId" class="form-input" required>
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="memberRole">Role *</label>
+                    <select id="memberRole" class="form-input" required>
+                        <option value="owner">Owner (Full control)</option>
+                        <option value="editor" selected>Editor (Edit content)</option>
+                        <option value="viewer">Viewer (Read-only)</option>
+                    </select>
+                    <small class="text-muted">
+                        <strong>Owner:</strong> Full control, can manage team<br>
+                        <strong>Editor:</strong> Can add/edit/delete evidence<br>
+                        <strong>Viewer:</strong> Read-only access
+                    </small>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('memberModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Multi-Engagement Comparison Modal (Q3) -->
+    <div id="comparisonModal" class="modal" style="display: none;">
+        <div class="modal-content modal-xl">
+            <div class="modal-header">
+                <h3>Multi-Engagement Comparison</h3>
+                <button class="modal-close" onclick="closeModal('comparisonModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Engagement Selection -->
+                <div class="form-group">
+                    <label>Select Engagements to Compare</label>
+                    <div id="engagementCheckboxes" class="checkbox-grid">
+                        <!-- Populated dynamically -->
+                    </div>
+                    <small class="text-muted">Select 2-10 engagements</small>
+                </div>
+
+                <!-- Comparison Results -->
+                <div id="comparisonResults" style="display: none;">
+                    <h4>Comparison Metrics</h4>
+
+                    <!-- Summary Cards -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Avg Findings</div>
+                            <div class="metric-value" id="avgFindings">-</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Avg Hosts</div>
+                            <div class="metric-value" id="avgHosts">-</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Critical Findings</div>
+                            <div class="metric-value" id="totalCritical">-</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Engagements</div>
+                            <div class="metric-value" id="engagementCount">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Engagement Table -->
+                    <div class="table-container">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Engagement</th>
+                                    <th>Client</th>
+                                    <th>Hosts</th>
+                                    <th>Findings</th>
+                                    <th>Critical</th>
+                                    <th>High</th>
+                                    <th>Medium</th>
+                                    <th>Low</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparisonTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('comparisonModal')">Close</button>
+                <button class="btn btn-primary" id="runComparisonBtn" onclick="ReportingManager.runComparison()">
+                    <i data-lucide="play"></i>
+                    Run Comparison
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attack Maps modal is rendered dynamically by attack_map_editor.js -->
+
+    <!-- Slide-Over Controller -->
+    <script>
+        const SlideOver = {
+            open(name) {
+                const backdrop = document.getElementById(name + 'Backdrop');
+                const drawer = document.getElementById(name + 'Drawer');
+                if (backdrop) backdrop.classList.add('is-open');
+                if (drawer) {
+                    drawer.classList.add('is-open');
+                    // Focus first focusable element
+                    const focusable = drawer.querySelector('input, textarea, select, button');
+                    if (focusable) setTimeout(() => focusable.focus(), 50);
+                }
+                document.body.classList.add('slide-over-open');
+            },
+            close(name) {
+                const backdrop = document.getElementById(name + 'Backdrop');
+                const drawer = document.getElementById(name + 'Drawer');
+                if (backdrop) backdrop.classList.remove('is-open');
+                if (drawer) drawer.classList.remove('is-open');
+                document.body.classList.remove('slide-over-open');
+            }
+        };
+
+        // Close active slide-over on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.slide-over.is-open').forEach(drawer => {
+                    const name = drawer.id.replace('Drawer', '');
+                    SlideOver.close(name);
+                });
+            }
+        });
+    </script>
+
+    <!-- D3.js for graph visualization -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // Enable GFM line breaks: single newline = <br>, double newline = paragraph.
+        // Also ensures two trailing spaces + newline works per the Markdown spec.
+        if (typeof marked !== 'undefined') {
+            marked.use({ breaks: true, gfm: true });
+        }
+    </script>
+    <script type="module" src="/static/js/api.js"></script>
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/users.js"></script>
+    <script src="/static/js/teams.js"></script>
+    <script src="/static/js/clients.js"></script>
+    <script src="/static/js/clipboard_image_paste.js?v=2"></script>
+    <script src="/static/js/notes_tree.js"></script>
+    <script src="/static/js/attack_map_editor.js"></script>
+    <script src="/static/js/hosts.js"></script>
+    <script src="/static/js/commands.js"></script>
+    <script src="/static/js/admin.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/tools.js"></script>
+    <script src="/static/js/reporting.js"></script>
+    <script src="/static/js/testplans.js"></script>
+    <script type="module" src="/static/js/lib/idle-timeout.js"></script>
+    <script src="/static/js/app.js"></script>
+    <!-- Initialize Lucide Icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>
