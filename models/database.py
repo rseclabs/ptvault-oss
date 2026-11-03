@@ -22,6 +22,28 @@ def get_db_connection():
     return get_connection(Config.DATABASE_PATH)
 
 
+def setup_required():
+    """
+    True when no user account exists yet, so first-time setup should run.
+
+    The database file alone is no signal: init_db() creates it at startup,
+    before anyone has run setup. When the database cannot be read, setup is
+    assumed to be needed; the setup endpoint itself refuses a second admin.
+    """
+    try:
+        conn = get_db_connection()
+    except Exception:
+        return True
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM users")
+        return cursor.fetchone()[0] == 0
+    except Exception:
+        return True
+    finally:
+        conn.close()
+
+
 def init_db():
     """
     Initialize the database schema from schema.sql.

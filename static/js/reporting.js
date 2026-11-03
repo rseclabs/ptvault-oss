@@ -91,17 +91,17 @@ const ReportingManager = {
                 <div class="reporting-tabs">
                     <button class="reporting-tab ${this.activeTab === 'writeups' ? 'active' : ''}"
                             data-tab="writeups" onclick="ReportingManager.switchTab('writeups')">
-                        <span class="tab-icon">📝</span>
+                        <span class="tab-icon"><i data-lucide="notebook-pen"></i></span>
                         <span>Writeups Database</span>
                     </button>
                     <button class="reporting-tab ${this.activeTab === 'generation' ? 'active' : ''}"
                             data-tab="generation" onclick="ReportingManager.switchTab('generation')">
-                        <span class="tab-icon">📊</span>
+                        <span class="tab-icon"><i data-lucide="file-chart-column"></i></span>
                         <span>Report Generation</span>
                     </button>
                     <button class="reporting-tab ${this.activeTab === 'templates' ? 'active' : ''}"
                             data-tab="templates" onclick="ReportingManager.switchTab('templates')">
-                        <span class="tab-icon">📋</span>
+                        <span class="tab-icon"><i data-lucide="layout-template"></i></span>
                         <span>Templates</span>
                     </button>
                 </div>
@@ -252,7 +252,7 @@ const ReportingManager = {
         if (this.writeups.length === 0) {
             return `
                 <div class="empty-state">
-                    <div class="empty-icon">📝</div>
+                    <div class="empty-icon"><i data-lucide="notebook-pen"></i></div>
                     <h3>No writeups found</h3>
                     <p>Create your first writeup to build your vulnerability database.</p>
                     <button class="btn btn-primary" onclick="ReportingManager.showAddWriteupModal()">
@@ -323,7 +323,7 @@ const ReportingManager = {
             return `
                 <div class="generation-placeholder">
                     <div class="placeholder-content">
-                        <div class="placeholder-icon">📊</div>
+                        <div class="placeholder-icon"><i data-lucide="file-chart-column"></i></div>
                         <h2>Report Generation</h2>
                         <p>Please select an engagement to generate reports.</p>
                     </div>
@@ -512,7 +512,7 @@ const ReportingManager = {
             // Basic tools
             { id: 'spacer', name: 'Spacer', icon: '↕', description: 'Add blank space' },
             { id: 'divider', name: 'Divider', icon: '―', description: 'Horizontal line' },
-            { id: 'pagebreak', name: 'Page Break', icon: '📄', description: 'Page break for print' },
+            { id: 'pagebreak', name: 'Page Break', icon: '↧', description: 'Page break for print' },
             // Text content tools
             { id: 'sectionheader', name: 'Section Header', icon: 'H', description: 'Heading with level' },
             { id: 'textblock', name: 'Text Block', icon: '¶', description: 'Rich text paragraph' },
@@ -527,16 +527,16 @@ const ReportingManager = {
             // Callout tools
             { id: 'alertbox', name: 'Alert Box', icon: '⚠', description: 'Info/warning/danger box' },
             { id: 'keyfinding', name: 'Key Finding', icon: '★', description: 'Highlighted summary' },
-            { id: 'evidence', name: 'Evidence Block', icon: '📷', description: 'Image + description' },
-            { id: 'imageplaceholder', name: 'Image Placeholder', icon: '🖼', description: 'Image placeholder' },
+            { id: 'evidence', name: 'Evidence Block', icon: '◩', description: 'Image + description' },
+            { id: 'imageplaceholder', name: 'Image Placeholder', icon: '▭', description: 'Image placeholder' },
             // Complex tools
             { id: 'table', name: 'Table', icon: '▦', description: '3-column table' },
             { id: 'twocolumn', name: 'Two-Column', icon: '▐▌', description: 'Side-by-side layout' },
             { id: 'timeline', name: 'Timeline', icon: '→', description: 'Vertical timeline' },
             { id: 'riskmatrix', name: 'Risk Matrix', icon: '▣', description: 'Likelihood × Impact' },
             { id: 'cvsscard', name: 'CVSS Card', icon: '◉', description: 'CVSS score breakdown' },
-            { id: 'attackmap', name: 'Attack Map', icon: '🗺️', description: 'Embedded attack map' },
-            { id: 'coloredtable', name: 'Findings Table', icon: '🎨', description: 'Color-coded findings table' }
+            { id: 'attackmap', name: 'Attack Map', icon: '⌖', description: 'Embedded attack map' },
+            { id: 'coloredtable', name: 'Findings Table', icon: '▤', description: 'Color-coded findings table' }
         ];
 
         const toolsHtml = formatTools.map(tool => `
@@ -575,7 +575,7 @@ const ReportingManager = {
         if (this.workspaceItems.length === 0) {
             return `
                 <div class="workspace-empty">
-                    <div class="empty-icon">📄</div>
+                    <div class="empty-icon"><i data-lucide="file-plus"></i></div>
                     <p>Drag items here to build your report</p>
                     <p class="hint">Items can be reordered by dragging</p>
                 </div>
@@ -1004,7 +1004,7 @@ const ReportingManager = {
                         html += `
                             <div class="preview-attackmap" data-map-id="${mapId}">
                                 <div style="text-align:center;padding:20px;background:#1e1e2e;border-radius:8px;border:1px solid #374151;">
-                                    <div style="font-size:24px;margin-bottom:8px;">🗺️</div>
+                                    <div class="preview-attackmap-icon"><i data-lucide="map"></i></div>
                                     <div style="color:#e2e8f0;font-weight:600;">${escapeHtml(mapName)}</div>
                                     <div style="color:#94a3b8;font-size:12px;margin-top:4px;">Attack Map (embedded in export)</div>
                                 </div>
@@ -1220,7 +1220,7 @@ const ReportingManager = {
                     </button>
                 </div>
                 <div class="sensitive-warning" style="margin-bottom: var(--spacing-md);">
-                    <span class="warning-icon">&#9888;</span>
+                    <span class="warning-icon"><i data-lucide="triangle-alert"></i></span>
                     <span>Writeups are shared across all engagements. Do not include sensitive client information, IP addresses, or engagement-specific details.</span>
                 </div>
                 <form id="writeupForm" onsubmit="ReportingManager.handleWriteupFormSubmit(event)">
@@ -1796,7 +1796,7 @@ const ReportingManager = {
             const formatToolMeta = {
                 spacer: { title: 'Spacer', icon: '↕' },
                 divider: { title: 'Divider', icon: '―' },
-                pagebreak: { title: 'Page Break', icon: '📄' },
+                pagebreak: { title: 'Page Break', icon: '↧' },
                 sectionheader: { title: 'Section Header', icon: 'H' },
                 textblock: { title: 'Text Block', icon: '¶' },
                 quote: { title: 'Quote Block', icon: '❝' },
@@ -1807,15 +1807,15 @@ const ReportingManager = {
                 commandoutput: { title: 'Command Output', icon: '$_' },
                 alertbox: { title: 'Alert Box', icon: '⚠' },
                 keyfinding: { title: 'Key Finding', icon: '★' },
-                evidence: { title: 'Evidence Block', icon: '📷' },
-                imageplaceholder: { title: 'Image Placeholder', icon: '🖼' },
+                evidence: { title: 'Evidence Block', icon: '◩' },
+                imageplaceholder: { title: 'Image Placeholder', icon: '▭' },
                 table: { title: 'Table', icon: '▦' },
                 twocolumn: { title: 'Two-Column', icon: '▐▌' },
                 timeline: { title: 'Timeline', icon: '→' },
                 riskmatrix: { title: 'Risk Matrix', icon: '▣' },
                 cvsscard: { title: 'CVSS Card', icon: '◉' },
-                attackmap: { title: 'Attack Map', icon: '🗺️' },
-                coloredtable: { title: 'Findings Table', icon: '🎨' }
+                attackmap: { title: 'Attack Map', icon: '⌖' },
+                coloredtable: { title: 'Findings Table', icon: '▤' }
             };
             const meta = formatToolMeta[sourceId] || { title: sourceId, icon: '?' };
             sourceData = {

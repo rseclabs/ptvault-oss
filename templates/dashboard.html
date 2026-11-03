@@ -386,6 +386,11 @@
                 </div>
 
                 <!-- Host Sections Container (only visible when a host is selected, not for General) -->
+                <div class="host-empty-state">
+                    <i data-lucide="server"></i>
+                    <p>Select a host from the list to see its ports, notes, findings and credentials, or add one with +.</p>
+                </div>
+
                 <div id="hostSectionsContainer" class="host-sections-container">
                     <!-- Persistent Host Indicators Bar (always visible when a host is selected) -->
                     <div class="host-indicators-bar" id="hostIndicatorsBar">
@@ -1694,7 +1699,7 @@
             </div>
             <div class="modal-body">
                 <div class="warning-content">
-                    <span class="warning-icon large">&#9888;</span>
+                    <span class="warning-icon large"><i data-lucide="triangle-alert"></i></span>
                     <p><strong>Important:</strong> Writeups in the database are shared across all engagements.</p>
                     <p>Before saving, please ensure you have removed:</p>
                     <ul>

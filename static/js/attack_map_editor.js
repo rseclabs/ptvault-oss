@@ -1267,10 +1267,10 @@ const AttackMapEditor = {
         menu.style.top = event.clientY + 'px';
 
         const items = [
-            { label: 'Connect to\u2026', icon: '🔗', action: () => this._contextConnectFrom(nodeData.id) },
-            { label: 'Edit Properties', icon: '✏️', action: () => this.selectNode(nodeData.id) },
+            { label: 'Connect to\u2026', icon: '<i data-lucide="link"></i>', action: () => this._contextConnectFrom(nodeData.id) },
+            { label: 'Edit Properties', icon: '<i data-lucide="pencil"></i>', action: () => this.selectNode(nodeData.id) },
             { divider: true },
-            { label: 'Delete Node', icon: '🗑️', action: () => { this.selectNode(nodeData.id); this.deleteSelected(); }, danger: true }
+            { label: 'Delete Node', icon: '<i data-lucide="trash-2"></i>', action: () => { this.selectNode(nodeData.id); this.deleteSelected(); }, danger: true }
         ];
 
         items.forEach(item => {

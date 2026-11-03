@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger('ptvault')
 
-from models.database import init_db, get_db_connection, run_migrations
+from models.database import init_db, get_db_connection, run_migrations, setup_required
 from models.encryption import is_encryption_available, is_encryption_enabled, check_and_migrate_if_needed
 from features import register_blueprints
 from config import BASE_DIR
@@ -161,17 +161,11 @@ def set_security_headers(response):
 @app.route('/', methods=['GET'])
 def index():
     """
-    Root route - check if setup is needed, redirect to login or setup page.
+    Root route - the setup wizard until an account exists, then the login page.
     """
-    # Check if database file exists and has data (indicates setup was completed)
-    # We can't query the encrypted database without the user's password-derived key
-    db_path = Config.DATABASE_PATH
-    if os.path.exists(db_path) and os.path.getsize(db_path) > 0:
-        # Database exists with data, show login page
-        return render_template('login.html')
-    else:
-        # No database, redirect to setup
+    if setup_required():
         return redirect(url_for('setup'))
+    return render_template('login.html')
 
 @app.route('/login', methods=['GET'])
 def login():
@@ -180,7 +174,9 @@ def login():
 
 @app.route('/setup', methods=['GET'])
 def setup():
-    """Setup page for first-time configuration."""
+    """Setup page for first-time configuration; once an account exists, go to login."""
+    if not setup_required():
+        return redirect(url_for('index'))
     return render_template('setup.html')
 
 @app.route('/dashboard', methods=['GET'])

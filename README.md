@@ -513,7 +513,7 @@ Inserts a horizontal line to separate content sections.
 ---
 
 #### Page Break
-**Icon:** `📄` | **Editor:** None
+**Icon:** `↧` | **Editor:** None
 
 Inserts a page break for printed/PDF output. Displayed as a dashed line indicator in the preview.
 
@@ -727,7 +727,7 @@ Highlighted summary box for critical discoveries.
 ---
 
 #### Evidence Block
-**Icon:** `📷` | **Editor:** Yes
+**Icon:** `◩` | **Editor:** Yes
 
 Structured evidence documentation with image placeholder.
 
@@ -746,7 +746,7 @@ Structured evidence documentation with image placeholder.
 ---
 
 #### Image Placeholder
-**Icon:** `🖼` | **Editor:** Yes
+**Icon:** `▭` | **Editor:** Yes
 
 Placeholder for images with caption.
 

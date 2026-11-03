@@ -860,32 +860,32 @@ const ToolsManager = {
                 <div class="tools-tabs">
                     <button class="tools-tab ${this.activeTab === 'cyberchef' ? 'active' : ''}"
                             data-tool="cyberchef" onclick="ToolsManager.switchTool('cyberchef')">
-                        <span class="tool-icon">🍳</span>
+                        <span class="tool-icon"><i data-lucide="chef-hat"></i></span>
                         <span>CyberChef</span>
                     </button>
                     <button class="tools-tab ${this.activeTab === 'command' ? 'active' : ''}"
                             data-tool="command" onclick="ToolsManager.switchTool('command')">
-                        <span class="tool-icon">💻</span>
+                        <span class="tool-icon"><i data-lucide="terminal"></i></span>
                         <span>Command</span>
                     </button>
                     <button class="tools-tab ${this.activeTab === 'calculators' ? 'active' : ''}"
                             data-tool="calculators" onclick="ToolsManager.switchTool('calculators')">
-                        <span class="tool-icon">🧮</span>
+                        <span class="tool-icon"><i data-lucide="calculator"></i></span>
                         <span>Calculators</span>
                     </button>
                     <button class="tools-tab ${this.activeTab === 'decoders' ? 'active' : ''}"
                             data-tool="decoders" onclick="ToolsManager.switchTool('decoders')">
-                        <span class="tool-icon">🔓</span>
+                        <span class="tool-icon"><i data-lucide="lock-open"></i></span>
                         <span>Decoders</span>
                     </button>
                     <button class="tools-tab ${this.activeTab === 'attackmaps' ? 'active' : ''}"
                             data-tool="attackmaps" onclick="ToolsManager.switchTool('attackmaps')">
-                        <span class="tool-icon">🗺️</span>
+                        <span class="tool-icon"><i data-lucide="map"></i></span>
                         <span>Attack Maps</span>
                     </button>
                     <button class="tools-tab ${this.activeTab === 'data' ? 'active' : ''}"
                             data-tool="data" onclick="ToolsManager.switchTool('data')">
-                        <span class="tool-icon">💾</span>
+                        <span class="tool-icon"><i data-lucide="database"></i></span>
                         <span>Data</span>
                     </button>
                 </div>
@@ -1236,7 +1236,7 @@ const ToolsManager = {
     renderCyberChefInstallPrompt() {
         return `
             <div class="tool-install-prompt">
-                <div class="install-icon">🍳</div>
+                <div class="install-icon"><i data-lucide="chef-hat"></i></div>
                 <h3>CyberChef Not Installed</h3>
                 <p>CyberChef is a powerful web app for encoding, decoding, and analyzing data.</p>
                 <p class="install-size">Download size: ~43 MB</p>
@@ -1254,7 +1254,7 @@ const ToolsManager = {
     renderCyberChefInstalled() {
         return `
             <div class="tool-installed">
-                <div class="install-icon">🍳</div>
+                <div class="install-icon"><i data-lucide="chef-hat"></i></div>
                 <h3>CyberChef</h3>
                 <p>A web app for encoding, decoding, and analyzing data.</p>
                 <p class="version-info">Version: ${escapeHtml(this.cyberchefStatus?.version || 'Unknown')}</p>
@@ -1401,7 +1401,7 @@ const ToolsManager = {
                     <button id="attackMapConnectBtn" class="btn btn-sm" onclick="AttackMapEditor.toggleConnectMode()"
                             style="background:#2a2a3e;border:1px solid #374151;color:#e2e8f0;font-size:12px;border-radius:6px;padding:4px 10px;cursor:pointer;"
                             title="Toggle connect mode to draw arrows between nodes">
-                        🔗 Connect
+                        <i data-lucide="link"></i> Connect
                     </button>
 
                     <!-- Zoom -->
@@ -1502,9 +1502,9 @@ const ShellOneLinersManager = {
     },
 
     CATEGORY_ICONS: {
-        'shells': '💻',
-        'reverse_shells': '🔙',
-        'shell_upgrades': '⬆️'
+        'shells': '<i data-lucide="terminal"></i>',
+        'reverse_shells': '<i data-lucide="corner-down-left"></i>',
+        'shell_upgrades': '<i data-lucide="arrow-up"></i>'
     },
 
     /**
@@ -2149,10 +2149,10 @@ const CommandHubManager = {
     activeSubTool: 'msfvenom',
 
     SUB_TOOLS: {
-        msfvenom: { icon: '🎯', label: 'MSFVenom Builder' },
-        shells: { icon: '🐚', label: 'Shells' },
-        commands: { icon: '📖', label: 'Command Reference' },
-        markdown: { icon: '📝', label: 'Markdown' }
+        msfvenom: { icon: '<i data-lucide="target"></i>', label: 'MSFVenom Builder' },
+        shells: { icon: '<i data-lucide="terminal"></i>', label: 'Shells' },
+        commands: { icon: '<i data-lucide="book-open"></i>', label: 'Command Reference' },
+        markdown: { icon: '<i data-lucide="file-text"></i>', label: 'Markdown' }
     },
 
     render() {
@@ -2236,8 +2236,8 @@ const CalculatorsManager = {
     activeSubTool: 'cvss',
 
     SUB_TOOLS: {
-        cvss: { icon: '📊', label: 'CVSS Calculator' },
-        subnet: { icon: '🌐', label: 'Subnet Calculator' }
+        cvss: { icon: '<i data-lucide="gauge"></i>', label: 'CVSS Calculator' },
+        subnet: { icon: '<i data-lucide="network"></i>', label: 'Subnet Calculator' }
     },
 
     render() {
@@ -2314,8 +2314,8 @@ const DecodersManager = {
     activeSubTool: 'jwt',
 
     SUB_TOOLS: {
-        jwt: { icon: '🔑', label: 'JWT Decoder' },
-        powershell: { icon: '⚡', label: 'PS Encoder' }
+        jwt: { icon: '<i data-lucide="key-round"></i>', label: 'JWT Decoder' },
+        powershell: { icon: '<i data-lucide="square-terminal"></i>', label: 'PS Encoder' }
     },
 
     render() {
@@ -2932,14 +2932,14 @@ const MarkdownCheatSheet = {
     searchQuery: '',
 
     CATEGORIES: {
-        basic: { label: 'Basic Syntax', icon: '📄' },
-        text: { label: 'Text Formatting', icon: '✏️' },
-        lists: { label: 'Lists', icon: '📋' },
-        links: { label: 'Links & Images', icon: '🔗' },
-        code: { label: 'Code', icon: '💻' },
-        tables: { label: 'Tables', icon: '▦' },
-        blocks: { label: 'Blockquotes & Rules', icon: '❝' },
-        extended: { label: 'Extended Syntax', icon: '🔧' }
+        basic: { label: 'Basic Syntax', icon: '<i data-lucide="file-text"></i>' },
+        text: { label: 'Text Formatting', icon: '<i data-lucide="type"></i>' },
+        lists: { label: 'Lists', icon: '<i data-lucide="list"></i>' },
+        links: { label: 'Links & Images', icon: '<i data-lucide="link"></i>' },
+        code: { label: 'Code', icon: '<i data-lucide="code"></i>' },
+        tables: { label: 'Tables', icon: '<i data-lucide="table"></i>' },
+        blocks: { label: 'Blockquotes & Rules', icon: '<i data-lucide="quote"></i>' },
+        extended: { label: 'Extended Syntax', icon: '<i data-lucide="wrench"></i>' }
     },
 
     ENTRIES: {
@@ -3079,13 +3079,13 @@ const MarkdownCheatSheet = {
             {
                 name: 'Image',
                 syntax: '![Alt text](image.png)',
-                rendered: '<span style="border:1px dashed var(--border-primary);padding:8px 16px;display:inline-block;border-radius:4px;">🖼 Alt text</span>',
+                rendered: '<span style="border:1px dashed var(--border-primary);padding:8px 16px;display:inline-block;border-radius:4px;"><i data-lucide="image"></i> Alt text</span>',
                 notes: 'Embeds an image. Alt text shows if image fails to load.'
             },
             {
                 name: 'Image with Title',
                 syntax: '![Alt text](image.png "Title")',
-                rendered: '<span style="border:1px dashed var(--border-primary);padding:8px 16px;display:inline-block;border-radius:4px;">🖼 Alt text (Title)</span>',
+                rendered: '<span style="border:1px dashed var(--border-primary);padding:8px 16px;display:inline-block;border-radius:4px;"><i data-lucide="image"></i> Alt text (Title)</span>',
                 notes: 'Title appears on hover over the image.'
             },
             {

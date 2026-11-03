@@ -114,28 +114,28 @@ const TestPlansManager = {
                             aria-selected="${this.activeTab === 'atomics'}" aria-controls="testplansContent"
                             tabindex="${this.activeTab === 'atomics' ? '0' : '-1'}"
                             data-tab="atomics" onclick="TestPlansManager.switchTab('atomics')">
-                        <span class="tab-icon" aria-hidden="true">&#x1F4DA;</span>
+                        <span class="tab-icon" aria-hidden="true"><i data-lucide="library"></i></span>
                         <span>Atomics Library</span>
                     </button>
                     <button class="testplans-tab ${this.activeTab === 'navigator' ? 'active' : ''}" role="tab" id="tp-tab-navigator"
                             aria-selected="${this.activeTab === 'navigator'}" aria-controls="testplansContent"
                             tabindex="${this.activeTab === 'navigator' ? '0' : '-1'}"
                             data-tab="navigator" onclick="TestPlansManager.switchTab('navigator')">
-                        <span class="tab-icon" aria-hidden="true">&#x1F5FA;</span>
+                        <span class="tab-icon" aria-hidden="true"><i data-lucide="map"></i></span>
                         <span>Navigator Import</span>
                     </button>
                     <button class="testplans-tab ${this.activeTab === 'plans' ? 'active' : ''}" role="tab" id="tp-tab-plans"
                             aria-selected="${this.activeTab === 'plans'}" aria-controls="testplansContent"
                             tabindex="${this.activeTab === 'plans' ? '0' : '-1'}"
                             data-tab="plans" onclick="TestPlansManager.switchTab('plans')">
-                        <span class="tab-icon" aria-hidden="true">&#x1F4CB;</span>
+                        <span class="tab-icon" aria-hidden="true"><i data-lucide="clipboard-list"></i></span>
                         <span>Plans</span>
                     </button>
                     <button class="testplans-tab ${this.activeTab === 'executions' ? 'active' : ''}" role="tab" id="tp-tab-executions"
                             aria-selected="${this.activeTab === 'executions'}" aria-controls="testplansContent"
                             tabindex="${this.activeTab === 'executions' ? '0' : '-1'}"
                             data-tab="executions" onclick="TestPlansManager.switchTab('executions')">
-                        <span class="tab-icon" aria-hidden="true">&#x25B6;</span>
+                        <span class="tab-icon" aria-hidden="true"><i data-lucide="play"></i></span>
                         <span>Executions</span>
                     </button>
                 </div>
@@ -367,7 +367,7 @@ const TestPlansManager = {
                 <div class="atomics-status-bar">
                     ${isInstalled ? `
                         <div class="status-installed">
-                            <span class="status-icon">&#x2705;</span>
+                            <span class="status-icon"><i data-lucide="circle-check"></i></span>
                             <span>Library installed</span>
                             <span class="status-meta">${status.total_tests || 0} tests | ${status.total_techniques || 0} techniques</span>
                             <span class="status-meta">Updated: ${status.last_updated ? new Date(status.last_updated).toLocaleDateString() : 'Unknown'}</span>
@@ -377,7 +377,7 @@ const TestPlansManager = {
                         </button>
                     ` : `
                         <div class="status-not-installed">
-                            <span class="status-icon">&#x26A0;</span>
+                            <span class="status-icon"><i data-lucide="triangle-alert"></i></span>
                             <span>Library not installed</span>
                             <span class="status-meta">Download the Atomic Red Team tests to get started</span>
                         </div>
@@ -413,7 +413,7 @@ const TestPlansManager = {
                     </div>
                 ` : `
                     <div class="atomics-empty">
-                        <div class="empty-icon" aria-hidden="true">&#x1F4DA;</div>
+                        <div class="empty-icon" aria-hidden="true"><i data-lucide="library"></i></div>
                         <h3>No atomics library found</h3>
                         <p>Download the Atomic Red Team library to browse and use MITRE ATT&CK tests.</p>
                     </div>
@@ -441,21 +441,21 @@ const TestPlansManager = {
 
         // Tactic icons mapping
         const tacticIcons = {
-            'reconnaissance': '🔍',
-            'resource-development': '🛠️',
-            'initial-access': '🚪',
-            'execution': '⚡',
-            'persistence': '📌',
-            'privilege-escalation': '⬆️',
-            'defense-evasion': '🛡️',
-            'credential-access': '🔑',
-            'discovery': '🔭',
-            'lateral-movement': '↔️',
-            'collection': '📦',
-            'command-and-control': '📡',
-            'exfiltration': '📤',
-            'impact': '💥',
-            'unknown': '❓'
+            'reconnaissance': '<i data-lucide="search"></i>',
+            'resource-development': '<i data-lucide="wrench"></i>',
+            'initial-access': '<i data-lucide="door-open"></i>',
+            'execution': '<i data-lucide="zap"></i>',
+            'persistence': '<i data-lucide="pin"></i>',
+            'privilege-escalation': '<i data-lucide="arrow-big-up"></i>',
+            'defense-evasion': '<i data-lucide="shield"></i>',
+            'credential-access': '<i data-lucide="key-round"></i>',
+            'discovery': '<i data-lucide="telescope"></i>',
+            'lateral-movement': '<i data-lucide="arrow-left-right"></i>',
+            'collection': '<i data-lucide="package"></i>',
+            'command-and-control': '<i data-lucide="radio-tower"></i>',
+            'exfiltration': '<i data-lucide="upload"></i>',
+            'impact': '<i data-lucide="bomb"></i>',
+            'unknown': '<i data-lucide="circle-help"></i>'
         };
 
         return `
@@ -557,7 +557,7 @@ const TestPlansManager = {
 
                 <div class="navigator-upload">
                     <div class="upload-dropzone ${this.layers.length ? 'is-compact' : ''}" id="layerDropzone" role="button" tabindex="0" aria-label="Upload a Navigator layer JSON file">
-                        <div class="dropzone-icon" aria-hidden="true">&#x1F4C2;</div>
+                        <div class="dropzone-icon" aria-hidden="true"><i data-lucide="folder-open"></i></div>
                         <p>Drop a Navigator layer JSON file here</p>
                         <p class="dropzone-hint">or click to browse</p>
                         <input type="file" id="layerFileInput" accept=".json" style="display: none;">
@@ -726,7 +726,7 @@ const TestPlansManager = {
         if (!AppState || !AppState.activeEngagement) {
             return `
                 <div class="executions-no-engagement">
-                    <div class="empty-icon" aria-hidden="true">&#x26A0;</div>
+                    <div class="empty-icon" aria-hidden="true"><i data-lucide="triangle-alert"></i></div>
                     <h3>No Active Engagement</h3>
                     <p>Select an engagement to track test executions.</p>
                 </div>
@@ -800,7 +800,7 @@ const TestPlansManager = {
         if (this.executionsError) {
             return `
                 <div class="executions-empty" role="alert">
-                    <div class="empty-icon" aria-hidden="true">&#x26A0;</div>
+                    <div class="empty-icon" aria-hidden="true"><i data-lucide="triangle-alert"></i></div>
                     <h3>Couldn't load executions</h3>
                     <p>${escapeHtml(this.executionsError)}</p>
                     <button class="btn btn-secondary" onclick="TestPlansManager.switchTab('executions')">Retry</button>
@@ -811,7 +811,7 @@ const TestPlansManager = {
         if (this.executions.length === 0) {
             return `
                 <div class="executions-empty">
-                    <div class="empty-icon" aria-hidden="true">&#x25B6;</div>
+                    <div class="empty-icon" aria-hidden="true"><i data-lucide="play"></i></div>
                     <h3>No executions yet</h3>
                     <p>Start a test plan execution to track your testing progress.</p>
                     <button class="btn btn-primary" onclick="TestPlansManager.startNewExecution()">Start Execution</button>
@@ -1906,7 +1906,7 @@ const TestPlansManager = {
                 <div class="item-row-meta">
                     ${item.executor_name ? `<span class="item-row-executor">${escapeHtml(item.executor_name)}</span>` : ''}
                     ${platforms.slice(0, 2).map(p => `<span class="item-row-platform">${p}</span>`).join('')}
-                    ${item.notes ? `<span class="item-row-notes" role="img" aria-label="Has notes" title="${escapeHtml(item.notes)}">📝</span>` : ''}
+                    ${item.notes ? `<span class="item-row-notes" role="img" aria-label="Has notes" title="${escapeHtml(item.notes)}"><i data-lucide="notebook-pen"></i></span>` : ''}
                 </div>
                 <div class="item-row-actions">
                     <button class="btn btn-icon btn-xs" onclick="TestPlansManager.editPlanItem(${planId}, ${item.id})" title="Edit" aria-label="Edit ${escapeHtml(name)}">
@@ -2604,13 +2604,13 @@ const TestPlansManager = {
                             <div class="platform-options" style="display: flex; flex-direction: column; gap: 8px;">
                                 <label class="platform-option" style="display: flex; align-items: center; padding: 10px 12px; border: 2px solid ${defaultPlatform === 'linux' ? '#4f46e5' : 'var(--color-border)'}; border-radius: 6px; cursor: pointer; background: ${defaultPlatform === 'linux' ? 'rgba(79, 70, 229, 0.05)' : 'transparent'}; transition: all 0.2s;">
                                     <input type="radio" name="scriptPlatform" value="linux" ${defaultPlatform === 'linux' ? 'checked' : ''} ${linuxCount === 0 ? 'disabled' : ''} style="margin-right: 10px;">
-                                    <span style="font-size: 1.1em; margin-right: 10px;">🐧</span>
+                                    <span class="platform-icon"><i data-lucide="terminal"></i></span>
                                     <span style="font-weight: 600; font-size: 0.95em;">Bash (Linux/macOS)</span>
                                     <span style="font-size: 0.85em; color: var(--color-text-tertiary); margin-left: auto;">${linuxCount} tests</span>
                                 </label>
                                 <label class="platform-option" style="display: flex; align-items: center; padding: 10px 12px; border: 2px solid ${defaultPlatform === 'windows' ? '#4f46e5' : 'var(--color-border)'}; border-radius: 6px; cursor: pointer; background: ${defaultPlatform === 'windows' ? 'rgba(79, 70, 229, 0.05)' : 'transparent'}; transition: all 0.2s;">
                                     <input type="radio" name="scriptPlatform" value="windows" ${defaultPlatform === 'windows' ? 'checked' : ''} ${windowsCount === 0 ? 'disabled' : ''} style="margin-right: 10px;">
-                                    <span style="font-size: 1.1em; margin-right: 10px;">🪟</span>
+                                    <span class="platform-icon"><i data-lucide="square-terminal"></i></span>
                                     <span style="font-weight: 600; font-size: 0.95em;">PowerShell (Windows)</span>
                                     <span style="font-size: 0.85em; color: var(--color-text-tertiary); margin-left: auto;">${windowsCount} tests</span>
                                 </label>
@@ -2619,7 +2619,7 @@ const TestPlansManager = {
 
                         <!-- Warning -->
                         <div class="script-warning" style="background: rgba(255, 193, 7, 0.08); border: 1px solid rgba(255, 193, 7, 0.4); border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; font-size: 0.85em;">
-                            <strong style="color: #856404;">⚠️ Warning:</strong>
+                            <strong class="script-warning-label"><i data-lucide="triangle-alert"></i> Warning:</strong>
                             <span style="color: #856404; margin-left: 4px;">Contains commands that may modify system state. The script asks you to type the target's hostname before anything runs.</span>
                         </div>
 
@@ -2641,7 +2641,7 @@ const TestPlansManager = {
                             <!-- Bash Instructions -->
                             <div class="instructions-section" style="margin-bottom: 15px;">
                                 <h4 style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 1em;">
-                                    <span style="font-size: 1.2em;">🐧</span> Bash Script (Linux/macOS)
+                                    <i data-lucide="terminal"></i> Bash Script (Linux/macOS)
                                 </h4>
                                 <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 10px 12px;">
                                     <p style="margin-bottom: 6px; font-weight: 600; font-size: 0.9em;">Prerequisites:</p>
@@ -2670,7 +2670,7 @@ script -c "./script.sh" session.log
                             <!-- PowerShell Instructions -->
                             <div class="instructions-section" style="margin-bottom: 15px;">
                                 <h4 style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 1em;">
-                                    <span style="font-size: 1.2em;">🪟</span> PowerShell Script (Windows)
+                                    <i data-lucide="square-terminal"></i> PowerShell Script (Windows)
                                 </h4>
                                 <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 10px 12px;">
                                     <p style="margin-bottom: 6px; font-weight: 600; font-size: 0.9em;">Prerequisites:</p>
@@ -2917,11 +2917,11 @@ Stop-Transcript
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
                     <div style="background: rgba(0, 123, 255, 0.1); border: 2px solid #007bff; border-radius: 8px; padding: 15px; text-align: center;">
                         <div style="font-size: 2em; font-weight: bold; color: #007bff;">${linuxTests.length + bothTests.length}</div>
-                        <div style="font-size: 0.9em; color: var(--text-muted); margin-top: 5px;">🐧 Bash Compatible</div>
+                        <div style="font-size: 0.9em; color: var(--text-muted); margin-top: 5px;">Bash compatible</div>
                     </div>
                     <div style="background: rgba(0, 123, 255, 0.1); border: 2px solid #0099ff; border-radius: 8px; padding: 15px; text-align: center;">
                         <div style="font-size: 2em; font-weight: bold; color: #0099ff;">${windowsTests.length + bothTests.length}</div>
-                        <div style="font-size: 0.9em; color: var(--text-muted); margin-top: 5px;">🪟 PowerShell Compatible</div>
+                        <div style="font-size: 0.9em; color: var(--text-muted); margin-top: 5px;">PowerShell compatible</div>
                     </div>
                     <div style="background: rgba(40, 167, 69, 0.1); border: 2px solid #28a745; border-radius: 8px; padding: 15px; text-align: center;">
                         <div style="font-size: 2em; font-weight: bold; color: #28a745;">${bothTests.length}</div>
@@ -2932,10 +2932,10 @@ Stop-Transcript
                 <!-- Tabs for detailed view -->
                 <div style="border-bottom: 1px solid var(--border-color); margin-bottom: 15px;">
                     <button class="preview-tab active" data-tab="linux" onclick="TestPlansManager.switchPreviewTab('linux')" style="padding: 10px 20px; border: none; background: none; cursor: pointer; border-bottom: 2px solid var(--primary-color); color: var(--text-color); font-weight: 600;">
-                        🐧 Bash (${linuxTests.length + bothTests.length})
+                        <i data-lucide="terminal"></i> Bash (${linuxTests.length + bothTests.length})
                     </button>
                     <button class="preview-tab" data-tab="windows" onclick="TestPlansManager.switchPreviewTab('windows')" style="padding: 10px 20px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
-                        🪟 PowerShell (${windowsTests.length + bothTests.length})
+                        <i data-lucide="square-terminal"></i> PowerShell (${windowsTests.length + bothTests.length})
                     </button>
                     <button class="preview-tab" data-tab="both" onclick="TestPlansManager.switchPreviewTab('both')" style="padding: 10px 20px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
                         ✓ Both (${bothTests.length})

@@ -14,11 +14,11 @@ const CommandManager = {
 
     // Category definitions with icons
     CATEGORIES: {
-        'Recon': { icon: '🔍', description: 'Reconnaissance and information gathering' },
-        'Enumeration': { icon: '📋', description: 'Service and user enumeration' },
-        'Exploitation': { icon: '💥', description: 'Exploitation and access' },
-        'Post-exploitation': { icon: '🔓', description: 'Privilege escalation and persistence' },
-        'Reporting': { icon: '📝', description: 'Documentation and reporting' }
+        'Recon': { icon: '<i data-lucide="search"></i>', description: 'Reconnaissance and information gathering' },
+        'Enumeration': { icon: '<i data-lucide="list"></i>', description: 'Service and user enumeration' },
+        'Exploitation': { icon: '<i data-lucide="crosshair"></i>', description: 'Exploitation and access' },
+        'Post-exploitation': { icon: '<i data-lucide="lock-open"></i>', description: 'Privilege escalation and persistence' },
+        'Reporting': { icon: '<i data-lucide="file-text"></i>', description: 'Documentation and reporting' }
     },
 
     /**
@@ -108,14 +108,14 @@ const CommandManager = {
         let html = `
             <div class="category-item ${this.selectedCategory === 'all' ? 'active' : ''}"
                  onclick="CommandManager.filterByCategory('all')">
-                <span class="category-icon">📚</span>
+                <span class="category-icon"><i data-lucide="library"></i></span>
                 <span class="category-name">All Commands</span>
                 <span class="category-count">${this.totalCount || 0}</span>
             </div>
         `;
 
         for (const cat of this.categories) {
-            const catInfo = this.CATEGORIES[cat.name] || { icon: '📁' };
+            const catInfo = this.CATEGORIES[cat.name] || { icon: '<i data-lucide="folder"></i>' };
             const isActive = this.selectedCategory === cat.name;
             html += `
                 <div class="category-item ${isActive ? 'active' : ''}"
@@ -168,7 +168,7 @@ const CommandManager = {
      * Render single command as compact row
      */
     renderCommandRow(cmd) {
-        const catInfo = this.CATEGORIES[cmd.category] || { icon: '📁' };
+        const catInfo = this.CATEGORIES[cmd.category] || { icon: '<i data-lucide="folder"></i>' };
         const isCustom = cmd.is_custom === 1;
         const isFavorite = cmd.is_favorite === 1;
 
@@ -385,7 +385,7 @@ const CommandManager = {
 
         const icon = document.getElementById('favoritesFilterIcon');
         if (icon) {
-            icon.textContent = this.showFavoritesOnly ? '⭐' : '☆';
+            icon.textContent = this.showFavoritesOnly ? '★' : '☆';
             icon.parentElement.classList.toggle('active', this.showFavoritesOnly);
         }
 

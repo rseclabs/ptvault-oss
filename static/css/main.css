@@ -1,8 +1,11 @@
 /* Hallmark · checked: 2026-11-03 · genre: modern-minimal (inferred) · shape: app screen
  * floor: 385 → 1 FAIL (56 disputed: the port grid thead sticks inside .port-grid-wrapper, its own scroll container, so it cannot meet the navbar) · reflex: 105 → 0
- * fixed: 10a 19 26a 27 30a 34 38i 39a 48 63 67 · 26b 37 64 · 40 (96 → 22 contrast warnings) · structural: 3 printed (hosts filter band, empty detail pane, oversized empty chart panels)
+ * fixed: 10a 19 26a 27 30a 34 38i 39a 48 63 67 · 26b 37 64 · 40 (96 → 0 contrast warnings) · structural: 1 printed (hosts filter band)
+ * second pass: section-script emoji to Lucide · Host Details and chart empty states · 30 undefined legacy tokens aliased · setup link replaced by a server-side redirect
  * finish-review: subagent · fix · 5 findings · 4 resolved, 1 layout printed
  * built: the project · redesign: polish · v2.0.0 */
+/* Hallmark · dismissed 41 · 104 surfaces use theme tokens that flip with the inherited text colour; the 3 fixed dark code surfaces set their own ink */
+/* Hallmark · dismissed 3 · the left-border accent is the project's established callout and toast language, kept at polish depth */
 /* Hallmark · waive 30b · lucide icons beside font-awesome 4.7 · EasyMDE's markdown editor toolbar renders its buttons with font-awesome, the app's own icons are Lucide */
 /* PTVault - Modern Professional CSS with Dark Mode Support */
 
@@ -254,6 +257,45 @@
     --color-info-strong-hover: #1d4ed8;
     --color-warning-on: #451a03;
     --color-primary-ink: #4338ca;
+    /* Fills that carry text at 4.5:1 or better */
+    --color-on-bright: #0b1220;
+    --palette-steelblue-700: #36648b;
+    --palette-slate-600: #475569;
+    --palette-violet-600: #7c3aed;
+    --palette-teal-700: #0f766e;
+    --palette-orange-700: #c2410c;
+
+    /* Older token names still used by some rules and scripts; they resolve to the current tokens. */
+    --accent-color: var(--color-primary);
+    --brand-primary: var(--color-primary);
+    --primary-color: var(--color-primary);
+    --bg-primary: var(--color-bg-primary);
+    --bg-elevated: var(--color-bg-primary);
+    --color-background: var(--color-bg-primary);
+    --color-surface: var(--color-bg-primary);
+    --bg-secondary: var(--color-bg-secondary);
+    --color-surface-elevated: var(--color-bg-secondary);
+    --bg-tertiary: var(--color-bg-tertiary);
+    --bg-hover: var(--color-bg-tertiary);
+    --color-bg-hover: var(--color-bg-tertiary);
+    --color-surface-hover: var(--color-bg-tertiary);
+    --bg-selected: var(--color-primary-subtle);
+    --color-primary-alpha: var(--color-primary-subtle);
+    --color-primary-soft: var(--color-primary-light);
+    --border-color: var(--color-border);
+    --border-primary: var(--color-border);
+    --border-color-light: var(--color-border-light);
+    --text-primary: var(--color-text-primary);
+    --text-color: var(--color-text-primary);
+    --color-text: var(--color-text-primary);
+    --text-secondary: var(--color-text-secondary);
+    --text-tertiary: var(--color-text-tertiary);
+    --text-muted: var(--color-text-tertiary);
+    --color-text-muted: var(--color-text-tertiary);
+    --color-danger: var(--color-error);
+    --danger-color: var(--color-error);
+    --success-color: var(--color-success);
+    --warning-color: var(--color-warning);
 }
 
 /* Dark Theme */
@@ -1234,7 +1276,7 @@ select.ribbon-input {
 }
 
 .filter-toggle.filter-clear:hover {
-    background: var(--color-error);
+    background: var(--color-error-strong);
     color: white;
 }
 
@@ -3069,7 +3111,7 @@ select.ribbon-input {
 
 .source-badge.source-manual {
     background: var(--color-bg-tertiary);
-    color: var(--color-source-manual);
+    color: var(--color-text-secondary);
 }
 
 /* ============================================
@@ -3632,7 +3674,7 @@ select.ribbon-input {
 
 .engagement-card-stats .stat-medium {
     background: var(--color-medium);
-    color: white;
+    color: var(--color-warning-on);
 }
 
 .engagement-card-stats .stat-low {
@@ -3974,17 +4016,17 @@ select.ribbon-input {
 
 .tool-badge.tool-nessus {
     background: var(--palette-00a2c7);
-    color: white;
+    color: var(--color-on-bright);
 }
 
 .tool-badge.tool-nmap {
-    background: var(--palette-4682b4);
+    background: var(--palette-steelblue-700);
     color: white;
 }
 
 .tool-badge.tool-burp-suite {
     background: var(--palette-ff6633);
-    color: white;
+    color: var(--color-on-bright);
 }
 
 /* Confidence badges (Burp) */
@@ -6028,12 +6070,12 @@ select.ribbon-input {
 
 .admin-item-status.status-installed {
     background: var(--color-success-bg, var(--palette-green-500-a10));
-    color: var(--color-success, var(--palette-green-500));
+    color: var(--color-success-ink);
 }
 
 .admin-item-status.status-not-installed {
     background: var(--color-warning-bg, var(--palette-amber-500-a10));
-    color: var(--color-warning, var(--color-warning));
+    color: var(--color-warning-ink);
 }
 
 .admin-item-actions {
@@ -6617,18 +6659,18 @@ select.ribbon-input {
 }
 
 .cvss-severity-badge.none {
-    background: var(--palette-718096);
+    background: var(--palette-slate-600);
     color: white;
 }
 
 .cvss-severity-badge.low {
     background: var(--palette-d69e2e);
-    color: white;
+    color: var(--color-on-bright);
 }
 
 .cvss-severity-badge.medium {
     background: var(--palette-dd6b20);
-    color: white;
+    color: var(--color-on-bright);
 }
 
 .cvss-severity-badge.high {
@@ -7997,7 +8039,7 @@ select.ribbon-input {
     font-size: 0.65rem;
     padding: 2px 6px;
     background: var(--color-warning);
-    color: white;
+    color: var(--color-warning-on);
     border-radius: 10px;
     font-weight: 600;
 }
@@ -9148,7 +9190,7 @@ select.ribbon-input {
     justify-content: center;
     width: 24px;
     height: 24px;
-    background: var(--palette-violet-500);
+    background: var(--palette-violet-600);
     color: white;
     border-radius: var(--radius-sm);
     font-size: 0.9rem;
@@ -9180,7 +9222,7 @@ select.ribbon-input {
     justify-content: center;
     width: 28px;
     height: 28px;
-    background: var(--color-info);
+    background: var(--color-info-strong);
     color: white;
     border-radius: var(--radius-sm);
     font-size: 1rem;
@@ -10588,7 +10630,7 @@ h4.preview-sectionheader { font-size: 1.1rem; border-bottom: none; }
 .exec-row-technique {
     font-family: var(--font-mono);
     font-size: 0.75rem;
-    color: var(--color-primary);
+    color: var(--color-primary-ink);
     background: var(--color-bg-secondary);
     padding: 2px 6px;
     border-radius: var(--radius-sm);
@@ -11441,7 +11483,7 @@ h4.preview-sectionheader { font-size: 1.1rem; border-bottom: none; }
 .item-row-technique {
     font-family: var(--font-mono);
     font-size: 0.75rem;
-    color: var(--color-primary);
+    color: var(--color-primary-ink);
     background: var(--color-bg-secondary);
     padding: 2px 6px;
     border-radius: var(--radius-sm);
@@ -13095,6 +13137,7 @@ h4.preview-sectionheader { font-size: 1.1rem; border-bottom: none; }
 
 .command-block {
     background: var(--palette-1e1e1e);
+    color: var(--palette-d4d4d4);
     border-radius: 8px;
     overflow: hidden;
 }
@@ -13312,7 +13355,7 @@ h4.preview-sectionheader { font-size: 1.1rem; border-bottom: none; }
    REPORT GENERATION BUTTONS
    ============================================ */
 .btn-new {
-    background: var(--palette-green-500) !important;
+    background: var(--color-success-strong) !important;
     color: white !important;
     border: none !important;
 }
@@ -13321,7 +13364,7 @@ h4.preview-sectionheader { font-size: 1.1rem; border-bottom: none; }
 }
 
 .btn-export-html {
-    background: var(--palette-teal-500) !important;
+    background: var(--palette-teal-700) !important;
     color: white !important;
     border: none !important;
 }
@@ -13330,7 +13373,7 @@ h4.preview-sectionheader { font-size: 1.1rem; border-bottom: none; }
 }
 
 .btn-export-md {
-    background: var(--palette-orange-500) !important;
+    background: var(--palette-orange-700) !important;
     color: white !important;
     border: none !important;
 }
@@ -13339,7 +13382,7 @@ h4.preview-sectionheader { font-size: 1.1rem; border-bottom: none; }
 }
 
 .btn-export-pdf {
-    background: var(--color-error);
+    background: var(--color-error-strong);
     color: white;
     border: none;
 }
@@ -13348,7 +13391,7 @@ h4.preview-sectionheader { font-size: 1.1rem; border-bottom: none; }
 }
 
 .btn-export-word {
-    background: var(--color-info);
+    background: var(--color-info-strong);
     color: white;
     border: none;
 }
@@ -14601,6 +14644,31 @@ button:disabled,
     box-shadow: none;
 }
 
+/* Host Details before a host is chosen: say what belongs here. */
+.host-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-2xl) var(--spacing-lg);
+    color: var(--color-text-tertiary);
+    text-align: center;
+}
+
+.host-empty-state svg {
+    width: 2rem;
+    height: 2rem;
+}
+
+.host-empty-state p {
+    max-width: 45ch;
+    font-size: var(--text-sm);
+}
+
+.evidence-details-panel:has(.host-sections-container.active) .host-empty-state {
+    display: none;
+}
+
 /* No engagement selected: no empty pill beside the wordmark. */
 .active-engagement:empty {
     display: none;
@@ -14638,8 +14706,32 @@ button:disabled,
     vertical-align: -0.125em;
 }
 
+/* Default size for every Lucide icon; zero specificity, so any sized rule above still wins. */
+:where(svg.lucide) {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    vertical-align: -0.125em;
+}
+
+.platform-icon {
+    display: inline-flex;
+    margin-right: var(--spacing-sm);
+}
+
+.script-warning-label {
+    color: var(--color-warning-ink);
+}
+
+.preview-attackmap-icon {
+    margin-bottom: var(--spacing-sm);
+    font-size: 1.5rem;
+    color: var(--color-text-tertiary);
+}
+
 .placeholder-icon svg,
 .empty-icon svg,
+.install-icon svg,
 .dropzone-icon svg {
     width: 2.5rem;
     height: 2.5rem;
