@@ -70,10 +70,11 @@ function timeSince(dateString) {
  */
 function getSeverityIcon(severity) {
     const icons = {
-        'critical': '🔴',
-        'high': '🟠',
-        'medium': '🟡',
-        'low': '🔵'
+        // The badge's colour and label carry severity; no decorative dot.
+        'critical': '',
+        'high': '',
+        'medium': '',
+        'low': ''
     };
 
     return icons[severity?.toLowerCase()] || '';
@@ -170,7 +171,7 @@ const ThemeManager = {
         // Update theme icon
         const themeIcon = document.querySelector('.theme-icon');
         if (themeIcon) {
-            themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️';
+            themeIcon.innerHTML = `<i data-lucide="${theme === 'dark' ? 'moon' : 'sun'}"></i>`;
         }
     },
 

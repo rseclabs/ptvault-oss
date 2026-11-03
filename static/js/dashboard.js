@@ -222,7 +222,7 @@ const Dashboard = {
                     + (safeCounts.low || 0);
 
         if (total === 0) {
-            this.emptyState(root, 'No vulnerability scans imported — bring in Nessus or Burp output via Tools → Data');
+            this.emptyState(root, 'No vulnerability scans imported. Bring in Nessus or Burp output from Tools, then Data.');
             return;
         }
 
@@ -278,8 +278,8 @@ const Dashboard = {
         const barColor = this.themeColor('--color-primary');
 
         g.selectAll('rect').data(rows).enter().append('rect')
-            .attr('x', d => x(d.port)).attr('y', d => y(d.host_count))
-            .attr('width', x.bandwidth()).attr('height', d => innerH - y(d.host_count))
+            .attr('x', d => x(d.port) + (x.bandwidth() - Math.min(x.bandwidth(), 40)) / 2).attr('y', d => y(d.host_count))
+            .attr('width', Math.min(x.bandwidth(), 40)).attr('height', d => innerH - y(d.host_count))
             .attr('rx', 2)
             .attr('fill', barColor)
             .append('title').text(d => `Port ${d.port}${d.service ? ' · ' + d.service : ''}: ${d.host_count} host(s)`);
@@ -291,7 +291,7 @@ const Dashboard = {
                 .attr('transform', 'translate(-4,4) rotate(-45)')
                 .style('text-anchor', 'end');
         g.append('g')
-            .call(d3.axisLeft(y).ticks(4).tickSize(0).tickPadding(6))
+            .call(d3.axisLeft(y).ticks(Math.min(4, y.domain()[1])).tickFormat(d3.format('d')).tickSize(0).tickPadding(6))
             .call(g => g.select('.domain').remove());
     },
 

@@ -20,53 +20,53 @@
     <!-- Top Navigation -->
     <nav class="navbar">
         <div class="nav-brand">
-            <h1>🔐 PTVault</h1>
+            <h1><span data-lucide="lock-keyhole"></span> PTVault</h1>
             <span id="activeEngagement" class="active-engagement"></span>
         </div>
 
         <!-- Main Navigation Tabs -->
         <div class="nav-tabs">
             <button class="nav-tab active" data-section="engagements">
-                <span class="nav-tab-icon">📁</span>
+                <span class="nav-tab-icon"><i data-lucide="folder"></i></span>
                 <span class="nav-tab-label">Engagements</span>
             </button>
             <button class="nav-tab" data-section="dashboard">
-                <span class="nav-tab-icon">📊</span>
+                <span class="nav-tab-icon"><i data-lucide="layout-dashboard"></i></span>
                 <span class="nav-tab-label">Dashboard</span>
             </button>
             <button class="nav-tab" data-section="general">
-                <span class="nav-tab-icon">📝</span>
+                <span class="nav-tab-icon"><i data-lucide="notebook-pen"></i></span>
                 <span class="nav-tab-label">General</span>
             </button>
             <button class="nav-tab" data-section="hosts">
-                <span class="nav-tab-icon">📋</span>
+                <span class="nav-tab-icon"><i data-lucide="server"></i></span>
                 <span class="nav-tab-label">Hosts</span>
             </button>
             <button class="nav-tab" data-section="portgrid">
-                <span class="nav-tab-icon">🔲</span>
+                <span class="nav-tab-icon"><i data-lucide="table"></i></span>
                 <span class="nav-tab-label">Port Grid</span>
             </button>
             <button class="nav-tab" data-section="tools">
-                <span class="nav-tab-icon">🛠️</span>
+                <span class="nav-tab-icon"><i data-lucide="wrench"></i></span>
                 <span class="nav-tab-label">Tools</span>
             </button>
             <button class="nav-tab" data-section="reporting">
-                <span class="nav-tab-icon">📄</span>
+                <span class="nav-tab-icon"><i data-lucide="file-text"></i></span>
                 <span class="nav-tab-label">Reporting</span>
             </button>
             <button class="nav-tab" data-section="testplans">
-                <span class="nav-tab-icon">🎯</span>
+                <span class="nav-tab-icon"><i data-lucide="target"></i></span>
                 <span class="nav-tab-label">Test Plans</span>
             </button>
             <button class="nav-tab" data-section="admin">
-                <span class="nav-tab-icon">⚙️</span>
+                <span class="nav-tab-icon"><i data-lucide="settings"></i></span>
                 <span class="nav-tab-label">Admin</span>
             </button>
         </div>
 
         <div class="nav-actions">
             <button id="toggleTheme" class="btn btn-icon" title="Toggle Dark Mode">
-                <span class="theme-icon">🌙</span>
+                <span class="theme-icon"><i data-lucide="moon"></i></span>
             </button>
             <button id="logoutBtn" class="btn btn-secondary">Logout</button>
         </div>
@@ -451,19 +451,19 @@
                     <!-- Sub-navigation tabs (Indicators moved into the persistent bar above) -->
                     <div class="host-sub-nav">
                         <button class="host-sub-tab active" data-subtab="notes" onclick="HostManager.switchHostTab('notes')">
-                            <span class="sub-tab-icon">📝</span>
+                            <span class="sub-tab-icon"><i data-lucide="notebook-pen"></i></span>
                             <span class="sub-tab-label">Notes</span>
                         </button>
                         <button class="host-sub-tab" data-subtab="ports" onclick="HostManager.switchHostTab('ports')">
-                            <span class="sub-tab-icon">🔌</span>
+                            <span class="sub-tab-icon"><i data-lucide="plug"></i></span>
                             <span class="sub-tab-label">Ports</span>
                         </button>
                         <button class="host-sub-tab" data-subtab="findings" onclick="HostManager.switchHostTab('findings')">
-                            <span class="sub-tab-icon">⚠️</span>
+                            <span class="sub-tab-icon"><i data-lucide="triangle-alert"></i></span>
                             <span class="sub-tab-label">Findings</span>
                         </button>
                         <button class="host-sub-tab" data-subtab="credentials" onclick="HostManager.switchHostTab('credentials')">
-                            <span class="sub-tab-icon">🔑</span>
+                            <span class="sub-tab-icon"><i data-lucide="key-round"></i></span>
                             <span class="sub-tab-label">Credentials</span>
                         </button>
                     </div>
@@ -580,19 +580,19 @@
                     <!-- Sub-navigation tabs -->
                     <div class="general-sub-nav">
                         <button class="general-sub-tab active" data-subtab="notes" onclick="HostManager.switchGeneralTab('notes')">
-                            <span class="sub-tab-icon">📝</span>
+                            <span class="sub-tab-icon"><i data-lucide="notebook-pen"></i></span>
                             <span class="sub-tab-label">Notes</span>
                         </button>
                         <button class="general-sub-tab" data-subtab="credentials" onclick="HostManager.switchGeneralTab('credentials')">
-                            <span class="sub-tab-icon">🔑</span>
+                            <span class="sub-tab-icon"><i data-lucide="key-round"></i></span>
                             <span class="sub-tab-label">Credentials</span>
                         </button>
                         <button class="general-sub-tab" data-subtab="terminal" onclick="HostManager.switchGeneralTab('terminal')">
-                            <span class="sub-tab-icon">💻</span>
+                            <span class="sub-tab-icon"><i data-lucide="terminal"></i></span>
                             <span class="sub-tab-label">Terminal Dumps</span>
                         </button>
                         <button class="general-sub-tab" data-subtab="findings" onclick="HostManager.switchGeneralTab('findings')">
-                            <span class="sub-tab-icon">🎯</span>
+                            <span class="sub-tab-icon"><i data-lucide="target"></i></span>
                             <span class="sub-tab-label">Findings</span>
                         </button>
                     </div>
@@ -703,7 +703,7 @@
     <div id="section-tools" class="app-section">
         <div class="section-content-full">
             <div class="section-placeholder">
-                <div class="placeholder-icon">🛠️</div>
+                <div class="placeholder-icon"><i data-lucide="wrench"></i></div>
                 <h2>Loading Tools...</h2>
             </div>
         </div>
@@ -713,7 +713,7 @@
     <div id="section-reporting" class="app-section">
         <div class="section-content-full">
             <div class="section-placeholder">
-                <div class="placeholder-icon">📄</div>
+                <div class="placeholder-icon"><i data-lucide="file-text"></i></div>
                 <h2>Loading Reporting...</h2>
             </div>
         </div>
@@ -723,7 +723,7 @@
     <div id="section-testplans" class="app-section">
         <div class="section-content-full">
             <div class="section-placeholder">
-                <div class="placeholder-icon">🎯</div>
+                <div class="placeholder-icon"><i data-lucide="target"></i></div>
                 <h2>Loading Test Plans...</h2>
             </div>
         </div>
@@ -742,7 +742,7 @@
             </aside>
             <main class="admin-content" id="adminContent">
                 <div class="section-placeholder">
-                    <div class="placeholder-icon">⚙️</div>
+                    <div class="placeholder-icon"><i data-lucide="settings"></i></div>
                     <h2>Loading Admin...</h2>
                 </div>
             </main>
@@ -809,7 +809,7 @@
                     <div class="form-group">
                         <label for="engClientSelect">Client</label>
                         <select id="engClientSelect" onchange="onEngagementClientChange(this)">
-                            <option value="">— Select client —</option>
+                            <option value="">Select client</option>
                             <option value="__new__">+ New Client…</option>
                         </select>
                         <input type="hidden" id="engClientId">
@@ -948,27 +948,27 @@
             </div>
             <div class="export-options">
                 <button class="export-option" onclick="exportData('json')">
-                    <span class="export-icon">📄</span>
+                    <span class="export-icon"><i data-lucide="braces"></i></span>
                     <span class="export-label">JSON</span>
                     <small>Complete data dump</small>
                 </button>
                 <button class="export-option" onclick="exportData('markdown')">
-                    <span class="export-icon">📝</span>
+                    <span class="export-icon"><i data-lucide="file-text"></i></span>
                     <span class="export-label">Markdown</span>
                     <small>Formatted report</small>
                 </button>
                 <button class="export-option" onclick="exportData('template', 'default')">
-                    <span class="export-icon">📋</span>
+                    <span class="export-icon"><i data-lucide="clipboard-list"></i></span>
                     <span class="export-label">Template: Default</span>
                     <small>Comprehensive report</small>
                 </button>
                 <button class="export-option" onclick="exportData('template', 'executive')">
-                    <span class="export-icon">📊</span>
+                    <span class="export-icon"><i data-lucide="presentation"></i></span>
                     <span class="export-label">Template: Executive</span>
                     <small>Summary for leadership</small>
                 </button>
                 <button class="export-option" onclick="exportData('template', 'findings')">
-                    <span class="export-icon">🔍</span>
+                    <span class="export-icon"><i data-lucide="search"></i></span>
                     <span class="export-label">Template: Findings</span>
                     <small>Technical details</small>
                 </button>
@@ -980,7 +980,7 @@
     <div id="importToolModal" class="modal" style="display: none;">
         <div class="modal-content modal-lg">
             <div class="modal-header">
-                <h3>📥 Import Tool Output</h3>
+                <h3><span data-lucide="download"></span> Import Tool Output</h3>
                 <button class="modal-close" onclick="closeModal('importToolModal')">&times;</button>
             </div>
             <form id="importToolForm">
@@ -1017,7 +1017,7 @@
                 <div class="import-dropzone" id="importDropzone">
                     <input type="file" id="importFile" accept=".xml,.nessus,.json,.jsonl,.log,.txt" style="display: none;">
                     <div class="dropzone-content">
-                        <span class="dropzone-icon">📂</span>
+                        <span class="dropzone-icon"><i data-lucide="folder-open"></i></span>
                         <p>Drag & drop your scan file here</p>
                         <p class="text-muted">or click to browse</p>
                         <div class="supported-formats">
@@ -1032,7 +1032,7 @@
                 <!-- File selected info -->
                 <div id="importFileInfo" class="import-file-info" style="display: none;">
                     <div class="file-info-header">
-                        <span class="file-icon">📄</span>
+                        <span class="file-icon"><i data-lucide="file"></i></span>
                         <div class="file-details">
                             <span id="importFileName" class="file-name"></span>
                             <span id="importFileSize" class="file-size"></span>
@@ -1228,10 +1228,10 @@
                     <div class="editor-toolbar">
                         <label class="btn btn-sm btn-secondary">
                             <input type="file" id="noteImageInput" accept="image/*" style="display:none" onchange="HostManager.handleNoteImage('noteImageInput', 'noteContent')">
-                            📁 Upload Image
+                            <i data-lucide="image"></i> Upload Image
                         </label>
-                        <span class="toolbar-hint">📋 Paste screenshots directly (Ctrl+V) | Markdown supported</span>
-                        <button type="button" class="btn btn-sm btn-secondary" title="Markdown Reference" onclick="document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); switchSection('tools'); setTimeout(() => ToolsManager.switchTool('markdown'), 100);">📝 Markdown Reference</button>
+                        <span class="toolbar-hint">Paste screenshots with Ctrl+V. Markdown is supported.</span>
+                        <button type="button" class="btn btn-sm btn-secondary" title="Markdown Reference" onclick="document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); switchSection('tools'); setTimeout(() => ToolsManager.switchTool('markdown'), 100);"><i data-lucide="book-open"></i> Markdown Reference</button>
                     </div>
                     <div class="editor-split">
                         <div class="editor-pane">
@@ -1451,10 +1451,10 @@
                     <div class="editor-toolbar">
                         <label class="btn btn-sm btn-secondary">
                             <input type="file" id="engagementNoteImageInput" accept="image/*" style="display:none" onchange="HostManager.handleNoteImage('engagementNoteImageInput', 'engagementNoteContent')">
-                            📁 Upload Image
+                            <i data-lucide="image"></i> Upload Image
                         </label>
-                        <span class="toolbar-hint">📋 Paste screenshots directly (Ctrl+V) | Markdown supported</span>
-                        <button type="button" class="btn btn-sm btn-secondary" title="Markdown Reference" onclick="document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); switchSection('tools'); setTimeout(() => ToolsManager.switchTool('markdown'), 100);">📝 Markdown Reference</button>
+                        <span class="toolbar-hint">Paste screenshots with Ctrl+V. Markdown is supported.</span>
+                        <button type="button" class="btn btn-sm btn-secondary" title="Markdown Reference" onclick="document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); switchSection('tools'); setTimeout(() => ToolsManager.switchTool('markdown'), 100);"><i data-lucide="book-open"></i> Markdown Reference</button>
                     </div>
                     <div class="editor-split">
                         <div class="editor-pane">
@@ -1977,9 +1977,18 @@
     <!-- Initialize Lucide Icons -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
+            if (typeof lucide === 'undefined') return;
+            lucide.createIcons();
+            // Icons rendered later by the section scripts are drawn on the next frame.
+            let pending = false;
+            new MutationObserver(function() {
+                if (pending || !document.querySelector('[data-lucide]:not(svg)')) return;
+                pending = true;
+                requestAnimationFrame(function() {
+                    pending = false;
+                    lucide.createIcons();
+                });
+            }).observe(document.body, { childList: true, subtree: true });
         });
     </script>
 </body>

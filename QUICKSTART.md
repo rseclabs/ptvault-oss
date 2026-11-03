@@ -67,14 +67,13 @@ curl -b cookies.txt -X POST http://localhost:5001/api/engagements \
   -H "Content-Type: application/json" \
   -d '{
     "name": "ACME Corp Pentest",
-    "client": "ACME Corporation",
+    "client_name": "ACME Corporation",
     "start_date": "2025-12-01",
     "end_date": "2025-12-15",
     "status": "active",
-    "scope": "External network penetration test",
+    "description": "External network penetration test, Q4 2025",
     "contact_name": "John Smith",
-    "contact_email": "john.smith@acme.com",
-    "notes": "Q4 2025 security assessment"
+    "contact_email": "john.smith@acme.com"
   }'
 ```
 
@@ -83,7 +82,7 @@ Expected response:
 {
   "id": 1,
   "name": "ACME Corp Pentest",
-  "client": "ACME Corporation",
+  "client_name": "ACME Corporation",
   ...
 }
 ```

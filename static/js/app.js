@@ -299,7 +299,7 @@ async function renderEngagementsGrid(engagements) {
     if (engagements.length === 0) {
         container.innerHTML = `
             <div class="empty-state-large">
-                <div class="empty-icon">📁</div>
+                <div class="empty-icon"><i data-lucide="folder"></i></div>
                 <h3>No Engagements Yet</h3>
                 <p>Create your first engagement to get started</p>
             </div>

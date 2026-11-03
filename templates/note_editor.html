@@ -90,7 +90,7 @@
             border-color: var(--color-border);
             border-top: none;
             border-radius: 0 0 var(--radius-md) var(--radius-md);
-            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-family: var(--font-mono);
             font-size: 14px;
             line-height: 1.6;
             min-height: 520px;
@@ -117,7 +117,7 @@
         .EasyMDEContainer .editor-preview h1,
         .EasyMDEContainer .editor-preview h2,
         .EasyMDEContainer .editor-preview h3 { margin: 1em 0 0.4em 0; font-weight: 600; }
-        .EasyMDEContainer .editor-preview pre { background: var(--color-surface-code); color: #e2e8f0; padding: 0.75em; border-radius: var(--radius-md); overflow-x: auto; margin: 0 0 0.75em 0; }
+        .EasyMDEContainer .editor-preview pre { background: var(--color-surface-code); color: var(--palette-slate-200); padding: 0.75em; border-radius: var(--radius-md); overflow-x: auto; margin: 0 0 0.75em 0; }
         .EasyMDEContainer .editor-preview code { background: var(--color-bg-tertiary); padding: 0.1em 0.3em; border-radius: var(--radius-sm); font-size: 0.875em; }
         .EasyMDEContainer .editor-preview pre code { background: none; padding: 0; }
         .EasyMDEContainer .editor-preview blockquote { border-left: 3px solid var(--color-primary); padding: 0.25em 0.75em; color: var(--color-text-secondary); margin: 0 0 0.75em 0; }
@@ -127,14 +127,14 @@
         .EasyMDEContainer .editor-preview th { background: var(--color-bg-tertiary); font-weight: 600; }
 
         /* Dark mode CodeMirror syntax */
-        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-comment { color: #6a9955; }
-        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-header { color: #569cd6; font-weight: 600; }
-        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-strong { color: #dcdcaa; }
-        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-em { color: #ce9178; }
-        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-link { color: #4fc3f7; }
-        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-url { color: #4fc3f7; }
-        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-string { color: #ce9178; }
-        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-keyword { color: #c586c0; }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-comment { color: var(--palette-6a9955); }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-header { color: var(--palette-569cd6); font-weight: 600; }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-strong { color: var(--palette-dcdcaa); }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-em { color: var(--palette-ce9178); }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-link { color: var(--palette-4fc3f7); }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-url { color: var(--palette-4fc3f7); }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-string { color: var(--palette-ce9178); }
+        [data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-keyword { color: var(--palette-c586c0); }
 
         /* Image upload hint */
         .upload-hint {
@@ -157,7 +157,7 @@
 
         <div class="editor-container">
             <textarea id="noteContent"></textarea>
-            <p class="upload-hint">Paste screenshots with Ctrl+V &nbsp;·&nbsp; Upload images via toolbar &nbsp;·&nbsp; Markdown supported</p>
+            <p class="upload-hint">Paste screenshots with Ctrl+V, or upload images from the toolbar. Markdown is supported.</p>
         </div>
     </div>
 

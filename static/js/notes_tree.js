@@ -121,10 +121,10 @@
                     tabindex="0">
                     <div class="notes-tree-row" title="${escapeHtml(title)}">
                         <span class="notes-tree-indent" style="width:${depth * 16}px;"></span>
-                        <span class="notes-tree-icon">📄</span>
+                        <span class="notes-tree-icon"><i data-lucide="file-text"></i></span>
                         <span class="notes-tree-title">${escapeHtml(title)}</span>
                         <span class="notes-tree-actions">
-                            <button class="btn btn-sm btn-icon" data-act="delete" title="Delete">🗑️</button>
+                            <button class="btn btn-sm btn-icon" data-act="delete" title="Delete"><i data-lucide="trash-2"></i></button>
                         </span>
                     </div>
                     ${childrenHtml ? `<ul class="notes-tree-children">${childrenHtml}</ul>` : ''}

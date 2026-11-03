@@ -133,14 +133,14 @@ const HostManager = {
      * Get icon for host based on OS or type
      */
     getHostIcon(host) {
-        if (!host.os) return '🖥️';
+        if (!host.os) return '<i data-lucide="monitor"></i>';
         const os = host.os.toLowerCase();
-        if (os.includes('windows')) return '🪟';
-        if (os.includes('linux') || os.includes('ubuntu') || os.includes('debian')) return '🐧';
-        if (os.includes('mac') || os.includes('darwin')) return '🍎';
-        if (os.includes('router') || os.includes('cisco')) return '📡';
-        if (os.includes('firewall')) return '🔥';
-        return '🖥️';
+        if (os.includes('windows')) return '<i data-lucide="monitor"></i>';
+        if (os.includes('linux') || os.includes('ubuntu') || os.includes('debian')) return '<i data-lucide="hard-drive"></i>';
+        if (os.includes('mac') || os.includes('darwin')) return '<i data-lucide="laptop"></i>';
+        if (os.includes('router') || os.includes('cisco')) return '<i data-lucide="router"></i>';
+        if (os.includes('firewall')) return '<i data-lucide="shield"></i>';
+        return '<i data-lucide="monitor"></i>';
     },
 
     /**
@@ -399,8 +399,8 @@ const HostManager = {
                             <button class="btn btn-sm btn-icon" onclick="HostManager.toggleEvidence(${ev.id})" title="Expand">
                                 <span class="expand-icon">▼</span>
                             </button>
-                            <button class="btn btn-sm btn-icon" onclick="HostManager.editEvidence(${ev.id})" title="Edit">✏️</button>
-                            <button class="btn btn-sm btn-icon" onclick="HostManager.deleteEvidence(${ev.id})" title="Delete">🗑️</button>
+                            <button class="btn btn-sm btn-icon" onclick="HostManager.editEvidence(${ev.id})" title="Edit"><i data-lucide="pencil"></i></button>
+                            <button class="btn btn-sm btn-icon" onclick="HostManager.deleteEvidence(${ev.id})" title="Delete"><i data-lucide="trash-2"></i></button>
                         </div>
                     </div>
                     <div class="evidence-preview">
@@ -413,7 +413,7 @@ const HostManager = {
                         ${ev.file_name ? `
                             <div class="evidence-attachment">
                                 <a href="/api/evidence/${ev.id}/download" class="btn btn-sm btn-secondary">
-                                    📎 ${escapeHtml(ev.file_name)}
+                                    <i data-lucide="paperclip"></i> ${escapeHtml(ev.file_name)}
                                 </a>
                             </div>
                         ` : ''}
@@ -920,12 +920,12 @@ const HostManager = {
             return `
             <div class="note-list-item" data-id="${note.id}">
                 <div class="note-list-item-header">
-                    <span class="note-list-item-icon">📄</span>
+                    <span class="note-list-item-icon"><i data-lucide="file-text"></i></span>
                     <span class="note-list-item-title">${this.noteFirstLine(source)}</span>
                     <span class="note-list-item-meta">${timeSince(note.created_at)}</span>
                     <div class="note-list-item-actions">
-                        <button class="btn btn-sm btn-icon" onclick="HostManager.editNote(${note.id})" title="Edit">✏️</button>
-                        <button class="btn btn-sm btn-icon" onclick="HostManager.deleteNote(${note.id})" title="Delete">🗑️</button>
+                        <button class="btn btn-sm btn-icon" onclick="HostManager.editNote(${note.id})" title="Edit"><i data-lucide="pencil"></i></button>
+                        <button class="btn btn-sm btn-icon" onclick="HostManager.deleteNote(${note.id})" title="Delete"><i data-lucide="trash-2"></i></button>
                     </div>
                 </div>
                 ${preview ? `<div class="note-list-item-preview" data-note-preview="${note.id}">${preview}</div>` : ''}
@@ -1135,8 +1135,8 @@ const HostManager = {
                 <td><span class="state-badge state-${port.state}">${port.state}</span></td>
                 <td><span class="source-badge source-${port.source}">${port.source}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-icon" onclick="HostManager.editPort(${port.id})" title="Edit">✏️</button>
-                    <button class="btn btn-sm btn-icon" onclick="HostManager.deletePort(${port.id})" title="Delete">🗑️</button>
+                    <button class="btn btn-sm btn-icon" onclick="HostManager.editPort(${port.id})" title="Edit"><i data-lucide="pencil"></i></button>
+                    <button class="btn btn-sm btn-icon" onclick="HostManager.deletePort(${port.id})" title="Delete"><i data-lucide="trash-2"></i></button>
                 </td>
             </tr>
         `).join('');
@@ -1284,8 +1284,8 @@ const HostManager = {
                     <td>${escapeHtml(cred.service || '-')}</td>
                     <td>${escapeHtml(truncate(cred.notes || '', 50))}</td>
                     <td>
-                        <button class="btn btn-sm btn-icon" onclick="HostManager.editCredential(${cred.id})" title="Edit">✏️</button>
-                        <button class="btn btn-sm btn-icon" onclick="HostManager.deleteCredential(${cred.id})" title="Delete">🗑️</button>
+                        <button class="btn btn-sm btn-icon" onclick="HostManager.editCredential(${cred.id})" title="Edit"><i data-lucide="pencil"></i></button>
+                        <button class="btn btn-sm btn-icon" onclick="HostManager.deleteCredential(${cred.id})" title="Delete"><i data-lucide="trash-2"></i></button>
                     </td>
                 </tr>
             `;
@@ -1708,8 +1708,8 @@ const HostManager = {
      * Get severity icon
      */
     getSeverityIcon(severity) {
-        const icons = { 4: '🔴', 3: '🟠', 2: '🟡', 1: '🟢', 0: '⚪' };
-        return icons[severity] || '❓';
+        // The label beside it and the card's colour carry severity; no decorative dot.
+        return '';
     },
 
     /**
@@ -2145,12 +2145,12 @@ const HostManager = {
             return `
             <div class="note-list-item" data-id="${note.id}">
                 <div class="note-list-item-header">
-                    <span class="note-list-item-icon">📄</span>
+                    <span class="note-list-item-icon"><i data-lucide="file-text"></i></span>
                     <span class="note-list-item-title">${this.noteFirstLine(source)}</span>
                     <span class="note-list-item-meta">${timeSince(note.created_at)}</span>
                     <div class="note-list-item-actions">
-                        <button class="btn btn-sm btn-icon" onclick="HostManager.editEngagementNote(${note.id})" title="Edit">✏️</button>
-                        <button class="btn btn-sm btn-icon" onclick="HostManager.deleteEngagementNote(${note.id})" title="Delete">🗑️</button>
+                        <button class="btn btn-sm btn-icon" onclick="HostManager.editEngagementNote(${note.id})" title="Edit"><i data-lucide="pencil"></i></button>
+                        <button class="btn btn-sm btn-icon" onclick="HostManager.deleteEngagementNote(${note.id})" title="Delete"><i data-lucide="trash-2"></i></button>
                     </div>
                 </div>
                 ${preview ? `<div class="note-list-item-preview" data-note-preview="${note.id}">${preview}</div>` : ''}
@@ -2303,8 +2303,8 @@ const HostManager = {
                     <td><span class="credential-type-badge type-${typeClass}">${typeLabel}</span></td>
                     <td>${escapeHtml(truncate(cred.description || '', 80))}</td>
                     <td>
-                        <button class="btn btn-sm btn-icon" onclick="HostManager.editEngagementCredential(${cred.id})" title="Edit">✏️</button>
-                        <button class="btn btn-sm btn-icon" onclick="HostManager.deleteEngagementCredential(${cred.id})" title="Delete">🗑️</button>
+                        <button class="btn btn-sm btn-icon" onclick="HostManager.editEngagementCredential(${cred.id})" title="Edit"><i data-lucide="pencil"></i></button>
+                        <button class="btn btn-sm btn-icon" onclick="HostManager.deleteEngagementCredential(${cred.id})" title="Delete"><i data-lucide="trash-2"></i></button>
                     </td>
                 </tr>
             `;
@@ -2483,8 +2483,8 @@ const HostManager = {
                             <span class="terminal-dump-datetime">${sessionTime}</span>
                         </div>
                         <div class="terminal-dump-actions">
-                            <button class="btn btn-sm btn-icon" onclick="HostManager.editTerminalDump(${dump.id})" title="Edit">✏️</button>
-                            <button class="btn btn-sm btn-icon" onclick="HostManager.deleteTerminalDump(${dump.id})" title="Delete">🗑️</button>
+                            <button class="btn btn-sm btn-icon" onclick="HostManager.editTerminalDump(${dump.id})" title="Edit"><i data-lucide="pencil"></i></button>
+                            <button class="btn btn-sm btn-icon" onclick="HostManager.deleteTerminalDump(${dump.id})" title="Delete"><i data-lucide="trash-2"></i></button>
                         </div>
                     </div>
                     <div class="terminal-dump-content">
@@ -2741,9 +2741,9 @@ const HostManager = {
                                 <input type="checkbox" ${finding.include_in_report ? 'checked' : ''} onchange="HostManager.toggleFindingReport(${finding.id})">
                                 <span class="report-toggle-label">Report</span>
                             </label>
-                            <button class="btn btn-sm btn-icon" onclick="HostManager.saveToWriteups(${finding.id})" title="Save to Writeups Database">📚</button>
-                            <button class="btn btn-sm btn-icon" onclick="HostManager.editEngagementFinding(${finding.id})" title="Edit">✏️</button>
-                            <button class="btn btn-sm btn-icon" onclick="HostManager.deleteEngagementFinding(${finding.id})" title="Delete">🗑️</button>
+                            <button class="btn btn-sm btn-icon" onclick="HostManager.saveToWriteups(${finding.id})" title="Save to Writeups Database"><i data-lucide="book-plus"></i></button>
+                            <button class="btn btn-sm btn-icon" onclick="HostManager.editEngagementFinding(${finding.id})" title="Edit"><i data-lucide="pencil"></i></button>
+                            <button class="btn btn-sm btn-icon" onclick="HostManager.deleteEngagementFinding(${finding.id})" title="Delete"><i data-lucide="trash-2"></i></button>
                         </div>
                     </div>
                     <div class="finding-body">
