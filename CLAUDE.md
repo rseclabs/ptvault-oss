@@ -216,6 +216,8 @@ A selection; `models/schema.sql` plus the migrations are the full schema.
 - Every colour and font goes through a custom property in `static/css/main.css` (`:root` and `[data-theme="dark"]`); no literal values in rules
 - Icons are Lucide (`<i data-lucide="name"></i>`); on the dashboard, icons added to the DOM later are drawn automatically. No emoji as icons
 - Font Awesome is present only for EasyMDE's toolbar; create editors with `autoDownloadFontAwesome: false`
+- Gradients are allowed. Finding and scan cards keep their severity gradient (a soft severity tint fading across the card) and a 4px severity left edge; do not flatten them
+- Severity colours: critical purple, high red, medium orange, low yellow (`--sev-*` in `static/css/tokens.css`), the same in every view and in both themes
 
 ### Import Order
 

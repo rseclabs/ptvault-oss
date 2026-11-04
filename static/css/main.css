@@ -6,7 +6,8 @@
  * axes: dark/grotesk-sans/chromatic-amber · posture: restrained · contrast: pass · v2.0.0 */
 /* Hallmark · pre-emit critique: P4 H4 E4 S4 R5 V4 · weakest: S, a dark data tool reads like any dev console; the person-amber and instrument-cool split on every piece of evidence is what only PTVault has */
 /* Hallmark · dismissed 41 · 104 surfaces use theme tokens that flip with the inherited text colour; the 3 fixed dark code surfaces set their own ink */
-/* Hallmark · dismissed 3 · the left-border accents left are toast and form-message callouts on screens that took the system without recomposition; the recomposed screens carry none */
+/* Hallmark · house rule · gradients are allowed in PTVault: the severity gradient and 4px severity edge on finding and scan cards are part of the design (owner, 2026-11-03). The Console theme's no-gradient rule does not apply to this project */
+/* Hallmark · dismissed 3 · the 4px severity edges on finding and scan cards are the house rule above; the other left accents are toast and form-message callouts */
 /* Hallmark · waive 24b · off-scale 2px 6px and 10px paddings on chips, inputs and table cells · the nine screens that take the system keep their own control density; the five recomposed screens use the space tokens */
 /* Hallmark · waive 30b · lucide icons beside font-awesome 4.7 · EasyMDE's markdown editor toolbar renders its buttons with font-awesome, the app's own icons are Lucide */
 /* PTVault - Modern Professional CSS with Dark Mode Support */
@@ -4630,8 +4631,8 @@ select.ribbon-input {
 }
 
 .finding-card.criticality-low {
-    border-left-color: var(--color-success-hover);
-    background: linear-gradient(90deg, var(--color-success-bg) 0%, var(--color-bg-primary) 100%);
+    border-left-color: var(--color-low);
+    background: linear-gradient(90deg, var(--color-low-bg) 0%, var(--color-bg-primary) 100%);
 }
 
 .finding-header {
@@ -8659,8 +8660,8 @@ select.ribbon-input {
 }
 
 .source-item.criticality-low {
-    border-left: 3px solid var(--color-success-hover);
-    background: linear-gradient(90deg, var(--color-success-bg) 0%, var(--color-bg-secondary) 100%);
+    border-left: 3px solid var(--color-low);
+    background: linear-gradient(90deg, var(--color-low-bg) 0%, var(--color-bg-secondary) 100%);
 }
 
 /* Criticality badges in reporting (criticality-* prefix format) */
@@ -15718,21 +15719,40 @@ body.auth-page {
     }
 }
 
-/* ---- Findings: neutral panels; who wrote it shows in the badge ---- */
-.vuln-card,
-.vuln-card.vuln-critical,
-.vuln-card.vuln-high,
-.vuln-card.vuln-medium,
-.vuln-card.vuln-low,
-.vuln-card.vuln-info {
-    background: var(--color-paper-2);
+/* ---- Findings: the owner's severity gradient fills each card (kept from before the redesign) ---- */
+.vuln-card {
     border: var(--rule-hair) solid var(--color-rule);
+    border-left: 4px solid var(--color-rule);
     border-radius: var(--radius-card);
     box-shadow: none;
 }
 
+.vuln-card.vuln-critical {
+    border-left-color: var(--sev-critical);
+    background: linear-gradient(90deg, var(--sev-critical-soft) 0%, var(--color-paper-2) 100%);
+}
+
+.vuln-card.vuln-high {
+    border-left-color: var(--sev-high);
+    background: linear-gradient(90deg, var(--sev-high-soft) 0%, var(--color-paper-2) 100%);
+}
+
+.vuln-card.vuln-medium {
+    border-left-color: var(--sev-medium);
+    background: linear-gradient(90deg, var(--sev-medium-soft) 0%, var(--color-paper-2) 100%);
+}
+
+.vuln-card.vuln-low {
+    border-left-color: var(--sev-low);
+    background: linear-gradient(90deg, var(--sev-low-soft) 0%, var(--color-paper-2) 100%);
+}
+
+.vuln-card.vuln-info {
+    border-left-color: var(--color-muted);
+    background: linear-gradient(90deg, var(--color-paper-4) 0%, var(--color-paper-2) 100%);
+}
+
 .vuln-card:hover {
-    border-color: var(--color-rule-2);
     box-shadow: none;
     transform: none;
 }
