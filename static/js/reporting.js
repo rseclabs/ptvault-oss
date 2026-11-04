@@ -883,12 +883,14 @@ const ReportingManager = {
                     `;
                 } else if (toolId === 'coloredtable') {
                     const ctData = item.toolData || { headers: ['Finding', 'Severity', 'Status'], rows: [] };
+                    // Same scale as every other severity view: purple critical, red high,
+                    // orange medium, yellow low (--sev-* tokens); green is the theme's ok.
                     const cellColors = {
-                        purple: { bg: '#f3e8ff', text: '#6b21a8' },
-                        red:    { bg: '#fee2e2', text: '#991b1b' },
-                        orange: { bg: '#fed7aa', text: '#9a3412' },
-                        yellow: { bg: '#fef9c3', text: '#713f12' },
-                        green:  { bg: '#dcfce7', text: '#166534' }
+                        purple: { bg: 'var(--sev-critical-soft)', text: 'var(--sev-critical-text)' },
+                        red:    { bg: 'var(--sev-high-soft)',     text: 'var(--sev-high-text)' },
+                        orange: { bg: 'var(--sev-medium-soft)',   text: 'var(--sev-medium-text)' },
+                        yellow: { bg: 'var(--sev-low-soft)',      text: 'var(--sev-low-text)' },
+                        green:  { bg: 'var(--color-ok-soft)',     text: 'var(--color-ok)' }
                     };
                     html += `
                         <div class="preview-table preview-colored-table">
@@ -2582,7 +2584,8 @@ const ReportingManager = {
     _renderCtableEditorContent() {
         const d = this.editingCtableData;
         const colors = ['purple', 'red', 'orange', 'yellow', 'green'];
-        const colorLabels = { purple: '#9333ea', red: '#ef4444', orange: '#f97316', yellow: '#eab308', green: '#22c55e' };
+        const colorLabels = { purple: 'var(--sev-critical)', red: 'var(--sev-high)', orange: 'var(--sev-medium)',
+                              yellow: 'var(--sev-low)', green: 'var(--color-ok)' };
 
         const headerInputs = d.headers.map((h, ci) => `
             <th>
