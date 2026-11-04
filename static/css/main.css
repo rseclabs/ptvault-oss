@@ -15845,3 +15845,203 @@ body.auth-page {
         font-size: 0.8125rem;
     }
 }
+
+/* ---- Attack maps: the editor on Console surfaces ---- */
+.attack-maps-page {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 180px);
+    padding: 0;
+    background: var(--color-paper);
+}
+
+.atk-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    background: var(--color-paper-2);
+    border-bottom: var(--rule-hair) solid var(--color-rule);
+}
+
+.atk-selector {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.atk-select {
+    min-width: 200px;
+    padding: var(--space-2xs) var(--space-sm);
+    background: var(--color-paper-3);
+    border: var(--rule-hair) solid var(--color-rule);
+    border-radius: var(--radius-pill);
+    color: var(--color-ink);
+}
+
+.atk-divider {
+    width: 1px;
+    height: 24px;
+    margin: 0 var(--space-2xs);
+    background: var(--color-rule);
+}
+
+.atk-connect.is-active {
+    background: var(--color-accent-soft);
+    color: var(--color-accent-text);
+    border-color: color-mix(in oklab, var(--color-accent) 45%, transparent);
+}
+
+.atk-zoom {
+    display: flex;
+    gap: var(--space-2xs);
+    margin-left: auto;
+}
+
+.atk-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.atk-palette {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3xs);
+    width: 84px;
+    flex-shrink: 0;
+    padding: var(--space-xs) 0;
+    overflow-y: auto;
+    position: relative;
+    z-index: 10;
+    background: var(--color-paper-2);
+    border-right: var(--rule-hair) solid var(--color-rule);
+}
+
+.atk-palette-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2xs);
+    margin: 0 var(--space-2xs);
+    padding: var(--space-xs) var(--space-2xs);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: background-color var(--dur-micro) var(--ease-out);
+}
+
+.atk-palette-btn:hover { background: var(--color-paper-4); }
+.atk-palette-btn:active { background: var(--color-rule); }
+
+.atk-palette-dot {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: var(--radius-chip);
+}
+
+.atk-palette-label {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--color-muted);
+    text-align: center;
+    white-space: nowrap;
+}
+
+.atk-palette-btn:hover .atk-palette-label { color: var(--color-ink); }
+
+.atk-canvas {
+    flex: 1;
+    overflow: hidden;
+    cursor: crosshair;
+    background: var(--color-paper-3);
+}
+
+.atk-properties {
+    width: 260px;
+    flex-shrink: 0;
+    padding: var(--space-md);
+    overflow-y: auto;
+    background: var(--color-paper-2);
+    border-left: var(--rule-hair) solid var(--color-rule);
+    color: var(--color-ink);
+    font-size: var(--text-sm);
+}
+
+.atk-empty {
+    padding: var(--space-lg) var(--space-xs);
+    color: var(--color-muted);
+    text-align: center;
+    font-size: var(--text-sm);
+}
+
+.attack-maps-page .prop-field { margin-bottom: var(--space-sm); }
+
+.attack-maps-page .prop-field label {
+    display: block;
+    margin-bottom: var(--space-2xs);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--color-muted);
+}
+
+.attack-maps-page .prop-field input,
+.attack-maps-page .prop-field textarea,
+.attack-maps-page .prop-field select {
+    width: 100%;
+    padding: var(--space-2xs) var(--space-xs);
+    background: var(--color-paper-3);
+    border: var(--rule-hair) solid var(--color-rule);
+    border-radius: var(--radius-pill);
+    color: var(--color-ink);
+    font-size: var(--text-sm);
+}
+
+
+/* ---- Reporting: format tools and writeup types on the theme (no stray violet) ---- */
+.source-item .format-tool-icon {
+    background: var(--color-paper-4);
+    color: var(--color-ink-2);
+    border: var(--rule-hair) solid var(--color-rule);
+}
+
+.source-item.format-tool:hover {
+    border-color: var(--color-rule-2);
+}
+
+.type-badge.narrative {
+    background: var(--color-paper-4);
+    color: var(--color-ink-2);
+}
+
+.writeup-card.type-narrative {
+    border-left-color: var(--color-rule-2);
+}
+
+.credential-type-badge.type-krbtgt {
+    background: var(--color-cool-soft);
+    color: var(--color-cool);
+}
+
+/* Report toolbar: one primary (Save), every other action secondary */
+.btn-new,
+.btn-export-html,
+.btn-export-md,
+.btn-export-pdf,
+.btn-export-word {
+    background: var(--color-paper-2) !important;
+    color: var(--color-ink) !important;
+    border: var(--rule-hair) solid var(--color-rule-2) !important;
+}
+
+.btn-new:hover:not(:disabled),
+.btn-export-html:hover:not(:disabled),
+.btn-export-md:hover:not(:disabled),
+.btn-export-pdf:hover:not(:disabled),
+.btn-export-word:hover:not(:disabled) {
+    background: var(--color-paper-4) !important;
+}

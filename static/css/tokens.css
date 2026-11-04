@@ -61,6 +61,15 @@
   --sev-on: oklch(16% 0.01 250);
   --ink-on-bright: oklch(18% 0.02 250);
 
+  /* Attack map node types (one set for the palette, the canvas and the SVG export) */
+  --node-recon: #4a7eb5;
+  --node-tactic: #4a9e6b;
+  --node-exploit: #c45c5c;
+  --node-connector: #c98544;
+  --node-evidence: #4a9e94;
+  --node-finding: #9278c4;
+  --node-host: #4a9eb5;
+
   /* Type */
   --font-display: "Host Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: var(--font-display);

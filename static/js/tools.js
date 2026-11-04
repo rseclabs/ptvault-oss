@@ -1364,13 +1364,13 @@ const ToolsManager = {
         }, 0);
 
         const nodeTypes = [
-            { type: 'recon', color: '#4a7eb5', label: 'Recon' },
-            { type: 'tactic', color: '#4a9e6b', label: 'Tactic' },
-            { type: 'exploit', color: '#c45c5c', label: 'Exploit' },
-            { type: 'connector', color: '#c98544', label: 'Connect' },
-            { type: 'evidence_ref', color: '#4a9e94', label: 'Evidence' },
-            { type: 'finding_ref', color: '#9278c4', label: 'Finding' },
-            { type: 'host_ref', color: '#4a9eb5', label: 'Host' }
+            { type: 'recon', color: 'var(--node-recon)', label: 'Recon' },
+            { type: 'tactic', color: 'var(--node-tactic)', label: 'Tactic' },
+            { type: 'exploit', color: 'var(--node-exploit)', label: 'Exploit' },
+            { type: 'connector', color: 'var(--node-connector)', label: 'Connect' },
+            { type: 'evidence_ref', color: 'var(--node-evidence)', label: 'Evidence' },
+            { type: 'finding_ref', color: 'var(--node-finding)', label: 'Finding' },
+            { type: 'host_ref', color: 'var(--node-host)', label: 'Host' }
         ];
 
         const paletteButtons = nodeTypes.map(n => `
@@ -1382,82 +1382,49 @@ const ToolsManager = {
         `).join('');
 
         return `
-            <div class="attack-maps-page" style="display:flex;flex-direction:column;height:calc(100vh - 180px);padding:0;">
+            <div class="attack-maps-page">
                 <!-- Toolbar -->
-                <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:#1a1a2e;border-bottom:1px solid #374151;flex-wrap:wrap;">
+                <div class="atk-toolbar">
                     <!-- Map selector -->
-                    <div id="attackMapSelector" style="display:flex;align-items:center;gap:6px;">
-                        <select style="background:#2a2a3e;border:1px solid #374151;color:#e2e8f0;padding:6px 10px;border-radius:6px;min-width:180px;">
+                    <div id="attackMapSelector" class="atk-selector">
+                        <select class="atk-select">
                             <option>Loading...</option>
                         </select>
                     </div>
-                    <button class="btn btn-sm btn-primary" onclick="AttackMapEditor.promptNewMap()" style="font-size:12px;" title="Create a new attack map">+ New</button>
-                    <button class="btn btn-sm btn-secondary" onclick="AttackMapEditor.duplicateCurrentMap()" style="font-size:12px;" title="Duplicate the current map">Dup</button>
-                    <button class="btn btn-sm btn-danger" onclick="AttackMapEditor.deleteCurrentMap()" style="font-size:12px;" title="Delete the current map">Del</button>
+                    <button class="btn btn-sm btn-primary" onclick="AttackMapEditor.promptNewMap()" title="Create a new attack map">+ New</button>
+                    <button class="btn btn-sm btn-secondary" onclick="AttackMapEditor.duplicateCurrentMap()" title="Duplicate the current map">Dup</button>
+                    <button class="btn btn-sm btn-quiet-danger" onclick="AttackMapEditor.deleteCurrentMap()" title="Delete the current map">Del</button>
 
-                    <div style="width:1px;height:24px;background:#374151;margin:0 4px;"></div>
+                    <div class="atk-divider" aria-hidden="true"></div>
 
                     <!-- Connect mode -->
-                    <button id="attackMapConnectBtn" class="btn btn-sm" onclick="AttackMapEditor.toggleConnectMode()"
-                            style="background:#2a2a3e;border:1px solid #374151;color:#e2e8f0;font-size:12px;border-radius:6px;padding:4px 10px;cursor:pointer;"
+                    <button id="attackMapConnectBtn" class="btn btn-sm btn-secondary atk-connect" onclick="AttackMapEditor.toggleConnectMode()"
                             title="Toggle connect mode to draw arrows between nodes">
                         <i data-lucide="link"></i> Connect
                     </button>
 
                     <!-- Zoom -->
-                    <div style="margin-left:auto;display:flex;gap:4px;">
-                        <button class="btn btn-sm" onclick="AttackMapEditor.zoomIn()" title="Zoom in"
-                                style="background:#2a2a3e;border:1px solid #374151;color:#e2e8f0;font-size:14px;padding:4px 8px;border-radius:6px;cursor:pointer;">+</button>
-                        <button class="btn btn-sm" onclick="AttackMapEditor.zoomOut()" title="Zoom out"
-                                style="background:#2a2a3e;border:1px solid #374151;color:#e2e8f0;font-size:14px;padding:4px 8px;border-radius:6px;cursor:pointer;">−</button>
-                        <button class="btn btn-sm" onclick="AttackMapEditor.zoomFit()" title="Zoom to fit all nodes"
-                                style="background:#2a2a3e;border:1px solid #374151;color:#e2e8f0;font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer;">Fit</button>
+                    <div class="atk-zoom">
+                        <button class="btn btn-sm btn-secondary" onclick="AttackMapEditor.zoomIn()" title="Zoom in" aria-label="Zoom in">+</button>
+                        <button class="btn btn-sm btn-secondary" onclick="AttackMapEditor.zoomOut()" title="Zoom out" aria-label="Zoom out">−</button>
+                        <button class="btn btn-sm btn-secondary" onclick="AttackMapEditor.zoomFit()" title="Zoom to fit all nodes">Fit</button>
                     </div>
                 </div>
 
                 <!-- Palette + Canvas + Properties -->
-                <div style="display:flex;flex:1;overflow:hidden;">
+                <div class="atk-body">
                     <!-- Left Palette -->
-                    <div class="atk-palette" style="width:80px;background:#1a1a2e;border-right:1px solid #374151;display:flex;flex-direction:column;padding:8px 0;gap:2px;overflow-y:auto;position:relative;z-index:10;flex-shrink:0;">
+                    <div class="atk-palette">
                         ${paletteButtons}
                     </div>
-                    <div id="attackMapCanvas" style="flex:1;overflow:hidden;cursor:crosshair;"></div>
-                    <div id="attackMapProperties" style="width:250px;background:#1a1a2e;border-left:1px solid #374151;padding:16px;overflow-y:auto;color:#e2e8f0;font-size:13px;">
-                        <div style="color:#64748b;text-align:center;padding:20px;font-size:13px;">
+                    <div id="attackMapCanvas" class="atk-canvas"></div>
+                    <div id="attackMapProperties" class="atk-properties">
+                        <div class="atk-empty">
                             Select a node or edge to edit its properties
                         </div>
                     </div>
                 </div>
             </div>
-            <style>
-                .attack-maps-page .prop-field { margin-bottom: 10px; }
-                .attack-maps-page .prop-field label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; font-weight: 500; }
-                .attack-maps-page .prop-field input,
-                .attack-maps-page .prop-field textarea,
-                .attack-maps-page .prop-field select {
-                    width: 100%; padding: 6px 8px; background: #2a2a3e; border: 1px solid #374151;
-                    border-radius: 6px; color: #e2e8f0; font-size: 13px; outline: none;
-                }
-                .attack-maps-page .prop-field input:focus,
-                .attack-maps-page .prop-field textarea:focus {
-                    border-color: #7c7fcc;
-                }
-                .atk-palette-btn {
-                    display: flex; flex-direction: column; align-items: center; gap: 4px;
-                    background: transparent; border: none; cursor: pointer; padding: 10px 6px;
-                    transition: background 0.15s; border-radius: 6px; margin: 0 4px;
-                }
-                .atk-palette-btn:hover { background: #2a2a3e; }
-                .atk-palette-btn:active { background: #374151; }
-                .atk-palette-dot {
-                    width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0;
-                }
-                .atk-palette-label {
-                    font-size: 11px; color: #94a3b8; font-weight: 600; line-height: 1.2;
-                    text-align: center; white-space: nowrap;
-                }
-                .atk-palette-btn:hover .atk-palette-label { color: #e2e8f0; }
-            </style>
         `;
     },
 

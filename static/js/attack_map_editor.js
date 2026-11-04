@@ -25,13 +25,13 @@ const AttackMapEditor = {
     maps: [],
 
     NODE_COLORS: {
-        recon: '#5b2d8e',
-        tactic: '#3b82f6',
-        exploit: '#ef4444',
-        connector: '#166534',
-        evidence_ref: '#4a9e94',
-        finding_ref: '#9278c4',
-        host_ref: '#1e3a5f'
+        recon: 'var(--node-recon)',
+        tactic: 'var(--node-tactic)',
+        exploit: 'var(--node-exploit)',
+        connector: 'var(--node-connector)',
+        evidence_ref: 'var(--node-evidence)',
+        finding_ref: 'var(--node-finding)',
+        host_ref: 'var(--node-host)'
     },
 
     NODE_LABELS: {
@@ -90,7 +90,8 @@ const AttackMapEditor = {
             .attr('width', '100%')
             .attr('height', '100%')
             .attr('viewBox', `0 0 ${this._containerWidth} ${this._containerHeight}`)
-            .style('background', '#1e1e2e');
+            .style('background', 'var(--color-paper-3)')
+            .style('font-family', 'var(--font-body)');
 
         // Defs for arrow markers
         const defs = this.svg.append('defs');
@@ -104,7 +105,7 @@ const AttackMapEditor = {
             .attr('orient', 'auto')
             .append('polygon')
             .attr('points', '0 0, 10 3.5, 0 7')
-            .attr('fill', '#94a3b8');
+            .style('fill', 'var(--color-muted)');
 
         // Grid pattern
         defs.append('pattern')
@@ -115,7 +116,8 @@ const AttackMapEditor = {
             .append('path')
             .attr('d', `M ${this.GRID_SIZE} 0 L 0 0 0 ${this.GRID_SIZE}`)
             .attr('fill', 'none')
-            .attr('stroke', 'rgba(255,255,255,0.04)')
+            .style('stroke', 'var(--color-rule)')
+            .attr('stroke-opacity', '0.6')
             .attr('stroke-width', '0.5');
 
         // Zoom behavior
@@ -246,7 +248,7 @@ const AttackMapEditor = {
             } else {
                 this.renderMapSelector();
                 const container = document.getElementById(this.containerId);
-                if (container) container.innerHTML = '<div style="color:#94a3b8;text-align:center;padding:60px;">Create a new map to get started</div>';
+                if (container) container.innerHTML = '<div style="color:var(--color-muted);text-align:center;padding:60px;">Create a new map to get started</div>';
             }
             showToast('Map deleted', 'success');
         } catch (e) {
@@ -330,7 +332,7 @@ const AttackMapEditor = {
 
     _drawNode(g, d) {
         const isLogic = d.node_type === 'connector';
-        const color = this.NODE_COLORS[d.node_type] || '#6b7280';
+        const color = this.NODE_COLORS[d.node_type] || 'var(--color-muted)';
         const isSelected = d.id === this.selectedNodeId;
         const label = d.label || this.NODE_LABELS[d.node_type] || '';
         const typeLabel = this.NODE_LABELS[d.node_type] || d.node_type;
@@ -348,9 +350,9 @@ const AttackMapEditor = {
                 .attr('height', h)
                 .attr('rx', 20)
                 .attr('ry', 20)
-                .attr('fill', color)
-                .attr('stroke', isSelected ? '#fff' : 'transparent')
-                .attr('stroke-width', isSelected ? 2 : 0)
+                .style('fill', `color-mix(in oklab, ${color} 30%, var(--color-paper-2))`)
+                .style('stroke', isSelected ? 'var(--color-accent)' : color)
+                .attr('stroke-width', isSelected ? 2 : 1.5)
                 .attr('cursor', 'move');
 
             g.append('text')
@@ -358,9 +360,9 @@ const AttackMapEditor = {
                 .attr('y', h / 2 + 1)
                 .attr('text-anchor', 'middle')
                 .attr('dominant-baseline', 'middle')
-                .attr('fill', '#fff')
-                .attr('font-size', '14px')
-                .attr('font-weight', '700')
+                .style('fill', 'var(--color-ink)')
+                .attr('font-size', '13px')
+                .attr('font-weight', '600')
                 .attr('pointer-events', 'none')
                 .text(connLabel);
         } else {
@@ -414,65 +416,58 @@ const AttackMapEditor = {
             d._computedWidth = w;
             d._computedHeight = totalH;
 
-            // Background
+            // Card: graphite body, hairline edge; the selection is amber
             g.append('rect')
                 .attr('width', w)
                 .attr('height', totalH)
                 .attr('rx', 8)
                 .attr('ry', 8)
-                .attr('fill', '#2a2a3e')
-                .attr('stroke', isSelected ? '#fff' : color)
-                .attr('stroke-width', isSelected ? 2 : 1.5)
+                .style('fill', 'var(--color-paper-2)')
+                .style('stroke', isSelected ? 'var(--color-accent)' : 'var(--color-rule-2)')
+                .attr('stroke-width', isSelected ? 2 : 1)
                 .attr('cursor', 'move');
 
-            // Header bar
+            // Header: the node type's tint, a 3px type-colour top edge
             const isCompromised = d.node_type === 'host_ref' && props.compromised;
-            const headerColor = isCompromised ? '#000000' : color;
-            g.append('rect')
-                .attr('width', w)
-                .attr('height', headerH)
-                .attr('rx', 8)
-                .attr('ry', 8)
-                .attr('fill', headerColor)
+            const tint = isCompromised ? 'var(--color-bad-soft)' : `color-mix(in oklab, ${color} 26%, var(--color-paper-2))`;
+            const edgeColor = isCompromised ? 'var(--color-bad)' : color;
+            g.append('path')
+                .attr('d', `M0,${headerH} V8 A8,8 0 0 1 8,0 H${w - 8} A8,8 0 0 1 ${w},8 V${headerH} Z`)
+                .style('fill', tint)
                 .attr('pointer-events', 'none');
-            g.append('rect')
-                .attr('width', w)
-                .attr('height', 8)
-                .attr('y', headerH - 8)
-                .attr('fill', headerColor)
+            g.append('path')
+                .attr('d', `M0,8 A8,8 0 0 1 8,0 H${w - 8} A8,8 0 0 1 ${w},8 V11 A8,8 0 0 0 ${w - 8},3 H8 A8,8 0 0 0 0,11 Z`)
+                .style('fill', edgeColor)
                 .attr('pointer-events', 'none');
 
-            // Skull badge for compromised host nodes (left of label)
             if (isCompromised) {
                 g.append('text')
                     .attr('x', 8)
-                    .attr('y', headerH / 2 + 1)
+                    .attr('y', headerH / 2 + 2)
                     .attr('dominant-baseline', 'middle')
-                    .attr('fill', '#ef4444')
-                    .attr('font-size', '20px')
+                    .style('fill', 'var(--color-bad)')
+                    .attr('font-size', '16px')
                     .attr('pointer-events', 'none')
                     .text('☠');
             }
 
-            // Type label in header
             g.append('text')
-                .attr('x', isCompromised ? 32 : 8)
-                .attr('y', headerH / 2 + 1)
+                .attr('x', isCompromised ? 28 : 10)
+                .attr('y', headerH / 2 + 2)
                 .attr('dominant-baseline', 'middle')
-                .attr('fill', isCompromised ? '#ef4444' : '#fff')
+                .style('fill', isCompromised ? 'var(--color-bad)' : 'var(--color-ink-2)')
                 .attr('font-size', '11px')
                 .attr('font-weight', '600')
                 .attr('pointer-events', 'none')
-                .text(typeLabel);
+                .text(isCompromised ? `${typeLabel} (compromised)` : typeLabel);
 
-            // Content lines (word-wrapped)
             visLines.forEach((line, idx) => {
                 g.append('text')
-                    .attr('x', 8)
+                    .attr('x', 10)
                     .attr('y', headerH + padding + idx * lineH + fontSize)
-                    .attr('fill', line.bold ? '#e2e8f0' : '#94a3b8')
-                    .attr('font-size', `${fontSize}px`)
-                    .attr('font-weight', line.bold ? '600' : '400')
+                    .style('fill', line.bold ? 'var(--color-ink)' : 'var(--color-muted)')
+                    .attr('font-size', `${line.bold ? fontSize + 1 : fontSize}px`)
+                    .attr('font-weight', line.bold ? '500' : '400')
                     .attr('pointer-events', 'none')
                     .text(line.text);
             });
@@ -494,8 +489,8 @@ const AttackMapEditor = {
         entered.append('path')
             .attr('class', 'edge-path')
             .attr('fill', 'none')
-            .attr('stroke', '#94a3b8')
-            .attr('stroke-width', 2)
+            .style('stroke', 'var(--color-muted)')
+            .attr('stroke-width', 1.5)
             .attr('marker-end', 'url(#arrowhead)')
             .attr('cursor', 'pointer')
             .on('click', (event, d) => {
@@ -505,8 +500,12 @@ const AttackMapEditor = {
 
         entered.append('text')
             .attr('class', 'edge-label')
-            .attr('fill', '#94a3b8')
-            .attr('font-size', '11px')
+            .style('fill', 'var(--color-ink-2)')
+            .style('paint-order', 'stroke')
+            .style('stroke', 'var(--color-paper-3)')
+            .attr('stroke-width', 4)
+            .attr('stroke-linejoin', 'round')
+            .attr('font-size', '12px')
             .attr('text-anchor', 'middle')
             .attr('pointer-events', 'none');
 
@@ -538,8 +537,8 @@ const AttackMapEditor = {
 
             g.select('.edge-path')
                 .attr('d', `M ${startX} ${startY} L ${endX} ${endY}`)
-                .attr('stroke', isSelected ? '#fff' : '#94a3b8')
-                .attr('stroke-width', isSelected ? 3 : 2);
+                .style('stroke', isSelected ? 'var(--color-accent)' : 'var(--color-muted)')
+                .attr('stroke-width', isSelected ? 2.5 : 1.5);
 
             if (d.label) {
                 g.select('.edge-label')
@@ -794,7 +793,7 @@ const AttackMapEditor = {
 
             const props = node.properties || {};
             const isLogic = node.node_type === 'connector';
-            const color = this.NODE_COLORS[node.node_type] || '#6b7280';
+            const color = this.NODE_COLORS[node.node_type] || 'var(--color-muted)';
 
             let fieldsHtml = '';
             fieldsHtml += `
@@ -857,7 +856,7 @@ const AttackMapEditor = {
                 fieldsHtml += `
                     <div class="prop-field">
                         <label>Reference</label>
-                        <div style="color:#94a3b8;font-size:12px;padding:4px 0;">
+                        <div style="color:var(--color-muted);font-size:12px;padding:4px 0;">
                             ${node.ref_type ? `${node.ref_type} #${node.ref_id}` : 'No reference linked'}
                         </div>
                     </div>
@@ -878,13 +877,13 @@ const AttackMapEditor = {
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
                             <input type="checkbox" ${props.compromised ? 'checked' : ''}
                                    onchange="AttackMapEditor.updateNodeProp(${node.id}, 'compromised', this.checked)"
-                                   style="width:15px;height:15px;cursor:pointer;accent-color:#ef4444;" />
+                                   style="width:15px;height:15px;cursor:pointer;accent-color:var(--color-bad);" />
                             <span>Compromised ☠</span>
                         </label>
                     </div>
                     <div class="prop-field">
                         <label>Reference</label>
-                        <div style="color:#94a3b8;font-size:12px;padding:4px 0;">
+                        <div style="color:var(--color-muted);font-size:12px;padding:4px 0;">
                             ${node.ref_type ? `${node.ref_type} #${node.ref_id}` : 'No reference linked'}
                         </div>
                     </div>
@@ -893,8 +892,8 @@ const AttackMapEditor = {
 
             panel.innerHTML = `
                 <div class="props-header" style="border-left: 3px solid ${color}; padding-left: 10px; margin-bottom: 12px;">
-                    <div style="font-weight:600;color:#e2e8f0;font-size:14px;">${this.NODE_LABELS[node.node_type]}</div>
-                    <div style="color:#94a3b8;font-size:12px;">Node #${node.id}</div>
+                    <div style="font-weight:600;color:var(--color-ink);font-size:14px;">${this.NODE_LABELS[node.node_type]}</div>
+                    <div style="color:var(--color-muted);font-size:12px;">Node #${node.id}</div>
                 </div>
                 ${fieldsHtml}
                 <button class="btn btn-sm btn-danger" style="margin-top:12px;width:100%;"
@@ -908,8 +907,8 @@ const AttackMapEditor = {
 
             panel.innerHTML = `
                 <div class="props-header" style="margin-bottom:12px;">
-                    <div style="font-weight:600;color:#e2e8f0;font-size:14px;">Connection</div>
-                    <div style="color:#94a3b8;font-size:12px;">Edge #${edge.id}</div>
+                    <div style="font-weight:600;color:var(--color-ink);font-size:14px;">Connection</div>
+                    <div style="color:var(--color-muted);font-size:12px;">Edge #${edge.id}</div>
                 </div>
                 <div class="prop-field">
                     <label>Label</label>
@@ -923,7 +922,7 @@ const AttackMapEditor = {
             `;
         } else {
             panel.innerHTML = `
-                <div style="color:#64748b;text-align:center;padding:20px;font-size:13px;">
+                <div style="color:var(--color-muted);text-align:center;padding:20px;font-size:13px;">
                     Select a node or edge to edit its properties
                 </div>
             `;
@@ -1018,26 +1017,26 @@ const AttackMapEditor = {
 
         // Build and show modal
         const modalHtml = `
-            <div id="refPickerModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;">
-                <div style="background:#1e1e2e;border:1px solid #374151;border-radius:12px;width:400px;max-height:500px;overflow:hidden;display:flex;flex-direction:column;">
-                    <div style="padding:16px;border-bottom:1px solid #374151;">
+            <div id="refPickerModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--color-scrim);z-index:10000;display:flex;align-items:center;justify-content:center;">
+                <div style="background:var(--color-paper-2);border:1px solid var(--color-rule);border-radius:12px;width:400px;max-height:500px;overflow:hidden;display:flex;flex-direction:column;">
+                    <div style="padding:16px;border-bottom:1px solid var(--color-rule);">
                         <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <h4 style="margin:0;color:#e2e8f0;">${title}</h4>
-                            <button onclick="document.getElementById('refPickerModal').remove()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:18px;">&times;</button>
+                            <h4 style="margin:0;color:var(--color-ink);">${title}</h4>
+                            <button onclick="document.getElementById('refPickerModal').remove()" style="background:none;border:none;color:var(--color-muted);cursor:pointer;font-size:18px;">&times;</button>
                         </div>
                         <input type="text" id="refPickerSearch" placeholder="Search..."
-                               style="width:100%;margin-top:8px;padding:8px;background:#2a2a3e;border:1px solid #374151;border-radius:6px;color:#e2e8f0;outline:none;"
+                               style="width:100%;margin-top:8px;padding:8px;background:var(--color-paper-4);border:1px solid var(--color-rule);border-radius:6px;color:var(--color-ink);outline:none;"
                                oninput="AttackMapEditor._filterRefPicker(this.value)" />
                     </div>
                     <div id="refPickerList" style="overflow-y:auto;max-height:350px;padding:8px;">
                         ${items.map((item, idx) => `
                             <div class="ref-picker-item" data-search="${this._esc(item.label.toLowerCase())}" data-idx="${idx}"
-                                 style="padding:10px 12px;cursor:pointer;border-radius:6px;margin-bottom:2px;color:#e2e8f0;"
-                                 onmouseover="this.style.background='#374151'"
+                                 style="padding:10px 12px;cursor:pointer;border-radius:6px;margin-bottom:2px;color:var(--color-ink);"
+                                 onmouseover="this.style.background='var(--color-paper-4)'"
                                  onmouseout="this.style.background='transparent'"
                                  onclick="AttackMapEditor._selectRefByIndex(${idx})">
                                 <div style="font-weight:500;">${this._esc(item.label)}</div>
-                                ${item.sub ? `<div style="font-size:11px;color:#94a3b8;">${this._esc(item.sub)}</div>` : ''}
+                                ${item.sub ? `<div style="font-size:11px;color:var(--color-muted);">${this._esc(item.sub)}</div>` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -1110,7 +1109,7 @@ const AttackMapEditor = {
 
         selector.innerHTML = `
             <select id="attackMapSelect" onchange="AttackMapEditor.loadMap(parseInt(this.value))"
-                    style="background:#2a2a3e;border:1px solid #374151;color:#e2e8f0;padding:6px 10px;border-radius:6px;min-width:180px;">
+                    style="background:var(--color-paper-4);border:1px solid var(--color-rule);color:var(--color-ink);padding:6px 10px;border-radius:6px;min-width:180px;">
                 ${this.maps.length ? options : '<option value="">No maps</option>'}
             </select>
         `;
@@ -1153,8 +1152,7 @@ const AttackMapEditor = {
         const connectBtn = document.getElementById('attackMapConnectBtn');
         if (connectBtn) {
             connectBtn.classList.toggle('active', this.connectMode);
-            connectBtn.style.background = this.connectMode ? '#22c55e' : '';
-            connectBtn.style.color = this.connectMode ? '#fff' : '';
+            connectBtn.classList.toggle('is-active', this.connectMode);
         }
     },
 
@@ -1234,7 +1232,7 @@ const AttackMapEditor = {
             .attr('x', w / 2)
             .attr('y', h / 2 - 30)
             .attr('text-anchor', 'middle')
-            .attr('fill', '#64748b')
+            .style('fill', 'var(--color-muted)')
             .attr('font-size', '16px')
             .attr('font-weight', '600')
             .text('Empty Attack Map');
@@ -1243,7 +1241,7 @@ const AttackMapEditor = {
             .attr('x', w / 2)
             .attr('y', h / 2)
             .attr('text-anchor', 'middle')
-            .attr('fill', '#475569')
+            .style('fill', 'var(--color-muted)')
             .attr('font-size', '13px')
             .text('Use the node palette on the left to add nodes');
 
@@ -1251,7 +1249,7 @@ const AttackMapEditor = {
             .attr('x', w / 2)
             .attr('y', h / 2 + 22)
             .attr('text-anchor', 'middle')
-            .attr('fill', '#475569')
+            .style('fill', 'var(--color-muted)')
             .attr('font-size', '13px')
             .text('Then use Connect to draw arrows between them');
     },
@@ -1262,7 +1260,7 @@ const AttackMapEditor = {
         this._dismissContextMenu();
         const menu = document.createElement('div');
         menu.id = 'attackMapContextMenu';
-        menu.style.cssText = 'position:fixed;z-index:10001;background:#1e1e2e;border:1px solid #374151;border-radius:8px;padding:4px 0;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,0.4);';
+        menu.style.cssText = 'position:fixed;z-index:10001;background:var(--color-paper-2);border:1px solid var(--color-rule);border-radius:8px;padding:4px 0;min-width:160px;box-shadow:0 8px 24px var(--color-scrim);';
         menu.style.left = event.clientX + 'px';
         menu.style.top = event.clientY + 'px';
 
@@ -1276,14 +1274,14 @@ const AttackMapEditor = {
         items.forEach(item => {
             if (item.divider) {
                 const hr = document.createElement('div');
-                hr.style.cssText = 'height:1px;background:#374151;margin:4px 0;';
+                hr.style.cssText = 'height:1px;background:var(--color-rule);margin:4px 0;';
                 menu.appendChild(hr);
                 return;
             }
             const btn = document.createElement('div');
-            btn.style.cssText = `padding:8px 12px;cursor:pointer;font-size:13px;color:${item.danger ? '#ef4444' : '#e2e8f0'};display:flex;align-items:center;gap:8px;`;
+            btn.style.cssText = `padding:8px 12px;cursor:pointer;font-size:13px;color:${item.danger ? 'var(--color-bad)' : 'var(--color-ink)'};display:flex;align-items:center;gap:8px;`;
             btn.innerHTML = `<span style="font-size:14px;width:18px;text-align:center;">${item.icon}</span>${item.label}`;
-            btn.addEventListener('mouseenter', () => { btn.style.background = '#2a2a3e'; });
+            btn.addEventListener('mouseenter', () => { btn.style.background = 'var(--color-paper-4)'; });
             btn.addEventListener('mouseleave', () => { btn.style.background = 'transparent'; });
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();

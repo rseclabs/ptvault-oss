@@ -61,18 +61,18 @@ def generate_attack_map_svg(attack_map):
     parts.append(f'<svg xmlns="http://www.w3.org/2000/svg" '
                  f'viewBox="{min_x} {min_y} {width} {height}" '
                  f'width="{width}" height="{height}" '
-                 f'style="background:#1e1e2e;font-family:sans-serif;">')
+                 f'style="background:#0e1114;font-family:sans-serif;">')
 
     # Arrow marker
     parts.append('<defs>')
     parts.append('<marker id="ah" viewBox="0 0 10 7" refX="10" refY="3.5" '
                  'markerWidth="10" markerHeight="7" orient="auto">')
-    parts.append('<polygon points="0 0,10 3.5,0 7" fill="#94a3b8"/>')
+    parts.append('<polygon points="0 0,10 3.5,0 7" fill="#a1a8b1"/>')
     parts.append('</marker>')
     parts.append('</defs>')
 
     # Title
-    parts.append(f'<text x="{min_x + 10}" y="{min_y + 20}" fill="#94a3b8" '
+    parts.append(f'<text x="{min_x + 10}" y="{min_y + 20}" fill="#a1a8b1" '
                  f'font-size="14" font-weight="600">{xml_escape(name)}</text>')
 
     # Edges
@@ -97,13 +97,13 @@ def generate_attack_map_svg(attack_map):
         y2 = ty - math.sin(angle) * (th / 2 + margin)
 
         parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
-                     f'stroke="#94a3b8" stroke-width="2" marker-end="url(#ah)"/>')
+                     f'stroke="#a1a8b1" stroke-width="2" marker-end="url(#ah)"/>')
 
         label = edge.get('label', '')
         if label:
             mx = (x1 + x2) / 2
             my = (y1 + y2) / 2 - 8
-            parts.append(f'<text x="{mx:.1f}" y="{my:.1f}" fill="#94a3b8" '
+            parts.append(f'<text x="{mx:.1f}" y="{my:.1f}" fill="#a1a8b1" '
                          f'font-size="11" text-anchor="middle">{xml_escape(label)}</text>')
 
     # Nodes
@@ -163,7 +163,7 @@ def _render_node_svg(node):
 
         # Background
         parts.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" '
-                     f'rx="8" ry="8" fill="#2a2a3e" stroke="{color}" stroke-width="1.5"/>')
+                     f'rx="8" ry="8" fill="#1b1f24" stroke="{color}" stroke-width="1.5"/>')
         # Header
         parts.append(f'<rect x="{x}" y="{y}" width="{w}" height="{header_h}" '
                      f'rx="8" ry="8" fill="{color}"/>')
@@ -174,7 +174,7 @@ def _render_node_svg(node):
         # Content
         for idx, line in enumerate(lines):
             line_y = y + header_h + 10 + idx * 16 + 12
-            fill = '#e2e8f0' if idx == 0 else '#94a3b8'
+            fill = '#eef0f3' if idx == 0 else '#a1a8b1'
             weight = '600' if idx == 0 else '400'
             text = xml_escape(line[:35])
             parts.append(f'<text x="{x + 8}" y="{line_y}" fill="{fill}" '
@@ -211,6 +211,6 @@ def _node_dims(node):
 def _empty_svg(name):
     """Return a placeholder SVG for empty maps."""
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100" '
-            f'width="400" height="100" style="background:#1e1e2e;font-family:sans-serif;">'
-            f'<text x="200" y="50" text-anchor="middle" fill="#64748b" font-size="14">'
+            f'width="400" height="100" style="background:#0e1114;font-family:sans-serif;">'
+            f'<text x="200" y="50" text-anchor="middle" fill="#a1a8b1" font-size="14">'
             f'{xml_escape(name)} - No nodes</text></svg>')
