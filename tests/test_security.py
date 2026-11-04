@@ -160,11 +160,9 @@ def app():
         response.headers['X-XSS-Protection'] = '1; mode=block'
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
-            "https://cdn.tailwindcss.com https://unpkg.com; "
-            "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com "
-            "https://fonts.googleapis.com; "
-            "font-src 'self' https://fonts.gstatic.com; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "font-src 'self'; "
             "img-src 'self' data: blob:; "
             "connect-src 'self'; "
             "frame-src 'self' https://gchq.github.io"
@@ -248,11 +246,28 @@ class TestSecurityHeaders:
         csp = response.headers.get('Content-Security-Policy', '')
         assert "default-src 'self'" in csp
 
-    def test_csp_allows_tailwind_cdn(self, client):
-        """CSP script-src should permit Tailwind CDN."""
+    def test_csp_allows_no_third_party_assets(self, client):
+        """Scripts, styles and fonts are vendored, so CSP names no external host."""
         response = client.get('/api/health')
         csp = response.headers.get('Content-Security-Policy', '')
-        assert 'https://cdn.tailwindcss.com' in csp
+        directives = dict(
+            part.strip().split(' ', 1) for part in csp.split(';') if part.strip()
+        )
+        for name in ('script-src', 'style-src', 'font-src'):
+            assert 'http' not in directives[name], f"{name} allows an external host"
+
+    def test_templates_load_no_third_party_assets(self):
+        """Every <script src> and <link href> in templates points at this server."""
+        import glob
+        import re
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        pattern = re.compile(r'<(?:script|link)\b[^>]*\b(?:src|href)="(https?:)?//', re.I)
+        offenders = [
+            os.path.basename(path)
+            for path in glob.glob(os.path.join(root, 'templates', '*.html'))
+            if pattern.search(open(path, encoding='utf-8').read())
+        ]
+        assert offenders == [], f"templates load external assets: {offenders}"
 
     def test_security_headers_on_404(self, client):
         """Security headers should appear even on 404 responses."""

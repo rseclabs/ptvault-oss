@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finding Editor - PTVault</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/vendor/inter-5.3.0/inter.css">
     <link rel="stylesheet" href="/static/css/main.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/vendor/easymde-2.21.0/easymde.min.css">
+    <link rel="stylesheet" href="/static/vendor/font-awesome-4.7.0/css/font-awesome.min.css">
     <script>
         // Apply theme before first paint to prevent flash
         (function() {
@@ -275,7 +273,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <script src="/static/vendor/easymde-2.21.0/easymde.min.js"></script>
     <script src="/static/js/clipboard_image_paste.js"></script>
     <script type="module" src="/static/js/api.js"></script>
     <script src="/static/js/utils.js"></script>
@@ -283,6 +281,7 @@
         // Initialize EasyMDE instances
         const findingMDE = new EasyMDE({
             element: document.getElementById('findingContent'),
+            autoDownloadFontAwesome: false,  // vendored in static/vendor; never fetch from a CDN
             placeholder: 'Describe the vulnerability, impact, and proof of concept...',
             spellChecker: false,
             autosave: { enabled: false },
@@ -297,6 +296,7 @@
 
         const remediationMDE = new EasyMDE({
             element: document.getElementById('remediationContent'),
+            autoDownloadFontAwesome: false,  // vendored in static/vendor; never fetch from a CDN
             placeholder: 'Describe recommended fixes and mitigations...',
             spellChecker: false,
             autosave: { enabled: false },

@@ -136,12 +136,13 @@ def set_security_headers(response):
             "frame-src 'none'"
         )
     else:
-        # Content Security Policy - allow Tailwind CDN and Lucide CDN
+        # Content Security Policy - every library and font is vendored under
+        # static/vendor, so nothing loads from a third-party host.
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://d3js.org https://cdn.jsdelivr.net; "
-            "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com https://cdn.jsdelivr.net; "
-            "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "font-src 'self'; "
             "img-src 'self' data: blob:; "
             "connect-src 'self'; "
             "frame-src 'self' https://gchq.github.io"

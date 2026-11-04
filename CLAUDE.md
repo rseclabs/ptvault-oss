@@ -8,13 +8,14 @@ PTVault is a secure, local-first workspace for penetration testers to manage eng
 |-------|------------|---------|---------|
 | Runtime | Python | 3.10+ | Server-side logic and API |
 | Framework | Flask | 3.x | Web framework with Blueprint-based routing |
-| Database | SQLite | 3.31+ | Local storage with FTS4 full-text search, WAL mode |
+| Database | SQLite + SQLCipher | 3.31+ | Local storage, encrypted at rest (`sqlcipher3`), FTS4 full-text search, WAL mode |
 | Auth | Argon2id + JWT | - | Password hashing (time_cost=3, memory=64MiB) and HS256 session tokens |
 | Crypto | PyNaCl | 1.5+ | Cryptographic operations |
 | Parsers | lxml, defusedxml, python-libnmap | - | Secure XML/JSON tool output parsing (11 tools supported) |
 | Reports | python-docx, WeasyPrint | 1.1+, 60+ | Word and PDF document generation |
 | Frontend | Vanilla JS | ES6+ | Single-page application (no build step) |
-| Styling | Tailwind CSS | 3.x | Utility-first CSS via CDN |
+| Styling | CSS custom properties | - | `static/css/main.css` token system, light and dark themes |
+| Front-end libraries | Lucide, D3, marked, EasyMDE, Inter | pinned | Vendored in `static/vendor/`; nothing loads from a CDN |
 
 ## Quick Start
 
@@ -33,7 +34,7 @@ python app.py
 # Access at http://localhost:5001
 ```
 
-**First-time setup:** Navigate to http://localhost:5001, create the initial admin account (email + password, min 8 characters), then log in.
+**First-time setup:** Navigate to http://localhost:5001. Until an account exists, `/` redirects to the setup wizard: create the initial admin account (full name, email, password of at least 8 characters), then log in.
 
 **Docker:** `docker compose up -d` -- Access at http://localhost:5000
 
@@ -41,48 +42,47 @@ python app.py
 
 ```
 ptvault/
-├── app.py                 # Flask entry point, blueprint registration via features.py
+├── app.py                 # Flask entry point, web UI routes, CSRF and security headers
 ├── config.py              # Configuration (env vars, paths, upload limits)
-├── features.py            # Blueprint registry (single list of route modules)
-├── requirements.txt       # 12 Python dependencies
+├── features.py            # Blueprint registry (BLUEPRINTS list of route modules)
+├── requirements.txt       # 14 Python dependencies
 │
 ├── models/
 │   ├── auth.py            # Argon2id hashing, JWT creation/verification
-│   ├── database.py        # SQLite connection, init_db, seeding
-│   ├── schema.sql         # 19 tables, FTS4, triggers, indexes
+│   ├── database.py        # Connection, init_db, setup_required, migrations entry
+│   ├── encryption.py      # SQLCipher key handling, plaintext <-> encrypted export
+│   ├── schema.sql         # Base schema (21 tables, FTS4, triggers, indexes)
 │   ├── seed_templates.py  # Report template seeding
-│   ├── dao/               # Data Access Objects (10 DAOs)
+│   ├── dao/               # Data Access Objects (13 DAOs + BaseDAO)
 │   │   ├── base.py        # BaseDAO with common CRUD
-│   │   ├── engagement_dao.py
-│   │   ├── evidence_dao.py
-│   │   ├── host_dao.py
-│   │   ├── user_dao.py
-│   │   ├── report_dao.py
-│   │   ├── test_plan_dao.py
-│   │   ├── template_dao.py
-│   │   ├── relationship_dao.py
-│   │   └── attack_map_dao.py
+│   │   ├── engagement_dao.py, evidence_dao.py, host_dao.py, user_dao.py
+│   │   ├── team_dao.py, client_dao.py, dashboard_dao.py, note_tree_dao.py
+│   │   ├── report_dao.py, template_dao.py, test_plan_dao.py
+│   │   └── relationship_dao.py, attack_map_dao.py
 │   └── migrations/        # Versioned migration system
 │       ├── manager.py     # MigrationManager class
-│       └── versions/      # 15 migration files (001-015)
+│       └── versions/      # 29 migration files (001-030)
 │
-├── routes/                # Flask Blueprints (17 API endpoints)
-│   ├── auth.py            # /api/auth/* - Login, setup, logout
+├── routes/                # Flask Blueprints (20, registered in features.py)
+│   ├── auth.py            # /api/auth/* - Login, setup, logout, CSRF token
+│   ├── dashboard.py       # /api/dashboard/* - Engagement dashboard data
 │   ├── engagements.py     # /api/engagements/* - Projects, export
-│   ├── evidence.py        # /api/evidence/* - Notes, files, search
+│   ├── engagement_members.py # /api/engagements/<id>/members - Team access
+│   ├── evidence.py        # /api/evidence/* - Notes, files, search, filter
 │   ├── hosts.py           # /api/hosts/* - Targets, ports, creds
 │   ├── reporting.py       # /api/reporting/* - Reports, writeups
+│   ├── templates.py       # /api/templates/* - Report templates
 │   ├── testplans.py       # /api/testplans/* - MITRE ATT&CK, Atomics
 │   ├── commands.py        # /api/commands/* - Command database
 │   ├── shell_oneliners.py # /api/shell-oneliners/* - Shell snippets
-│   ├── admin.py           # /api/admin/* - Backup, CyberChef
 │   ├── tags.py            # /api/tags/* - Tag autocomplete
-│   ├── templates.py       # /api/templates/* - Report templates
 │   ├── filters.py         # /api/filters/* - Saved filters, CIDR support
 │   ├── users.py           # /api/users/* - Multi-user management
-│   ├── engagement_members.py # /api/engagements/<id>/members - Team access
+│   ├── teams.py           # /api/teams/* - Teams
+│   ├── clients.py         # /api/clients/* - Client records
 │   ├── relationships.py   # /api/relationships/* - Node relationships
 │   ├── attack_maps.py     # /api/attack-maps/* - Attack map visualization
+│   ├── admin.py           # /api/admin/* - Backup, settings, CyberChef
 │   └── test.py            # /api/test/* - Development testing
 │
 ├── middleware/
@@ -90,19 +90,10 @@ ptvault/
 │
 ├── utils/
 │   ├── parsers/           # Tool output parsers (11 tools + base + registry)
-│   │   ├── base_parser.py     # BaseParser abstract class
+│   │   ├── base_parser.py     # BaseToolParser abstract class
 │   │   ├── registry.py        # Parser auto-discovery and routing
-│   │   ├── nmap_parser.py     # Nmap XML → hosts, ports
-│   │   ├── nessus_parser.py   # Nessus XML → vulnerabilities
-│   │   ├── burp_parser.py     # Burp Suite XML → findings
-│   │   ├── zap_parser.py      # OWASP ZAP XML → findings
-│   │   ├── qualys_parser.py   # Qualys XML → vulnerabilities
-│   │   ├── nuclei_parser.py   # Nuclei JSON → findings
-│   │   ├── metasploit_parser.py    # Metasploit XML → sessions/vulns
-│   │   ├── acunetix_parser.py      # Acunetix XML → web findings
-│   │   ├── insightvm_parser.py     # InsightVM/Nexpose XML → vulns
-│   │   ├── bloodhound_parser.py    # BloodHound JSON → AD paths
-│   │   └── crackmapexec_parser.py  # CrackMapExec JSON → creds/shares
+│   │   ├── nmap, nessus, burp, zap, qualys, nuclei, metasploit,
+│   │   └── acunetix, insightvm, bloodhound, crackmapexec (*_parser.py)
 │   ├── attack_map_svg.py     # SVG generation for attack maps
 │   ├── audit_logger.py       # Audit logging for compliance
 │   ├── error_handler.py      # Centralized error handling
@@ -110,56 +101,36 @@ ptvault/
 │   ├── report_auto_populator.py # Auto-populate reports from findings
 │   ├── template_renderer.py  # Report template rendering
 │   ├── script_generator.py   # Bash/PowerShell test scripts
-│   ├── atomics_downloader.py # Atomic Red Team fetcher
-│   ├── atomics_parser.py     # Atomics YAML parser
+│   ├── atomics_downloader.py, atomics_parser.py # Atomic Red Team
 │   ├── navigator_parser.py   # MITRE Navigator layers
+│   ├── session_log_parser.py # Session log imports
 │   ├── markdown_export.py    # Report export to Markdown
 │   ├── host_extractor.py     # IP/hostname extraction
-│   ├── file_helpers.py       # File utilities
-│   └── migration_tags.py     # Tag migration helpers
+│   └── helpers.py, file_helpers.py, migration_tags.py
 │
 ├── templates/
-│   ├── dashboard.html     # Main SPA (~126KB, all features)
+│   ├── dashboard.html     # Main SPA (all sections)
 │   ├── login.html         # Login page
 │   ├── setup.html         # First-time setup wizard
-│   ├── note_editor.html   # Standalone note editor
+│   ├── note_editor.html, finding_editor.html # Standalone editors
 │   └── reports/           # Report templates
 │
-├── static/js/             # Frontend modules (~20K lines total)
-│   ├── app.js             # Main application logic (1,272 lines)
-│   ├── api.js             # API facade (imports from api/ modules)
-│   ├── api/               # Modular API layer (15 modules)
-│   │   ├── auth.js        ├── engagements.js  ├── evidence.js
-│   │   ├── hosts.js       ├── reporting.js    ├── testplans.js
-│   │   ├── commands.js    ├── admin.js        ├── tags.js
-│   │   ├── export.js      ├── filters.js      ├── shelloneliners.js
-│   │   ├── users.js       ├── relationships.js└── attack_maps.js
-│   ├── hosts.js           # Host management UI (3,619 lines)
-│   ├── reporting.js       # Report builder UI (3,557 lines)
-│   ├── testplans.js       # Test plans UI (2,742 lines)
-│   ├── tools.js           # Built-in utilities UI (2,635 lines)
-│   ├── attack_map_editor.js # Attack map builder (1,096 lines)
-│   ├── relationship_graph.js # Relationship graph visualization
-│   ├── commands.js        # Command database UI
-│   ├── users.js           # User management UI
-│   ├── auth.js            # Authentication UI
-│   ├── admin.js           # Admin functions
-│   └── utils.js           # Shared utilities
+├── static/
+│   ├── css/main.css, dashboard.css # Design tokens (:root, [data-theme="dark"]) and styles
+│   ├── js/                # Section modules: app, hosts, reporting, testplans, tools,
+│   │                      #   dashboard, attack_map_editor, notes_tree, commands, users, ...
+│   ├── js/api/            # API layer (18 modules), re-exported by js/api.js
+│   ├── js/lib/            # request.js, idle-timeout.js
+│   ├── vendor/            # Pinned third-party libraries and fonts (see vendor/README.md)
+│   └── tools/cyberchef/   # Bundled CyberChef
 │
-├── tests/                 # Test suite
-│   ├── conftest.py        # Pytest configuration
-│   ├── test_nmap_parser.py
-│   ├── test_migrations.py
-│   ├── test_multi_user.py
-│   ├── test_rbac.py
-│   ├── test_relationships.py
-│   ├── test_report_templates.py
-│   ├── dao/               # DAO unit tests
-│   ├── parsers/           # Parser tests
-│   └── fixtures/          # Test data
+├── tests/                 # pytest suite (unit, DAO, parser, route, security)
+│   ├── conftest.py, dao/, parsers/, fixtures/, e2e/
+│   └── test_*.py
 │
 └── data/                  # Runtime (gitignored)
-    ├── ptvault.db         # SQLite database
+    ├── ptvault.db         # SQLite database (SQLCipher-encrypted after setup)
+    ├── encryption.key, encryption.salt
     ├── uploads/           # Evidence files
     └── atomics/           # Atomic Red Team library
 ```
@@ -169,17 +140,18 @@ ptvault/
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     Browser (SPA)                        │
-│  dashboard.html + static/js/*.js + Tailwind CSS CDN     │
+│  dashboard.html + static/js + static/css + static/vendor │
 └─────────────────────────┬───────────────────────────────┘
                           │ REST API (JSON)
 ┌─────────────────────────▼───────────────────────────────┐
 │                    Flask Application                     │
-│  app.py → 17 Blueprints → @require_auth → DAO layer    │
+│  app.py → features.py (20 Blueprints) → @require_auth    │
+│         → DAO layer                                      │
 └─────────────────────────┬───────────────────────────────┘
                           │
 ┌─────────────────────────▼───────────────────────────────┐
-│              SQLite + FTS4 (WAL mode)                   │
-│  data/ptvault.db • 19 tables • Triggers sync FTS index  │
+│         SQLite / SQLCipher + FTS4 (WAL mode)            │
+│  data/ptvault.db • schema.sql + migrations • FTS index  │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -192,14 +164,17 @@ ptvault/
 | Host Tracking | `routes/hosts.py` | Target IPs, ports, credentials, indicators |
 | Report Builder | `routes/reporting.py` | Drag-and-drop report generation |
 | Test Plans | `routes/testplans.py` | MITRE ATT&CK, Atomic Red Team integration |
-| User Management | `routes/users.py` | Multi-user RBAC (admin, editor, viewer) |
+| User Management | `routes/users.py`, `routes/teams.py` | Multi-user RBAC (admin, editor, viewer) |
 | Attack Maps | `routes/attack_maps.py` | Visual attack path mapping with SVG export |
 | Relationships | `routes/relationships.py` | Universal node relationships between entities |
 | Tool Parsers | `utils/parsers/` | 11 parsers: Nmap, Nessus, Burp, ZAP, Nuclei, etc. |
 | DAO Layer | `models/dao/` | Data access objects for all entities |
-| Migrations | `models/migrations/` | Versioned schema migrations (001-015) |
+| Migrations | `models/migrations/` | Versioned schema migrations (001-030) |
+| Encryption | `models/encryption.py` | SQLCipher keying and migration to/from encrypted |
 
 ### Core Tables
+
+A selection; `models/schema.sql` plus the migrations are the full schema.
 
 | Table | Purpose |
 |-------|---------|
@@ -237,6 +212,11 @@ ptvault/
 - Constants: `SCREAMING_SNAKE` when applicable
 - Global objects: `PascalCase` (e.g., `API`, `Utils`)
 
+**CSS and icons:**
+- Every colour and font goes through a custom property in `static/css/main.css` (`:root` and `[data-theme="dark"]`); no literal values in rules
+- Icons are Lucide (`<i data-lucide="name"></i>`); on the dashboard, icons added to the DOM later are drawn automatically. No emoji as icons
+- Font Awesome is present only for EasyMDE's toolbar; create editors with `autoDownloadFontAwesome: false`
+
 ### Import Order
 
 ```python
@@ -272,11 +252,12 @@ def get_hosts():
 - `@require_auth` sets `g.db`, `g.current_user`, `g.current_user_role`
 - `@require_role('admin')` restricts to specific roles
 - `@require_engagement_access('editor')` checks team membership with role hierarchy
+- Mutating requests need the double-submit CSRF token: the `csrf_token` cookie echoed in an `X-CSRF-Token` header
 
 ### Adding Features
 
 1. Create Blueprint in `routes/new_feature.py`
-2. Register in `app.py`: `app.register_blueprint(new_feature_bp)`
+2. Register it in `features.py`: add `('routes.new_feature', 'new_feature_bp')` to `BLUEPRINTS`
 3. Add `@require_auth` to protected endpoints
 4. Create DAO in `models/dao/new_feature_dao.py` if needed
 5. Add migration in `models/migrations/versions/NNN_description.py`
@@ -284,12 +265,15 @@ def get_hosts():
 7. Add API module in `static/js/api/new_feature.js`, import in `static/js/api.js`
 8. Update `dashboard.html` with UI section
 
+### Third-party front-end code
+
+Never load a script, stylesheet or font from a CDN: PTVault must run air-gapped, and the Content-Security-Policy in `app.py` allows no external host for them. Vendor a pinned release under `static/vendor/<name>-<version>/` with its license, following `static/vendor/README.md`. `tests/test_security.py` fails if a template references an external asset.
+
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `python app.py` | Dev server on port 5001 |
-| `flask run` | Alternative (port 5000 by default) |
+| `python app.py` | Dev server on port 5001 (`-i` interface, `-p` port) |
 | `python -m pytest tests/ -v` | Run test suite |
 | `docker compose up -d` | Docker deployment (port 5000) |
 | `./build_docker.sh build` | Build Docker image |
@@ -303,9 +287,12 @@ def get_hosts():
 | `DATABASE_PATH` | `./data/ptvault.db` | SQLite database path |
 | `JWT_SECRET_KEY` | Auto-generated | JWT signing key (HS256) |
 | `JWT_EXPIRY_HOURS` | `24` | Session token lifetime |
-| `ENVIRONMENT` | `development` | `development` or `production` |
+| `ENVIRONMENT` | `development` | `development` or `production` (production: Secure cookies, HSTS, no debugger) |
+| `PTVAULT_ENCRYPTION_KEY_FILE` | `encryption.key` beside the database | SQLCipher key file |
+| `PTVAULT_ENCRYPTION_SALT_FILE` | `encryption.salt` beside the database | Key derivation salt |
+| `PTVAULT_ENCRYPTION_REQUIRED` | unset | `true` refuses to start without SQLCipher |
 
-Copy `.env.example` to `.env` and customize for production.
+Copy `.env.example` to `.env` and customize for production. When running a second instance or a smoke test, point every data path (database, key, salt, uploads) somewhere else, or the instance can overwrite the real key.
 
 ## Testing
 
@@ -313,39 +300,43 @@ Copy `.env.example` to `.env` and customize for production.
 python -m pytest tests/ -v
 ```
 
-- **Unit tests:** `tests/test_nmap_parser.py`, `tests/parsers/` - parser verification
-- **DAO tests:** `tests/dao/` - data access object tests
-- **Integration tests:** `tests/test_multi_user.py`, `tests/test_rbac.py` - API/auth tests
-- **Migration tests:** `tests/test_migrations.py` - schema migration verification
+- **Parser tests:** `tests/test_nmap_parser.py`, `tests/parsers/`
+- **DAO tests:** `tests/dao/` (including FTS search and tag filtering)
+- **Integration tests:** `tests/test_multi_user.py`, `tests/test_rbac.py`, `tests/test_testplans_routes.py`
+- **Security tests:** `tests/test_security.py` (headers, CSP, CSRF, no external assets)
+- **Migration and encryption tests:** `tests/test_migrations.py`, `tests/test_encryption.py`
 - **Fixtures:** `tests/fixtures/` - sample XML/JSON data for parser tests
+
+Tests cannot import `app.py` (it opens the configured database on import); put logic a test needs in a module it can import, as `setup_required()` in `models/database.py` is.
 
 ## Security
 
 - Argon2id: time_cost=3, memory_cost=65536 KiB (64 MiB), parallelism=4, hash_len=32
-- JWT (HS256) in httpOnly cookies (XSS protection)
+- Database encrypted at rest with SQLCipher once setup runs; key and salt live beside the database
+- JWT (HS256) in httpOnly cookies (XSS protection); double-submit CSRF token on mutating API calls
 - RBAC: admin, editor, viewer roles with engagement-level access control
 - Audit logging for security-sensitive actions
 - defusedxml prevents XXE attacks in all XML parsers
 - Max upload: 250MB (`Config.MAX_FILE_SIZE`)
 - Allowed extensions: `.txt`, `.xml`, `.json`, `.png`, `.jpg`, `.jpeg`, `.pdf`, `.html`, `.log`, `.pcap`, `.nessus`
 - Data isolation by engagement_id with team membership checks
+- No default account: the first admin is created in the setup wizard
 
 ## Key Files Reference
 
 | File | Purpose |
 |------|---------|
 | `features.py` | Blueprint registry (`BLUEPRINTS` list) |
-| `app.py:139-187` | Web UI routes (index, setup, dashboard, note editor) |
-| `middleware/auth.py:155-192` | `@require_auth` decorator |
-| `middleware/auth.py:195-225` | `@require_role` decorator |
-| `middleware/auth.py:228-283` | `@require_engagement_access` decorator |
-| `models/database.py:33-161` | Database initialization (`init_db`) |
+| `app.py` | Web UI routes (`index`, `setup`, `dashboard`, editors), `csrf_protect`, `set_security_headers` |
+| `middleware/auth.py` | `require_auth`, `require_role`, `require_engagement_access` |
+| `models/database.py` | `get_db_connection`, `setup_required`, `init_db` |
+| `models/encryption.py` | SQLCipher keying, `migrate_to_plaintext`, encrypted export |
 | `models/migrations/manager.py` | Versioned migration runner |
-| `models/auth.py:14-20` | Argon2id parameters |
-| `models/auth.py:88-108` | JWT token creation |
-| `models/schema.sql` | Full schema (19 tables, FTS4, triggers) |
+| `models/auth.py` | Argon2id parameters, JWT creation and verification |
+| `models/schema.sql` | Base schema (FTS4, triggers) |
 | `utils/parsers/registry.py` | Parser auto-discovery and routing |
-| `utils/parsers/base_parser.py` | BaseParser abstract class for all parsers |
+| `utils/parsers/base_parser.py` | `BaseToolParser` abstract class for all parsers |
+| `static/vendor/README.md` | Pinned front-end libraries, licenses, checksums, update steps |
 
 ## Skills
 
@@ -357,12 +348,14 @@ Claude Code skills are defined in `.claude/skills/` for specialized assistance:
 | `flask` | Blueprints, routing, middleware, request handling |
 | `javascript` | SPA logic, DOM manipulation, API integration |
 | `python` | Routes, models, authentication, backend logic |
-| `frontend-design` | Tailwind CSS, responsive layouts, dark mode |
+| `frontend-design` | CSS tokens, responsive layouts, dark mode |
 | `jwt` | Token generation, validation, session auth |
 | `argon2` | Password hashing, verification |
-| `tailwind` | Utility-first CSS styling |
+| `pynacl` | Cryptographic operations |
+| `pytest` | Test structure and fixtures |
 | `docker` | Container builds, compose configs |
 | `xml-parsing` | Nmap, Nessus, Burp XML parsing |
+| `tailwind` | Legacy: the app no longer uses Tailwind; styles are plain CSS with custom properties |
 
 ## Specialized Agents
 
@@ -374,7 +367,7 @@ Agents in `.claude/agents/` for specific workflows:
 | `frontend-engineer` | Vanilla JS SPA, API integration |
 | `test-engineer` | Unit tests, integration tests |
 | `debugger` | Flask routes, SQLite, JWT, parser debugging |
-| `designer` | Tailwind CSS, dark mode, responsive layouts |
+| `designer` | CSS tokens, dark mode, responsive layouts |
 | `devops-engineer` | Docker, PyInstaller, systemd |
 | `security-engineer` | Argon2, JWT, XXE prevention, file security |
 | `data-engineer` | SQLite schema, FTS4, migrations |
@@ -400,27 +393,10 @@ When working on tasks involving these technologies, invoke the corresponding ski
 | python | Manages Flask routes, models, authentication, backend logic, and utility functions |
 | flask | Configures Flask blueprints, routing, middleware, and request handling patterns |
 | javascript | Handles vanilla JavaScript SPA logic, DOM manipulation, and API integration |
-| tailwind | Configures utility-first CSS styling via CDN for responsive component design |
-| frontend-design | Applies UI styling with Tailwind CSS CDN, dark mode support, and responsive layouts |
+| frontend-design | Applies UI styling with CSS custom properties, dark mode support, and responsive layouts |
 | jwt | Manages JWT token generation, validation, and session authentication in httpOnly cookies |
 | argon2 | Implements Argon2id password hashing and verification for user passwords and the database encryption key |
-
-
-## Skill Usage Guide
-
-When working on tasks involving these technologies, invoke the corresponding skill:
-
-| Skill | Invoke When |
-|-------|-------------|
-| sqlite | Designs SQLite schema, FTS4 indexes, migrations, and query optimization |
-| flask | Configures Flask blueprints, routing, middleware, and request handling patterns |
-| tailwind | Configures utility-first CSS styling via CDN for responsive component design |
-| python | Manages Flask routes, models, authentication, backend logic, and utility functions |
-| jwt | Manages JWT token generation, validation, and session authentication in httpOnly cookies |
-| javascript | Handles vanilla JavaScript SPA logic, DOM manipulation, and API integration |
 | xml-parsing | Secures XML parsing for Nmap, Nessus, and Burp Suite tool imports |
-| frontend-design | Applies UI styling with Tailwind CSS CDN, dark mode support, and responsive layouts |
 | docker | Builds Docker images and compose configurations for containerized deployment |
-| argon2 | Implements Argon2id password hashing and verification for user passwords and the database encryption key |
 | pynacl | Handles cryptographic operations and secure data encryption |
 | pytest | Structures unit tests, integration tests, and test fixtures for validation |
