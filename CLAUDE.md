@@ -53,6 +53,7 @@ ptvault/
 │   ├── encryption.py      # SQLCipher key handling, plaintext <-> encrypted export
 │   ├── schema.sql         # Base schema (21 tables, FTS4, triggers, indexes)
 │   ├── seed_templates.py  # Report template seeding
+│   ├── seed_shell_oneliners.py # Built-in shell one-liners (restored on every start)
 │   ├── dao/               # Data Access Objects (13 DAOs + BaseDAO)
 │   │   ├── base.py        # BaseDAO with common CRUD
 │   │   ├── engagement_dao.py, evidence_dao.py, host_dao.py, user_dao.py
@@ -61,7 +62,7 @@ ptvault/
 │   │   └── relationship_dao.py, attack_map_dao.py
 │   └── migrations/        # Versioned migration system
 │       ├── manager.py     # MigrationManager class
-│       └── versions/      # 29 migration files (001-030)
+│       └── versions/      # 30 migration files (001-031)
 │
 ├── routes/                # Flask Blueprints (20, registered in features.py)
 │   ├── auth.py            # /api/auth/* - Login, setup, logout, CSRF token
@@ -169,7 +170,7 @@ ptvault/
 | Relationships | `routes/relationships.py` | Universal node relationships between entities |
 | Tool Parsers | `utils/parsers/` | 11 parsers: Nmap, Nessus, Burp, ZAP, Nuclei, etc. |
 | DAO Layer | `models/dao/` | Data access objects for all entities |
-| Migrations | `models/migrations/` | Versioned schema migrations (001-030) |
+| Migrations | `models/migrations/` | Versioned schema migrations (001-031) |
 | Encryption | `models/encryption.py` | SQLCipher keying and migration to/from encrypted |
 
 ### Core Tables

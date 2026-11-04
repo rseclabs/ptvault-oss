@@ -570,12 +570,16 @@ const AdminPanel = {
                             </div>
                             <div class="admin-list-item-command">${escapeHtml(item.command.substring(0, 60))}${item.command.length > 60 ? '...' : ''}</div>
                             <div class="admin-list-item-actions">
-                                <button class="btn btn-icon btn-sm" onclick="AdminPanel.editOneliner(${item.id})" title="Edit">
+                                ${item.is_builtin ? `
+                                <span class="admin-list-item-builtin" title="Ships with PTVault and can't be changed">Built-in</span>
+                                ` : `
+                                <button class="btn btn-icon btn-sm" onclick="AdminPanel.editOneliner(${item.id})" title="Edit" aria-label="Edit ${escapeHtml(item.name)}">
                                     <i data-lucide="edit-2" class="icon-sm"></i>
                                 </button>
-                                <button class="btn btn-icon btn-sm btn-danger" onclick="AdminPanel.deleteOneliner(${item.id})" title="Delete">
+                                <button class="btn btn-icon btn-sm btn-danger" onclick="AdminPanel.deleteOneliner(${item.id})" title="Delete" aria-label="Delete ${escapeHtml(item.name)}">
                                     <i data-lucide="trash-2" class="icon-sm"></i>
                                 </button>
+                                `}
                             </div>
                         </div>
                     `).join('')}
@@ -606,7 +610,7 @@ const AdminPanel = {
 
     editOneliner(id) {
         const item = this.shellOneliners.find(o => o.id === id);
-        if (!item) return;
+        if (!item || item.is_builtin) return;
 
         document.getElementById('onelinerEditId').value = id;
         document.getElementById('onelinerCategory').value = item.category;

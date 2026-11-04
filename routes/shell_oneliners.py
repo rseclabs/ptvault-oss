@@ -1,9 +1,11 @@
 """Shell one-liners routes for PTVault."""
 
 from flask import Blueprint, request, jsonify, g
-from middleware.auth import require_auth
+from middleware.auth import require_auth, require_role
 from utils.error_handler import handle_errors
 import json
+
+BUILTIN_READ_ONLY = "Built-in one-liners can't be changed. Add your own one-liner instead."
 
 shell_oneliners_bp = Blueprint('shell_oneliners', __name__, url_prefix='/api/shell-oneliners')
 
@@ -137,6 +139,7 @@ def list_categories():
 
 @shell_oneliners_bp.route('/admin', methods=['POST'])
 @require_auth
+@require_role('admin')
 @handle_errors
 def create_oneliner():
     """
@@ -172,8 +175,8 @@ def create_oneliner():
 
     cursor = g.db.cursor()
     cursor.execute('''
-        INSERT INTO shell_oneliners (category, subcategory, name, command, description, variables, is_admin)
-        VALUES (?, ?, ?, ?, ?, ?, 1)
+        INSERT INTO shell_oneliners (category, subcategory, name, command, description, variables, is_admin, is_builtin)
+        VALUES (?, ?, ?, ?, ?, ?, 1, 0)
     ''', (category, subcategory, name, command, description, variables_json))
 
     g.db.commit()
@@ -196,6 +199,7 @@ def create_oneliner():
 
 @shell_oneliners_bp.route('/admin/<int:oneliner_id>', methods=['PUT'])
 @require_auth
+@require_role('admin')
 @handle_errors
 def update_oneliner(oneliner_id):
     """
@@ -204,11 +208,13 @@ def update_oneliner(oneliner_id):
     cursor = g.db.cursor()
 
     # Check if one-liner exists
-    cursor.execute("SELECT id FROM shell_oneliners WHERE id = ?", (oneliner_id,))
+    cursor.execute("SELECT is_builtin FROM shell_oneliners WHERE id = ?", (oneliner_id,))
     row = cursor.fetchone()
 
     if not row:
         return jsonify({"error": "One-liner not found"}), 404
+    if row[0]:
+        return jsonify({"error": BUILTIN_READ_ONLY}), 403
 
     data = request.get_json()
     if not data:
@@ -271,6 +277,7 @@ def update_oneliner(oneliner_id):
 
 @shell_oneliners_bp.route('/admin/<int:oneliner_id>', methods=['DELETE'])
 @require_auth
+@require_role('admin')
 @handle_errors
 def delete_oneliner(oneliner_id):
     """
@@ -279,11 +286,13 @@ def delete_oneliner(oneliner_id):
     cursor = g.db.cursor()
 
     # Check if one-liner exists
-    cursor.execute("SELECT id FROM shell_oneliners WHERE id = ?", (oneliner_id,))
+    cursor.execute("SELECT is_builtin FROM shell_oneliners WHERE id = ?", (oneliner_id,))
     row = cursor.fetchone()
 
     if not row:
         return jsonify({"error": "One-liner not found"}), 404
+    if row[0]:
+        return jsonify({"error": BUILTIN_READ_ONLY}), 403
 
     cursor.execute("DELETE FROM shell_oneliners WHERE id = ?", (oneliner_id,))
     g.db.commit()
