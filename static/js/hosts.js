@@ -112,11 +112,11 @@ const HostManager = {
                 ${host.color_category ? `<div class="host-color-badge" data-color="${host.color_category}"></div>` : ''}
                 <span class="host-icon">${this.getHostIcon(host)}</span>
                 <div class="host-info">
-                    <span class="host-name">${escapeHtml(host.ip)}</span>
+                    <span class="host-name measured">${escapeHtml(host.ip)}</span>
                     <span class="host-meta">${escapeHtml(host.hostname || host.os || '')}</span>
                     ${this.renderIndicatorBadges(host)}
                 </div>
-                <span class="evidence-count">${host.evidence_count || 0}</span>
+                ${host.evidence_count ? `<span class="evidence-count measured" title="${host.evidence_count} evidence items">${host.evidence_count}</span>` : ''}
             </div>
         `).join('');
 
@@ -149,12 +149,17 @@ const HostManager = {
     async selectHost(hostId) {
         this.selectedHostId = hostId;
         this.renderHostList();
+        // On phones and tablets the list and the detail are one screen each.
+        document.querySelector('.host-view-container')?.classList.add('has-selection');
 
         // Update header
         const headerEl = document.getElementById('hostHeader');
         if (headerEl) {
             if (hostId === 'general') {
                 headerEl.innerHTML = `
+                    <button type="button" class="host-back-btn" onclick="HostManager.showHostList()" aria-label="Back to hosts">
+                        <i data-lucide="arrow-left"></i><span>Hosts</span>
+                    </button>
                     <div class="host-detail-header">
                         <h2>General</h2>
                         <p>Evidence without host assignment</p>
@@ -164,13 +169,19 @@ const HostManager = {
                 const host = this.hosts.find(h => h.id === hostId);
                 if (host) {
                     headerEl.innerHTML = `
-                        <div class="host-detail-header">
-                            <h2>${escapeHtml(host.ip)}</h2>
-                            <p>${escapeHtml(host.hostname || '')} ${host.os ? '| ' + escapeHtml(host.os) : ''}</p>
+                        <button type="button" class="host-back-btn" onclick="HostManager.showHostList()" aria-label="Back to hosts">
+                            <i data-lucide="arrow-left"></i><span>Hosts</span>
+                        </button>
+                        <div class="host-detail-header host-record">
+                            <h2 class="host-record-ip measured">${escapeHtml(host.ip)}</h2>
+                            <dl class="host-record-facts">
+                                ${host.hostname ? `<div><dt>Hostname</dt><dd class="measured">${escapeHtml(host.hostname)}</dd></div>` : ''}
+                                ${host.os ? `<div><dt>OS</dt><dd>${escapeHtml(host.os)}</dd></div>` : ''}
+                            </dl>
                         </div>
                         <div class="host-actions">
                             <button class="btn btn-sm btn-secondary" onclick="HostManager.editHost(${host.id})">Edit</button>
-                            <button class="btn btn-sm btn-error" onclick="HostManager.deleteHost(${host.id})">Delete</button>
+                            <button class="btn btn-sm btn-quiet-danger" onclick="HostManager.deleteHost(${host.id})">Delete</button>
                         </div>
                     `;
                 }
@@ -198,6 +209,14 @@ const HostManager = {
             this.showGeneralSectionContainer(true);
             await this.loadGeneralTabData(this.currentGeneralTab);
         }
+    },
+
+    /**
+     * Phones and tablets: return from a host's detail to the host list.
+     */
+    showHostList() {
+        document.querySelector('.host-view-container')?.classList.remove('has-selection');
+        document.getElementById('hostsList')?.scrollIntoView({ block: 'start' });
     },
 
     /**
@@ -395,7 +414,7 @@ const HostManager = {
                             </div>
                         </div>
                         <div class="evidence-actions">
-                            <span class="evidence-type">${getEvidenceTypeDisplay(ev.evidence_type)}</span>
+                            <span class="evidence-type ${ev.evidence_type === 'tool_output' ? 'is-tool' : 'is-tester'}" title="${ev.evidence_type === 'tool_output' ? 'Imported from a tool' : 'Written by a tester'}">${getEvidenceTypeDisplay(ev.evidence_type)}</span>
                             <button class="btn btn-sm btn-icon" onclick="HostManager.toggleEvidence(${ev.id})" title="Expand">
                                 <span class="expand-icon">▼</span>
                             </button>

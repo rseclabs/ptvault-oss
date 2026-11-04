@@ -307,7 +307,7 @@
     font-size: 0.6875rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 1px 2px var(--palette-black-a25);
+    text-shadow: none;
     transition: filter var(--transition-fast);
     cursor: default;
 }
@@ -369,7 +369,7 @@
 }
 
 .scan-vuln-label {
-    margin-top: 4px;
+    margin-top: var(--space-2xs);
     font-size: 0.6875rem;
     font-weight: 600;
     color: var(--color-text-tertiary);
@@ -406,3 +406,66 @@
 .kpi-tile:not(.accent-critical):not(.accent-success)::before {
     display: none;
 }
+
+/* Redesign (Console): readings cut from one surface, values in the measured face. */
+.kpi-strip {
+    padding: 0;
+}
+
+.kpi-strip,
+.scan-vuln-grid {
+    gap: var(--rule-hair);
+    background: var(--color-rule);
+    border: var(--rule-hair) solid var(--color-rule);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+}
+
+.kpi-tile,
+.scan-vuln-tile {
+    background: var(--color-paper-2);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.kpi-tile::before,
+.kpi-tile:not(.accent-critical):not(.accent-success)::before,
+.scan-vuln-tile::before {
+    display: none;
+}
+
+.kpi-value,
+.scan-vuln-value {
+    font-family: var(--font-outlier);
+    font-size: var(--text-reading);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.kpi-tile.accent-critical .kpi-value { color: var(--sev-critical-text); }
+.kpi-tile.accent-success .kpi-value { color: var(--color-ok); }
+
+.scan-vuln-tile.sev-critical .scan-vuln-label { color: var(--sev-critical-text); }
+.scan-vuln-tile.sev-high .scan-vuln-label { color: var(--sev-high-text); }
+.scan-vuln-tile.sev-medium .scan-vuln-label { color: var(--sev-medium-text); }
+.scan-vuln-tile.sev-low .scan-vuln-label { color: var(--sev-low-text); }
+
+.dashboard-card {
+    background: var(--color-paper-2);
+    border-color: var(--color-rule);
+    box-shadow: none;
+}
+
+.dashboard-header {
+    background: var(--color-paper);
+}
+
+/* The severity scale reads at a glance: each count in its severity colour */
+.scan-vuln-tile.sev-critical .scan-vuln-value { color: var(--sev-critical-text); }
+.scan-vuln-tile.sev-high .scan-vuln-value { color: var(--sev-high-text); }
+.scan-vuln-tile.sev-medium .scan-vuln-value { color: var(--sev-medium-text); }
+.scan-vuln-tile.sev-low .scan-vuln-value { color: var(--sev-low-text); }

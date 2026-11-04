@@ -4,20 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PTVault - Setup</title>
-    <link rel="stylesheet" href="/static/vendor/inter-5.3.0/inter.css">
+    <link rel="stylesheet" href="/static/vendor/host-grotesk-5.3.0/host-grotesk.css">
+    <link rel="stylesheet" href="/static/vendor/atkinson-hyperlegible-mono-5.3.0/atkinson-hyperlegible-mono.css">
     <link rel="stylesheet" href="/static/css/main.css">
 </head>
 <body class="auth-page">
-    <div class="auth-container">
+    <main class="auth-container">
+        <section class="auth-intro" aria-label="About PTVault">
+            <p class="auth-wordmark">PTVault</p>
+            <p class="auth-lede">First-time setup. This account becomes the vault's first administrator.</p>
+            <dl class="auth-facts">
+                <div><dt>Data</dt><dd>Stays on this machine</dd></div>
+                <div><dt>Passwords</dt><dd class="measured">Argon2id</dd></div>
+                <div><dt>Network</dt><dd>None required, works offline</dd></div>
+            </dl>
+        </section>
         <div class="auth-card">
             <div class="auth-header">
-                <h1>PTVault Setup</h1>
-                <p class="tagline">Create Your Admin Account</p>
-            </div>
-
-            <div class="setup-info">
-                <p><strong>First-time setup:</strong> Create the initial administrator account.
-                You can add more users from the dashboard after setup.</p>
+                <h1>Create your admin account</h1>
+                <p class="tagline">You can add more users from the dashboard after setup.</p>
             </div>
 
             <form id="setupForm" class="auth-form">
@@ -90,10 +95,10 @@
                     Already set up?
                     <a href="/" class="link">Login instead</a>
                 </p>
-                <p class="version">v1.0</p>
+                <p class="version measured">v1.0</p>
             </div>
         </div>
-    </div>
+    </main>
 
     <script type="module" src="/static/js/api.js"></script>
     <script src="/static/js/auth.js"></script>

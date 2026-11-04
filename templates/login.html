@@ -4,15 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PTVault - Login</title>
-    <link rel="stylesheet" href="/static/vendor/inter-5.3.0/inter.css">
+    <link rel="stylesheet" href="/static/vendor/host-grotesk-5.3.0/host-grotesk.css">
+    <link rel="stylesheet" href="/static/vendor/atkinson-hyperlegible-mono-5.3.0/atkinson-hyperlegible-mono.css">
     <link rel="stylesheet" href="/static/css/main.css">
 </head>
 <body class="auth-page">
-    <div class="auth-container">
+    <main class="auth-container">
+        <section class="auth-intro" aria-label="About PTVault">
+            <p class="auth-wordmark">PTVault</p>
+            <p class="auth-lede">Secure evidence management for penetration testers.</p>
+            <dl class="auth-facts">
+                <div><dt>Data</dt><dd>Stays on this machine</dd></div>
+                <div><dt>Passwords</dt><dd class="measured">Argon2id</dd></div>
+                <div><dt>Network</dt><dd>None required, works offline</dd></div>
+            </dl>
+        </section>
         <div class="auth-card">
             <div class="auth-header">
-                <h1>PTVault</h1>
-                <p class="tagline">Secure Evidence Management for Penetration Testers</p>
+                <h1>Sign in</h1>
             </div>
 
             <form id="loginForm" class="auth-form">
@@ -39,10 +48,7 @@
                     >
                 </div>
 
-                <div id="idleMessage" class="info-message" style="display: none;
-                    padding: 0.75rem; margin-bottom: 1rem; border-radius: 6px;
-                    background: var(--palette-amber-100); color: var(--palette-amber-800);
-                    border: 1px solid var(--palette-amber-300); font-size: 0.875rem;">
+                <div id="idleMessage" class="info-message auth-notice" style="display: none;">
                     You were logged out due to inactivity.
                 </div>
 
@@ -55,10 +61,10 @@
             </form>
 
             <div class="auth-footer">
-                <p class="version">v1.0</p>
+                <p class="version measured">v1.0</p>
             </div>
         </div>
-    </div>
+    </main>
 
     <script type="module" src="/static/js/api.js"></script>
     <script src="/static/js/auth.js"></script>

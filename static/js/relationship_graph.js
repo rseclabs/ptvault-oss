@@ -198,12 +198,16 @@ const RelationshipGraph = {
     getNodeColor(node) {
         // If it's a finding node, use criticality colors
         if (node.node_type === 'finding') {
+            // Severity scale: critical purple, high red, medium orange, low yellow
+            // (the --sev-* tokens in tokens.css; hex fallbacks match the report table).
+            const css = getComputedStyle(document.documentElement);
+            const token = (name, fallback) => css.getPropertyValue(name).trim() || fallback;
             const criticalityColors = {
-                'critical': '#dc2626',  // red-600
-                'high': '#ea580c',      // orange-600
-                'medium': '#ca8a04',    // yellow-600
-                'low': '#16a34a',       // green-600
-                'info': '#2563eb'       // blue-600
+                'critical': token('--sev-critical', '#9333ea'),
+                'high': token('--sev-high', '#ef4444'),
+                'medium': token('--sev-medium', '#f97316'),
+                'low': token('--sev-low', '#eab308'),
+                'info': token('--color-cool', '#3b82f6')
             };
             return criticalityColors[node.type] || criticalityColors['medium'];
         }

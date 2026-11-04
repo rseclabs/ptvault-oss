@@ -122,7 +122,10 @@ function setupEventListeners() {
     const ribbonToggle = document.getElementById('hostRibbonToggle');
     const ribbon = document.getElementById('hostRibbon');
     if (ribbonToggle && ribbon) {
-        const collapsed = localStorage.getItem('hostRibbonCollapsed') === 'true';
+        const stored = localStorage.getItem('hostRibbonCollapsed');
+        const collapsed = stored === null
+            ? window.matchMedia('(max-width: 60rem)').matches
+            : stored === 'true';
         if (collapsed) {
             ribbon.classList.add('host-ribbon-collapsed');
             ribbonToggle.setAttribute('aria-expanded', 'false');
@@ -252,6 +255,18 @@ async function loadEngagements() {
 }
 
 /**
+ * Mark the active engagement's row in the ledger (it can render before the
+ * active engagement has loaded).
+ */
+function markActiveEngagementRow(engagementId) {
+    document.querySelectorAll('#engagementsGrid .engagement-card').forEach(row => {
+        const isActive = Number(row.dataset.id) === Number(engagementId);
+        row.classList.toggle('active', isActive);
+        row.setAttribute('aria-current', isActive ? 'true' : 'false');
+    });
+}
+
+/**
  * Load active engagement
  */
 async function loadActiveEngagement() {
@@ -261,6 +276,7 @@ async function loadActiveEngagement() {
         if (response && response.id) {
             AppState.activeEngagement = response;
             updateActiveEngagementDisplay(response);
+            markActiveEngagementRow(response.id);
         }
     } catch (error) {
         console.error('Failed to load active engagement:', error);
@@ -311,7 +327,11 @@ async function renderEngagementsGrid(engagements) {
     const statsPromises = engagements.map(eng => getStatsForEngagement(eng.id));
     const allStats = await Promise.all(statsPromises);
 
-    container.innerHTML = engagements.map((eng, index) => {
+    const ledgerHead = `
+        <div class="engagement-ledger-head" aria-hidden="true">
+            <span>Engagement</span><span>Client and dates</span><span>Vulnerabilities</span>
+        </div>`;
+    container.innerHTML = ledgerHead + engagements.map((eng, index) => {
         const statusClass = eng.status || 'active';
         const statusLabel = eng.status ? eng.status.charAt(0).toUpperCase() + eng.status.slice(1) : 'Active';
         const stats = allStats[index];
@@ -319,11 +339,14 @@ async function renderEngagementsGrid(engagements) {
 
         return `
             <div class="engagement-card ${AppState.activeEngagement?.id === eng.id ? 'active' : ''}"
-                 data-id="${eng.id}" onclick="handleEngagementCardClick(${eng.id})">
+                 data-id="${eng.id}" role="button" tabindex="0"
+                 aria-current="${AppState.activeEngagement?.id === eng.id ? 'true' : 'false'}"
+                 onclick="handleEngagementCardClick(${eng.id})"
+                 onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleEngagementCardClick(${eng.id}); }">
                 <div class="engagement-card-header">
                     <h3>${escapeHtml(eng.name)}</h3>
                     <div style="display:flex;gap:4px;align-items:center;">
-                        ${eng.team_name ? `<span class="status-badge" style="background:#6366f1;color:#fff;font-size:0.65rem;" title="Team: ${escapeHtml(eng.team_name)}">${escapeHtml(eng.team_name)}</span>` : ''}
+                        ${eng.team_name ? `<span class="status-badge team-badge" title="Team: ${escapeHtml(eng.team_name)}">${escapeHtml(eng.team_name)}</span>` : ''}
                         <span class="status-badge status-${statusClass}">${statusLabel}</span>
                     </div>
                 </div>
@@ -344,17 +367,17 @@ async function renderEngagementsGrid(engagements) {
                     ${eng.start_date || eng.end_date ? `
                     <div class="engagement-dates">
                         <span class="label">Dates:</span>
-                        <span class="value">${eng.start_date || '?'} - ${eng.end_date || '?'}</span>
+                        <span class="value measured">${eng.start_date || '?'} to ${eng.end_date || '?'}</span>
                     </div>
                     ` : ''}
                 </div>
                 <div class="engagement-card-stats">
                     <span class="stats-label">Vulnerabilities:</span>
                     <div class="stats-badges">
-                        ${stats.critical > 0 ? `<span class="stat-badge stat-critical" title="Critical">${stats.critical}</span>` : ''}
-                        ${stats.high > 0 ? `<span class="stat-badge stat-high" title="High">${stats.high}</span>` : ''}
-                        ${stats.medium > 0 ? `<span class="stat-badge stat-medium" title="Medium">${stats.medium}</span>` : ''}
-                        ${stats.low > 0 ? `<span class="stat-badge stat-low" title="Low">${stats.low}</span>` : ''}
+                        ${stats.critical > 0 ? `<span class="stat-badge stat-critical" title="Critical"><span class="measured">${stats.critical}</span> critical</span>` : ''}
+                        ${stats.high > 0 ? `<span class="stat-badge stat-high" title="High"><span class="measured">${stats.high}</span> high</span>` : ''}
+                        ${stats.medium > 0 ? `<span class="stat-badge stat-medium" title="Medium"><span class="measured">${stats.medium}</span> medium</span>` : ''}
+                        ${stats.low > 0 ? `<span class="stat-badge stat-low" title="Low"><span class="measured">${stats.low}</span> low</span>` : ''}
                         ${totalVulns === 0 ? `<span class="stat-badge stat-none">None</span>` : ''}
                     </div>
                 </div>

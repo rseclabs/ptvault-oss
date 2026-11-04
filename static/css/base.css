@@ -1,0 +1,49 @@
+/* Base rules from the Hallmark scaffold, trimmed for an existing app:
+ * no global svg, p or heading-width rules, which would disturb inline icons and
+ * the app's own layouts. Loaded by main.css right after tokens.css. */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+html { scrollbar-color: var(--color-rule-2) var(--color-paper); }
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  caret-color: var(--color-accent);
+}
+::selection { background: color-mix(in oklab, var(--color-accent) 28%, transparent); }
+:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-synthesis: none;
+  letter-spacing: var(--tracking-display);
+  overflow-wrap: break-word;
+  min-width: 0;
+  text-wrap: balance;
+}
+p { text-wrap: pretty; }
+img, video { max-width: 100%; height: auto; }
+[hidden] { display: none !important; }
+button, input, select, textarea { font: inherit; letter-spacing: inherit; }
+code, kbd, samp, pre { font-family: var(--font-outlier); }
+.num, .figure, td.num { font-variant-numeric: tabular-nums slashed-zero; }
+.measured {
+  font-family: var(--font-outlier);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--color-accent); }

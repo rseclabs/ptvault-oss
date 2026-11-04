@@ -125,7 +125,7 @@ const Dashboard = {
             const pct = (s.count / total * 100);
             const showLabel = pct > 8;  // hide text on tiny segments
             return `<div class="stacked-bar-segment"
-                style="width:${pct}%;background:${s.color};"
+                style="width:${pct}%;background:${s.color};color:${s.ink || 'var(--ink-on-bright)'};"
                 title="${this.escape(s.label)}: ${s.count} (${pct.toFixed(1)}%)">
                 ${showLabel ? this.escape(s.count) : ''}
             </div>`;
@@ -140,19 +140,19 @@ const Dashboard = {
         if (!root) return;
         const tiles = [
             { label: 'Hosts',          value: kpis.hosts },
-            { label: 'Open Ports',     value: kpis.open_ports },
+            { label: 'Open ports',     value: kpis.open_ports },
             { label: 'Findings',       value: kpis.findings,
               accent: kpis.findings > 0 ? 'critical' : null },
             { label: 'Credentials',    value: kpis.credentials },
             { label: 'Compromised',    value: kpis.compromised_hosts,
               accent: kpis.compromised_hosts > 0 ? 'success' : null },
-            { label: 'Days Remaining', value: kpis.days_remaining == null ? '—' : kpis.days_remaining,
+            { label: 'Days remaining', value: kpis.days_remaining == null ? '—' : kpis.days_remaining,
               muted: kpis.days_remaining == null },
         ];
         root.innerHTML = tiles.map(t => `
             <div class="kpi-tile${t.accent ? ' accent-' + t.accent : ''}">
                 <div class="kpi-label">${this.escape(t.label)}</div>
-                <div class="kpi-value${t.muted ? ' muted' : ''}">${this.escape(t.value)}</div>
+                <div class="kpi-value measured${t.muted ? ' muted' : ''}">${this.escape(t.value)}</div>
             </div>
         `).join('');
     },
@@ -236,12 +236,12 @@ const Dashboard = {
             <div class="scan-vuln-grid">
                 ${tiles.map(t => `
                     <div class="scan-vuln-tile sev-${t.key}">
-                        <div class="scan-vuln-value">${this.escape(t.value)}</div>
+                        <div class="scan-vuln-value measured">${this.escape(t.value)}</div>
                         <div class="scan-vuln-label">${this.escape(t.label)}</div>
                     </div>
                 `).join('')}
             </div>
-            <div class="scan-vuln-total">${total} total · individual vulnerabilities across all imported scans</div>
+            <div class="scan-vuln-total"><span class="measured">${total}</span> vulnerabilities across all imported scans</div>
         `;
     },
 
@@ -275,7 +275,7 @@ const Dashboard = {
         const x = d3.scaleBand().domain(rows.map(r => r.port)).range([0, innerW]).padding(0.18);
         const y = d3.scaleLinear().domain([0, d3.max(rows, r => r.host_count)]).nice().range([innerH, 0]);
 
-        const barColor = this.themeColor('--color-primary');
+        const barColor = this.themeColor('--color-cool');
 
         g.selectAll('rect').data(rows).enter().append('rect')
             .attr('x', d => x(d.port) + (x.bandwidth() - Math.min(x.bandwidth(), 40)) / 2).attr('y', d => y(d.host_count))
@@ -311,8 +311,8 @@ const Dashboard = {
             { label: 'Shell Only',   color: this.themeColor('--color-high'),     count: s.shell_only },
             { label: 'Reviewed',     color: this.themeColor('--color-success'),  count: s.reviewed },
             { label: 'Flagged',      color: this.themeColor('--color-medium'),   count: s.flagged },
-            { label: 'Out of Scope', color: this.themeColor('--color-text-tertiary'), count: s.out_of_scope },
-            { label: 'Untouched',    color: this.themeColor('--color-bg-tertiary'),   count: s.untouched },
+            { label: 'Out of Scope', color: this.themeColor('--color-text-tertiary'), count: s.out_of_scope, ink: 'var(--color-paper)' },
+            { label: 'Untouched',    color: this.themeColor('--color-bg-tertiary'),   count: s.untouched, ink: 'var(--color-ink)' },
         ];
 
         root.insertAdjacentHTML('beforeend', this.stackedBarHTML(segments, s.total));
@@ -350,7 +350,7 @@ const Dashboard = {
         const y = d3.scaleBand().domain(rows.map(r => r.service)).range([0, innerH]).padding(0.25);
         const x = d3.scaleLinear().domain([0, d3.max(rows, r => r.host_count)]).nice().range([0, innerW]);
 
-        const barColor = this.themeColor('--color-primary');
+        const barColor = this.themeColor('--color-cool');
 
         g.selectAll('rect').data(rows).enter().append('rect')
             .attr('y', d => y(d.service)).attr('x', 0)

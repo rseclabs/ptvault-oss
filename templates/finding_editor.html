@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finding Editor - PTVault</title>
-    <link rel="stylesheet" href="/static/vendor/inter-5.3.0/inter.css">
+    <link rel="stylesheet" href="/static/vendor/host-grotesk-5.3.0/host-grotesk.css">
+    <link rel="stylesheet" href="/static/vendor/atkinson-hyperlegible-mono-5.3.0/atkinson-hyperlegible-mono.css">
     <link rel="stylesheet" href="/static/css/main.css">
     <link rel="stylesheet" href="/static/vendor/easymde-2.21.0/easymde.min.css">
     <link rel="stylesheet" href="/static/vendor/font-awesome-4.7.0/css/font-awesome.min.css">
@@ -19,15 +20,15 @@
         .finding-editor-page {
             max-width: 1100px;
             margin: 0 auto;
-            padding: 24px 20px;
+            padding: var(--space-lg) 20px;
         }
 
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
             border-bottom: 1px solid var(--color-border);
         }
 
@@ -46,18 +47,18 @@
         .editor-container {
             background: var(--color-bg-secondary);
             border-radius: var(--radius-lg);
-            padding: 24px;
+            padding: var(--space-lg);
             box-shadow: var(--shadow-sm);
         }
 
         .form-row {
             display: flex;
-            gap: 16px;
-            margin-bottom: 16px;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: var(--space-md);
         }
 
         .form-group label {
@@ -71,7 +72,7 @@
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 9px 12px;
+            padding: 9px var(--space-sm);
             border: 1px solid var(--color-border);
             border-radius: var(--radius-md);
             font-size: var(--text-sm);
@@ -97,7 +98,7 @@
         .editor-section > .section-label {
             display: block;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: var(--space-xs);
             color: var(--color-text-primary);
             font-size: var(--text-sm);
         }
@@ -105,14 +106,14 @@
         .checkbox-group {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-top: 4px;
+            gap: var(--space-xs);
+            margin-top: var(--space-2xs);
         }
 
         .checkbox-group label {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--space-xs);
             cursor: pointer;
             font-size: var(--text-sm);
             color: var(--color-text-secondary);
@@ -129,7 +130,7 @@
             border-right: 1px solid var(--color-border) !important;
             border-bottom: none !important;
             border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
-            padding: 6px 8px !important;
+            padding: 6px var(--space-xs) !important;
         }
 
         .EasyMDEContainer .editor-toolbar button {
@@ -160,7 +161,7 @@
             font-size: 13px;
             line-height: 1.6;
             min-height: 280px;
-            padding: 8px 4px;
+            padding: var(--space-xs) var(--space-2xs);
         }
 
         .EasyMDEContainer .CodeMirror-scroll {
@@ -176,14 +177,14 @@
             background: var(--color-bg-secondary);
             color: var(--color-text-primary);
             border-color: var(--color-border);
-            padding: 16px;
+            padding: var(--space-md);
         }
 
         .EasyMDEContainer .editor-preview p { margin: 0 0 0.75em 0; }
         .EasyMDEContainer .editor-preview h1,
         .EasyMDEContainer .editor-preview h2,
         .EasyMDEContainer .editor-preview h3 { margin: 1em 0 0.4em 0; font-weight: 600; }
-        .EasyMDEContainer .editor-preview pre { background: var(--color-surface-code); color: var(--palette-slate-200); padding: 0.75em; border-radius: var(--radius-md); overflow-x: auto; margin: 0 0 0.75em 0; }
+        .EasyMDEContainer .editor-preview pre { background: var(--color-surface-code); color: var(--color-ink-2); padding: 0.75em; border-radius: var(--radius-md); overflow-x: auto; margin: 0 0 0.75em 0; }
         .EasyMDEContainer .editor-preview code { background: var(--color-bg-tertiary); padding: 0.1em 0.3em; border-radius: var(--radius-sm); font-size: 0.875em; }
         .EasyMDEContainer .editor-preview pre code { background: none; padding: 0; }
         .EasyMDEContainer .editor-preview blockquote { border-left: 3px solid var(--color-primary); padding: 0.25em 0.75em; color: var(--color-text-secondary); margin: 0 0 0.75em 0; }

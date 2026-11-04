@@ -50,3 +50,6 @@ docs/.playwright-mcp/
 
 # Ad-hoc screenshots at the repo root
 /*.png
+
+# Hallmark design tool state (local)
+.hallmark/
