@@ -5,7 +5,7 @@ from middleware.auth import engagement_role, require_auth, require_engagement_ro
 from functools import wraps
 from utils.error_handler import handle_errors
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from utils.markdown_export import generate_markdown_report
 from utils.audit_logger import audit_create, audit_update, audit_delete, audit_export, audit_view
 from utils.helpers import (
@@ -459,7 +459,7 @@ def get_engagement_export_data(engagement_id, include_secrets=False):
         'engagement_findings': engagement_findings_list,
         'statistics': statistics,
         'export_metadata': {
-            'exported_at': datetime.utcnow().isoformat(),
+            'exported_at': datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
             'ptvault_version': '1.0.0',
             'format_version': '2.0'
         }

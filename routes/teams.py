@@ -113,8 +113,8 @@ def update_team(team_id):
     if not update_data:
         return jsonify({"error": "no fields to update"}), 400
 
-    from datetime import datetime
-    update_data['updated_at'] = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    from datetime import datetime, timezone
+    update_data['updated_at'] = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
     dao.update(team_id, update_data)
 
     team = dao.find_by_id(team_id)

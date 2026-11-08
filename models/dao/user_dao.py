@@ -5,7 +5,7 @@ Handles all database operations for user management.
 
 import logging
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timezone
 from models.dao.base import BaseDAO
 
 logger = logging.getLogger(__name__)
@@ -178,7 +178,7 @@ class UserDAO(BaseDAO):
         Returns:
             bool: True if updated
         """
-        return self.update(user_id, {'last_login': datetime.utcnow().isoformat()})
+        return self.update(user_id, {'last_login': datetime.now(timezone.utc).replace(tzinfo=None).isoformat()})
 
     def get_user_engagements(self, user_id: int) -> List[Dict[str, Any]]:
         """Get all engagements a user has access to.

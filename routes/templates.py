@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, g, session, Response
 from middleware.auth import require_auth
 from utils.error_handler import handle_errors
 from jinja2.sandbox import SandboxedEnvironment
-from datetime import datetime
+from datetime import datetime, timezone
 from routes.engagements import get_engagement_export_data
 from config import BASE_DIR
 import os
@@ -110,7 +110,7 @@ def export_with_template(engagement_id, template_name):
         'high_findings': [e for e in data['evidence'] if e.get('severity_level') == 'high'],
         'medium_findings': [e for e in data['evidence'] if e.get('severity_level') == 'medium'],
         'low_findings': [e for e in data['evidence'] if e.get('severity_level') == 'low'],
-        'export_date': datetime.utcnow().strftime('%Y-%m-%d')
+        'export_date': datetime.now(timezone.utc).strftime('%Y-%m-%d')
     }
 
     # Render with Jinja2

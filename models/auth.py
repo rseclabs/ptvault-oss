@@ -6,7 +6,7 @@ from typing import Optional
 from argon2 import PasswordHasher
 from argon2.low_level import Type
 from jose import jwt, JWTError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from config import Config
 
 
@@ -97,7 +97,7 @@ def create_session_token(user_id: int, role: str = 'tester', username: str = Non
     Returns:
         str: JWT token string
     """
-    expiry = datetime.utcnow() + timedelta(hours=Config.JWT_EXPIRY_HOURS)
+    expiry = datetime.now(timezone.utc) + timedelta(hours=Config.JWT_EXPIRY_HOURS)
     payload = {
         'user_id': user_id,
         'role': role,

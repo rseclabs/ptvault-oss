@@ -369,7 +369,7 @@ class EngagementDAO(BaseDAO):
         statistics = self.get_statistics(engagement_id)
 
         # Build complete export data
-        from datetime import datetime
+        from datetime import datetime, timezone
         return {
             'engagement': engagement,
             'evidence': evidence_list,
@@ -384,7 +384,7 @@ class EngagementDAO(BaseDAO):
             'engagement_findings': engagement_findings_list,
             'statistics': statistics,
             'export_metadata': {
-                'exported_at': datetime.utcnow().isoformat(),
+                'exported_at': datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
                 'ptvault_version': '1.0.0',
                 'format_version': '2.0'
             }
