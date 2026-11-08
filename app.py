@@ -126,6 +126,8 @@ def close_db(error):
 
 # Bodies other than file uploads get a smaller limit (utils/request_limits.py, L-19)
 from utils.request_limits import limit_request_body
+from utils.request_limits import PrivateUploadRequest
+app.request_class = PrivateUploadRequest      # uploads stay in memory, not a plaintext temp file (L-29)
 app.before_request(limit_request_body)
 
 # CSRF on every mutating API request, login and setup included (utils/csrf.py, L-8)

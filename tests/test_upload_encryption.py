@@ -217,3 +217,29 @@ def test_every_folder_created_for_an_upload_is_private(tmp_path, unlocked):
     root = tmp_path / 'uploads'                                    # does not exist yet
     upload_store.write_file(str(root / '7' / 'f.txt'), '7/f.txt', SECRET)
     assert _mode(root) == 0o700 and _mode(root / '7') == 0o700
+
+
+# ------------------------------------------------------------------ plaintext outside the store (retest 2: L-29)
+
+def test_evidence_files_are_not_cached(live_app, unlocked):
+    client = _editor(live_app)
+    png = _upload(client, b'\x89PNG\r\n' + SECRET, 'shot.png')
+    for suffix in ('file', 'download'):
+        assert client.get(f"/api/evidence/{png['id']}/{suffix}").headers['Cache-Control'] == 'no-store'
+
+
+def test_uploads_are_not_spooled_to_a_temp_file(monkeypatch):
+    import tempfile
+    from flask import Flask, request
+    from utils.request_limits import PrivateUploadRequest
+
+    def no_disk(*args, **kwargs):
+        raise AssertionError('an upload was spooled to a temporary file')
+    monkeypatch.setattr(tempfile, 'TemporaryFile', no_disk)
+    monkeypatch.setattr(tempfile, 'SpooledTemporaryFile', no_disk)
+    app = Flask(__name__)
+    app.request_class = PrivateUploadRequest
+    app.add_url_rule('/up', 'up', lambda: str(len(request.files['file'].read())), methods=['POST'])
+    big = b'x' * (2 * 1024 * 1024)
+    resp = app.test_client().post('/up', data={'file': (io.BytesIO(big), 'big.png')}, content_type='multipart/form-data')
+    assert resp.status_code == 200 and resp.data == str(len(big)).encode()

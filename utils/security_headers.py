@@ -55,6 +55,9 @@ def untrusted_response_headers(response):
     """Mark a response that carries untrusted content (sandbox CSP, no sniffing)."""
     response.headers['Content-Security-Policy'] = SANDBOX_CSP
     response.headers['X-Content-Type-Options'] = 'nosniff'
+    # Evidence files are decrypted for this response only: keep them out of the
+    # browser's disk cache (send_file's default no-cache still stores them; L-29)
+    response.headers['Cache-Control'] = 'no-store'
     return response
 
 

@@ -6,7 +6,9 @@ other than multipart uploads get Config.MAX_JSON_SIZE instead; Werkzeug answers
 413 when a body is larger.
 """
 
-from flask import request
+import io
+
+from flask import Request, request
 
 from config import Config
 
@@ -40,3 +42,16 @@ def load_json_upload(file_storage):
         return json.loads(data)
     except (ValueError, RecursionError) as e:          # RecursionError: nesting too deep
         raise InvalidJSONFile(str(e)[:200]) from None
+
+
+class PrivateUploadRequest(Request):
+    """Keep uploaded files in memory instead of a plaintext temp file (L-29).
+
+    Werkzeug spools uploads over 500 KB to an unlinked file in the system temp
+    folder, so evidence that is stored encrypted (M-14) passed through the disk
+    in plaintext. The upload is read whole to be encrypted anyway, and its size
+    is capped by MAX_CONTENT_LENGTH.
+    """
+
+    def _get_file_stream(self, total_content_length, content_type, filename=None, content_length=None):
+        return io.BytesIO()
