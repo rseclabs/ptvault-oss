@@ -21,6 +21,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger('ptvault')
 
+# Validate or load the signing secrets before anything else: a placeholder
+# key lets anyone forge a session, so refuse to start.
+from config import InsecureSecretError, load_secrets
+try:
+    load_secrets()
+except InsecureSecretError as e:
+    logger.critical("Refusing to start: %s", e)
+    sys.exit(1)
+
 from models.database import init_db, get_db_connection, run_migrations, setup_required
 from models.encryption import is_encryption_available, is_encryption_enabled, check_and_migrate_if_needed
 from features import register_blueprints

@@ -286,9 +286,9 @@ Never load a script, stylesheet or font from a CDN: PTVault must run air-gapped,
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SECRET_KEY` | Auto-generated | Flask secret key |
+| `SECRET_KEY` | Generated once into `flask_secret.key` beside the database | Flask secret key; startup refuses placeholders or < 32 bytes |
 | `DATABASE_PATH` | `./data/ptvault.db` | SQLite database path |
-| `JWT_SECRET_KEY` | Auto-generated | JWT signing key (HS256) |
+| `JWT_SECRET_KEY` | Generated once into `jwt_secret.key` beside the database | JWT signing key (HS256); same checks |
 | `JWT_EXPIRY_HOURS` | `24` | Session token lifetime |
 | `ENVIRONMENT` | `development` | `development` or `production` (production: Secure cookies, HSTS, no debugger) |
 | `PTVAULT_ENCRYPTION_KEY_FILE` | `encryption.key` beside the database | SQLCipher key file |

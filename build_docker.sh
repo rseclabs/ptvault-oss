@@ -27,7 +27,7 @@ if [ ! -f ".env" ]; then
     echo "Creating .env from .env.example..."
     if [ -f ".env.example" ]; then
         cp .env.example .env
-        echo "Please edit .env file to configure your secrets."
+        echo "Signing secrets are generated on first start and kept in ./data."
     else
         echo "ERROR: .env.example not found!"
         exit 1

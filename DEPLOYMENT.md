@@ -57,13 +57,16 @@ PyInstaller packages PTVault into a single executable file that includes Python 
    nano .env  # Edit configuration
    ```
 
-   Required settings:
+   Typical settings:
    ```env
-   SECRET_KEY=your_random_64_char_hex_string
-   JWT_SECRET_KEY=your_random_base64_string
    DATABASE_PATH=./data/ptvault.db
    ENVIRONMENT=production
    ```
+
+   Leave `SECRET_KEY` and `JWT_SECRET_KEY` unset: PTVault generates them on
+   first start and keeps them in `data/flask_secret.key` and
+   `data/jwt_secret.key`. If you set them, PTVault refuses to start with a
+   placeholder or a value shorter than 32 bytes.
 
 3. **Run PTVault**:
    ```bash
@@ -430,13 +433,12 @@ For Docker:
 
 ### For Both Deployments
 
-1. **Use strong secrets**:
+1. **Keep the signing secrets private**: PTVault generates `SECRET_KEY` and
+   `JWT_SECRET_KEY` into `data/` on first start. Anyone with these files can
+   forge a login, so protect `data/` like the database. To set them yourself
+   (for example, to share them across hosts), use at least 32 random bytes:
    ```bash
-   # Generate random SECRET_KEY
    python3 -c "import secrets; print(secrets.token_hex(32))"
-
-   # Generate random JWT_SECRET_KEY
-   python3 -c "import secrets, base64; print(base64.b64encode(secrets.token_bytes(32)).decode())"
    ```
 
 2. **Restrict network access**:

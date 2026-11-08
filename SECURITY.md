@@ -38,6 +38,6 @@ and issues that require an already-compromised host.
 ## Deployment Guidance
 
 PTVault is designed for local or trusted-network use. If it is reachable by
-others, run it behind HTTPS, set strong `SECRET_KEY` / `JWT_SECRET_KEY`
-values in `.env`, and back up `data/encryption.key` and `data/encryption.salt`
+others, run it behind HTTPS, protect `data/` (it holds the generated
+`SECRET_KEY` / `JWT_SECRET_KEY` files), and back up `data/encryption.key` and `data/encryption.salt`
 alongside the database. See [DEPLOYMENT.md](DEPLOYMENT.md).
