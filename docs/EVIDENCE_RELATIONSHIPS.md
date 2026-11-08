@@ -277,4 +277,3 @@ Planned features for future releases:
 For API documentation, see the inline JSDoc in:
 - `/routes/relationships.py`
 - `/static/js/api/relationships.js`
-- `/static/js/relationship_graph.js`

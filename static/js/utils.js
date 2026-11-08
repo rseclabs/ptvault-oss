@@ -202,7 +202,7 @@ function on(eventName, path, ...args) {
 const HANDLER_ROOTS = new Set([
     'AdminPanel', 'AttackMapEditor', 'CVSSCalculator', 'CalculatorsManager', 'ClientManager', 'CommandHubManager',
     'CommandManager', 'DecodersManager', 'HostManager', 'JWTDecoder', 'MSFVenomBuilder', 'MarkdownCheatSheet',
-    'PowerShellEncoder', 'RelationshipGraph', 'ReportingManager', 'ShellOneLinersManager', 'SlideOver',
+    'PowerShellEncoder', 'ReportingManager', 'ShellOneLinersManager', 'SlideOver',
     'SubnetCalculator', 'TeamManager', 'TestPlansManager', 'ToolsManager', 'UserManager',
     'cancelEngagementNewClient', 'cancelFinding', 'cancelNote', 'clearImportFile', 'closeModal',
     'createEngagementNewClient', 'dataExportClicked', 'dataImportClicked', 'dataRestoreClicked', 'exportData',

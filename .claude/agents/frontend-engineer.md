@@ -44,7 +44,6 @@ PTVault is a Flask + vanilla JS SPA. The entire frontend lives in:
 | `testplans.js` | ~2,742 | MITRE ATT&CK Navigator, Atomic Red Team |
 | `tools.js` | ~2,635 | Built-in utilities (shells, MSFVenom, CVSS calc, etc.) |
 | `attack_map_editor.js` | ~1,096 | Attack map builder |
-| `relationship_graph.js` | — | Relationship graph visualization |
 | `commands.js` | — | Command database UI |
 | `users.js` | — | User management UI |
 | `auth.js` | — | Authentication UI |

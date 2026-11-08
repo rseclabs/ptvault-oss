@@ -40,7 +40,6 @@ static/js/
 ├── testplans.js            # TestPlansManager — MITRE ATT&CK, Atomic Red Team
 ├── tools.js                # ToolsManager — MSFVenom, CVSS calc, CyberChef, subnet
 ├── attack_map_editor.js    # AttackMapEditor — visual attack path builder
-├── relationship_graph.js   # Relationship graph visualization
 ├── commands.js             # CommandManager — command database CRUD
 ├── users.js                # UserManager — RBAC user management
 ├── auth.js                 # Auth UI logic
