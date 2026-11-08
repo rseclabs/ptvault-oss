@@ -125,34 +125,51 @@ def verify_session_token(token: str) -> Optional[dict]:
 
 
 def create_session_record(conn, user_id, token):
-    """Store session token hash in user_sessions table."""
+    """Store the session token hash; a token is only accepted while this row is active."""
     token_hash = hashlib.sha256(token.encode()).hexdigest()
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO user_sessions (user_id, token_hash, created_at, last_active, is_active)
-        VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1)
-    ''', (user_id, token_hash))
+        INSERT INTO user_sessions (user_id, token_hash, expires_at, created_at, last_active, is_active)
+        VALUES (?, ?, datetime('now', ?), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1)
+    ''', (user_id, token_hash, f'+{int(Config.JWT_EXPIRY_HOURS)} hours'))
     conn.commit()
     return cursor.lastrowid
 
 
-def validate_session(conn, token):
-    """Check if session token hash exists and is active."""
+SESSION_OK = 'ok'
+SESSION_REVOKED = 'revoked'
+SESSION_IDLE = 'idle'
+
+
+def check_session(conn, token, idle_timeout_minutes):
+    """Check the token's session row and record activity.
+
+    Returns SESSION_OK, SESSION_REVOKED (no active row, or past expiry) or
+    SESSION_IDLE (inactive longer than the timeout; the row is deactivated).
+    Database errors propagate so the caller can refuse the request.
+    """
     token_hash = hashlib.sha256(token.encode()).hexdigest()
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT id, user_id FROM user_sessions
+        SELECT id,
+               expires_at IS NOT NULL AND expires_at <= datetime('now') AS expired,
+               last_active IS NOT NULL AND last_active < datetime('now', ?) AS idle
+        FROM user_sessions
         WHERE token_hash = ? AND is_active = 1
-    ''', (token_hash,))
+    ''', (f'-{int(idle_timeout_minutes)} minutes', token_hash))
     row = cursor.fetchone()
-    if row:
-        # Update last_active
-        cursor.execute('''
-            UPDATE user_sessions SET last_active = CURRENT_TIMESTAMP WHERE id = ?
-        ''', (row[0],))
+    if not row:
+        return SESSION_REVOKED
+
+    session_id, expired, idle = row[0], row[1], row[2]
+    if expired or idle:
+        cursor.execute('UPDATE user_sessions SET is_active = 0 WHERE id = ?', (session_id,))
         conn.commit()
-        return True
-    return False
+        return SESSION_REVOKED if expired else SESSION_IDLE
+
+    cursor.execute('UPDATE user_sessions SET last_active = CURRENT_TIMESTAMP WHERE id = ?', (session_id,))
+    conn.commit()
+    return SESSION_OK
 
 
 def revoke_session(conn, token):

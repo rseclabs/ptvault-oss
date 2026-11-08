@@ -4,7 +4,8 @@
  * Tracks user activity and enforces idle timeout with a warning dialog.
  * - Monitors mousemove, keydown, scroll, click, touchstart
  * - Shows a countdown warning 60 seconds before timeout
- * - Sends heartbeat to keep server session alive on "Stay Logged In"
+ * - Sends a heartbeat on activity (at most once a minute) and on "Stay Logged In",
+ *   so the server's idle check matches what the user is doing in the page
  * - Forces logout when timeout expires
  */
 class IdleTimeoutManager {
@@ -16,6 +17,7 @@ class IdleTimeoutManager {
         this.logoutTimer = null;
         this.countdownInterval = null;
         this.activityThrottle = null;
+        this.lastHeartbeat = Date.now();
         this.dialogEl = null;
         this.started = false;
     }
@@ -76,6 +78,11 @@ class IdleTimeoutManager {
         if (this.dialogEl) return;
 
         this.lastActivity = Date.now();
+
+        // Typing or reading makes no API call, so tell the server the session is in use.
+        if (this.lastActivity - this.lastHeartbeat >= 60000) {
+            this._sendHeartbeat();
+        }
 
         // Throttle timer resets to every 30 seconds
         if (this.activityThrottle) return;
@@ -188,9 +195,16 @@ class IdleTimeoutManager {
     async _stayLoggedIn() {
         this._removeDialog();
         this.lastActivity = Date.now();
+        await this._sendHeartbeat();
+        this._resetTimers();
+    }
 
+    /**
+     * Mark the server session active and pick up any timeout change.
+     */
+    async _sendHeartbeat() {
+        this.lastHeartbeat = Date.now();
         try {
-            // Get CSRF token
             const csrfMatch = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
             const headers = { 'Content-Type': 'application/json' };
             if (csrfMatch) headers['X-CSRF-Token'] = decodeURIComponent(csrfMatch[1]);
@@ -207,10 +221,8 @@ class IdleTimeoutManager {
                 }
             }
         } catch (e) {
-            // Heartbeat failed, but still reset local timers
+            // Best effort: local timers still track activity
         }
-
-        this._resetTimers();
     }
 
     /**

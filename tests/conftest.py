@@ -213,3 +213,114 @@ def sample_engagement(app_ctx):
     app_ctx.commit()
 
     return engagement_id
+
+
+# ---------------------------------------------------------------- live app
+
+# Five users exercise every authorization path: a global admin, the owner,
+# editor and viewer of engagement A, and an outsider who owns engagement B
+# and has no access to A. Values are (global role, role on engagement A).
+LIVE_USERS = {
+    'admin': ('admin', None),
+    'owner': ('tester', 'owner'),
+    'editor': ('tester', 'editor'),
+    'viewer': ('viewer', 'viewer'),
+    'outsider': ('tester', None),
+}
+ENGAGEMENT_A = 1
+ENGAGEMENT_B = 2
+
+
+class LiveApp:
+    """The real blueprints and auth middleware over a temporary database.
+
+    `client_for(name)` returns a test client logged in as one of LIVE_USERS,
+    with a session row exactly as /api/auth/login creates it. CSRF is not
+    enforced here; tests/test_security.py covers it.
+    """
+
+    def __init__(self, app, db_path):
+        self.app = app
+        self.db_path = db_path
+        self.user_ids = {}
+
+    def db(self):
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def token_for(self, name):
+        from models.auth import create_session_record, create_session_token
+        role = LIVE_USERS[name][0]
+        token = create_session_token(self.user_ids[name], role=role, username=name)
+        conn = self.db()
+        create_session_record(conn, self.user_ids[name], token)
+        conn.close()
+        return token
+
+    def client_for(self, name, active_engagement=None):
+        client = self.app.test_client()
+        client.set_cookie('auth_token', self.token_for(name))
+        if active_engagement is not None:
+            with client.session_transaction() as sess:
+                sess['active_engagement_id'] = active_engagement
+        return client
+
+
+@pytest.fixture
+def live_app(tmp_path, monkeypatch):
+    from flask import Flask, g
+    from config import Config, BASE_DIR
+    from features import register_blueprints
+    from models import encryption
+
+    monkeypatch.setattr(encryption, '_SQLCIPHER_AVAILABLE', False)
+    monkeypatch.setattr(Config, 'ENCRYPTION_KEY_FILE', str(tmp_path / 'no.key'))
+    monkeypatch.setattr(Config, 'ENCRYPTION_SALT_FILE', str(tmp_path / 'no.salt'))
+    monkeypatch.setattr(Config, 'DATABASE_PATH', str(tmp_path / 'live.db'))
+    monkeypatch.setattr(Config, 'UPLOAD_FOLDER', str(tmp_path / 'uploads'))
+
+    conn = sqlite3.connect(Config.DATABASE_PATH)
+    _init_test_db(conn)
+    live_ids = {}
+    for name, (global_role, _) in LIVE_USERS.items():
+        cur = conn.execute(
+            'INSERT INTO users (username, email, full_name, password_hash, role) VALUES (?, ?, ?, ?, ?)',
+            (name, f'{name}@example.com', name.title(), 'unused', global_role))
+        live_ids[name] = cur.lastrowid
+    conn.execute("INSERT INTO engagements (id, name, client_name) VALUES (?, 'Engagement A', 'Client A')",
+                 (ENGAGEMENT_A,))
+    conn.execute("INSERT INTO engagements (id, name, client_name) VALUES (?, 'Engagement B', 'Client B')",
+                 (ENGAGEMENT_B,))
+    for name, (_, eng_role) in LIVE_USERS.items():
+        if eng_role:
+            conn.execute('INSERT INTO engagement_members (engagement_id, user_id, role) VALUES (?, ?, ?)',
+                         (ENGAGEMENT_A, live_ids[name], eng_role))
+    conn.execute("INSERT INTO engagement_members (engagement_id, user_id, role) VALUES (?, ?, 'owner')",
+                 (ENGAGEMENT_B, live_ids['outsider']))
+    conn.commit()
+    conn.close()
+
+    app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'),
+                static_folder=os.path.join(BASE_DIR, 'static'))
+    app.config['SECRET_KEY'] = 'live-app-test-secret-key-not-for-production'
+    app.config['TESTING'] = True
+
+    # Some route tests reload route modules under a stubbed require_auth and
+    # leave them that way; reload every route module against the real
+    # middleware so this app runs the real authorization checks.
+    import importlib
+    from features import BLUEPRINTS
+    for module_path, _ in BLUEPRINTS:
+        importlib.reload(importlib.import_module(module_path))
+    register_blueprints(app)
+
+    @app.teardown_appcontext
+    def close_db(error):
+        db = g.pop('db', None)
+        if db is not None:
+            db.close()
+
+    live = LiveApp(app, Config.DATABASE_PATH)
+    live.user_ids = live_ids
+    return live

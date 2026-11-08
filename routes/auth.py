@@ -106,11 +106,13 @@ def setup():
         # Create JWT token and set session cookie (auto-login after setup)
         token = create_session_token(user_id, role='admin', username=username)
 
-        # Store session record
+        # The account already exists; if the session row cannot be stored the
+        # auto-login cookie is refused and the admin simply logs in again.
         try:
             create_session_record(conn, user_id, token)
         except Exception:
-            pass  # Don't fail setup if session tracking fails
+            import logging
+            logging.getLogger(__name__).exception("Could not record setup session; log in manually")
 
         # Set httpOnly cookie
         response = make_response(jsonify({
@@ -233,11 +235,9 @@ def login():
         # Create JWT token with role
         token = create_session_token(user_id, role=role, username=db_username)
 
-        # Store session record
-        try:
-            create_session_record(conn, user_id, token)
-        except Exception:
-            pass  # Don't fail login if session tracking fails
+        # A token is only accepted while its session row exists, so a failure
+        # here must fail the login (it propagates to the DatabaseError below).
+        create_session_record(conn, user_id, token)
 
         # Set httpOnly cookie
         response = make_response(jsonify({

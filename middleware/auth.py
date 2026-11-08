@@ -1,11 +1,9 @@
 """Authentication middleware for protected routes."""
 
 import logging
-import sqlite3
 from functools import wraps
-from datetime import datetime, timedelta
 from flask import request, jsonify, g, session
-from models.auth import verify_session_token, validate_session
+from models.auth import SESSION_IDLE, SESSION_OK, check_session, verify_session_token
 from models.database import get_db_connection
 
 logger = logging.getLogger(__name__)
@@ -43,46 +41,21 @@ def require_auth(f):
         except Exception as e:
             return jsonify({"error": f"database connection failed: {str(e)}"}), 500
 
-        # Validate session is still active (reuses the already-open g.db connection)
+        # Every JWT must match an active, unexpired, non-idle session row.
+        # Fail closed: an error here refuses the request.
         try:
-            cursor_check = g.db.cursor()
-            cursor_check.execute('SELECT COUNT(*) FROM user_sessions WHERE is_active = 1')
-            has_sessions = cursor_check.fetchone()[0] > 0
-            if has_sessions and not validate_session(g.db, token):
-                session.clear()
-                return jsonify({"error": "session revoked"}), 401
+            from routes.admin import get_idle_timeout_minutes
+            status = check_session(g.db, token, get_idle_timeout_minutes(g.db))
+        except Exception:
+            logger.exception("Session validation failed; refusing request")
+            return jsonify({"error": "session validation failed"}), 500
 
-            # Check idle timeout
-            if has_sessions:
-                import hashlib
-                token_hash = hashlib.sha256(token.encode()).hexdigest()
-                cursor_check.execute(
-                    'SELECT id, last_active FROM user_sessions WHERE token_hash = ? AND is_active = 1',
-                    (token_hash,)
-                )
-                sess_row = cursor_check.fetchone()
-                if sess_row:
-                    from routes.admin import get_idle_timeout_minutes
-                    timeout_min = get_idle_timeout_minutes(g.db)
-                    last_active_str = sess_row[1]
-                    if last_active_str:
-                        try:
-                            last_active = datetime.strptime(last_active_str, '%Y-%m-%d %H:%M:%S')
-                        except ValueError:
-                            last_active = datetime.fromisoformat(last_active_str.replace('Z', '+00:00')).replace(tzinfo=None)
-                        idle_limit = datetime.utcnow() - timedelta(minutes=timeout_min)
-                        if last_active < idle_limit:
-                            cursor_check.execute(
-                                'UPDATE user_sessions SET is_active = 0 WHERE id = ?',
-                                (sess_row[0],)
-                            )
-                            g.db.commit()
-                            session.clear()
-                            return jsonify({"error": "session_idle_timeout"}), 401
-        except sqlite3.OperationalError:
-            pass  # user_sessions table not yet created during initial setup
-        except Exception as e:
-            logger.warning("Session validation error (request will proceed with valid JWT): %s", e)
+        if status == SESSION_IDLE:
+            session.clear()
+            return jsonify({"error": "session_idle_timeout"}), 401
+        if status != SESSION_OK:
+            session.clear()
+            return jsonify({"error": "session revoked"}), 401
 
         # Set active engagement ID from session
         g.active_engagement_id = session.get('active_engagement_id')
