@@ -1090,11 +1090,7 @@ const HostManager = {
         if (!textarea || !preview) return;
 
         const content = textarea.value;
-        if (typeof marked !== 'undefined') {
-            preview.innerHTML = marked.parse(content);
-        } else {
-            preview.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');
-        }
+        preview.innerHTML = renderMarkdown(content);
     },
 
     /**
@@ -1811,28 +1807,32 @@ const HostManager = {
      * Build finding markdown from vulnerability data
      */
     _buildFindingMarkdown(vuln) {
+        // Scanner text quotes target responses, so it is attacker-influenced (H-9):
+        // markup and backticks are escaped so it shows as text, and tool output is
+        // fenced with more backticks than it contains so it cannot close the fence.
+        const text = value => escapeHtml(value);
         const sections = [];
 
         // Summary section
         if (vuln.synopsis) {
-            sections.push(`## Summary\n${vuln.synopsis}`);
+            sections.push(`## Summary\n${text(vuln.synopsis)}`);
         }
 
         // Description section
         if (vuln.description) {
-            sections.push(`## Description\n${vuln.description}`);
+            sections.push(`## Description\n${text(vuln.description)}`);
         }
 
         // Technical details section
         const details = [];
         if (vuln.port) {
-            details.push(`- **Port**: ${vuln.port}/${vuln.protocol || 'tcp'}`);
+            details.push(`- **Port**: ${text(vuln.port)}/${text(vuln.protocol || 'tcp')}`);
         }
         if (vuln.location) {
-            details.push(`- **Location**: ${vuln.location}`);
+            details.push(`- **Location**: ${text(vuln.location)}`);
         }
         if (vuln.source_tool) {
-            details.push(`- **Detected By**: ${vuln.source_tool}`);
+            details.push(`- **Detected By**: ${text(vuln.source_tool)}`);
         }
         if (details.length > 0) {
             sections.push(`## Technical Details\n${details.join('\n')}`);
@@ -1840,15 +1840,19 @@ const HostManager = {
 
         // CVE References section
         if (vuln.cves && vuln.cves.length > 0) {
-            const cveLinks = vuln.cves.map(cve =>
-                `- [${cve}](https://nvd.nist.gov/vuln/detail/${cve})`
+            const cveLinks = vuln.cves.map(cve => /^CVE-\d{4}-\d{4,}$/i.test(String(cve))
+                ? `- [${cve}](https://nvd.nist.gov/vuln/detail/${cve})`
+                : `- ${text(cve)}`
             ).join('\n');
             sections.push(`## CVE References\n${cveLinks}`);
         }
 
         // Tool output section
         if (vuln.plugin_output) {
-            sections.push(`## Tool Output\n\`\`\`\n${vuln.plugin_output}\n\`\`\``);
+            const output = String(vuln.plugin_output);
+            const longestRun = Math.max(0, ...(output.match(/`+/g) || []).map(run => run.length));
+            const fence = '`'.repeat(Math.max(3, longestRun + 1));
+            sections.push(`## Tool Output\n${fence}\n${output}\n${fence}`);
         }
 
         return sections.join('\n\n');
@@ -1859,7 +1863,7 @@ const HostManager = {
      */
     _buildRemediationMarkdown(vuln) {
         if (vuln.solution) {
-            return vuln.solution;
+            return escapeHtml(vuln.solution);   // scanner text, shown as text (H-9)
         }
         return '';
     },
@@ -2765,8 +2769,8 @@ const HostManager = {
         container.innerHTML = this.engagementFindings.map(finding => {
             const crit = criticalityLabels[finding.criticality] || criticalityLabels['medium'];
             const cvssDisplay = finding.cvss_score !== null ? finding.cvss_score.toFixed(1) : '-';
-            const findingHtml = finding.finding_content ? (typeof marked !== 'undefined' ? marked.parse(finding.finding_content) : escapeHtml(finding.finding_content)) : '<em>No description</em>';
-            const remediationHtml = finding.remediation_content ? (typeof marked !== 'undefined' ? marked.parse(finding.remediation_content) : escapeHtml(finding.remediation_content)) : '<em>No remediation notes</em>';
+            const findingHtml = finding.finding_content ? renderMarkdown(finding.finding_content) : '<em>No description</em>';
+            const remediationHtml = finding.remediation_content ? renderMarkdown(finding.remediation_content) : '<em>No remediation notes</em>';
 
             // Build host info display
             let hostInfo = '';
@@ -2945,11 +2949,7 @@ const HostManager = {
         if (!textarea || !preview) return;
 
         const content = textarea.value;
-        if (typeof marked !== 'undefined') {
-            preview.innerHTML = marked.parse(content);
-        } else {
-            preview.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');
-        }
+        preview.innerHTML = renderMarkdown(content);
     },
 
     // ============================================

@@ -1952,15 +1952,10 @@
     <!-- D3.js for graph visualization -->
     <script src="/static/vendor/d3-7.9.0/d3.min.js"></script>
 
-    <!-- Marked.js for Markdown rendering -->
+    <!-- Markdown: marked's output is always sanitized by DOMPurify (static/js/lib/markdown.js, H-9) -->
     <script src="/static/vendor/marked-18.1.1/marked.umd.js"></script>
-    <script>
-        // Enable GFM line breaks: single newline = <br>, double newline = paragraph.
-        // Also ensures two trailing spaces + newline works per the Markdown spec.
-        if (typeof marked !== 'undefined') {
-            marked.use({ breaks: true, gfm: true });
-        }
-    </script>
+    <script src="/static/vendor/dompurify-3.4.17/purify.min.js"></script>
+    <script src="/static/js/lib/markdown.js"></script>
     <script type="module" src="/static/js/api.js"></script>
     <script src="/static/js/utils.js"></script>
     <script src="/static/js/users.js"></script>

@@ -51,7 +51,10 @@ def browser():
 @pytest.fixture
 def ui(live_app, browser):
     app = live_app.app
-    app.add_url_rule('/dashboard', 'dashboard', lambda: render_template('dashboard.html'))
+    # The pages app.py serves (it cannot be imported in tests); routes must exist before the first request.
+    for route, template in (('/dashboard', 'dashboard.html'), ('/note/new', 'note_editor.html'),
+                            ('/finding/new', 'finding_editor.html')):
+        app.add_url_rule(route, template, lambda t=template: render_template(t))
     server = make_server('127.0.0.1', 0, app, threaded=True)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     base = f'http://127.0.0.1:{server.server_port}'
@@ -157,17 +160,16 @@ def test_writeup_card(ui):
 def test_saved_report_workspace_and_preview(ui):
     tool = lambda tool_id, data, **kw: {'id': P, 'type': 'format_tool', 'format_tool_id': tool_id,
                                         'title': P, 'toolData': data, **kw}
-    # Markdown bodies (descriptions, alert content) are H-9's: test_markdown_xss.py covers them.
     conn = ui.db()
     writeup_id = conn.execute(
-        "INSERT INTO writeups (name, description, criticality, writeup_type) VALUES (?, 'md', 'high', 'finding')",
-        (P,)).lastrowid
+        "INSERT INTO writeups (name, description, remediation, criticality, writeup_type) "
+        "VALUES (?, ?, ?, 'high', 'finding')", (P, P, P)).lastrowid
     narrative_id = conn.execute(
-        "INSERT INTO writeups (name, description, writeup_type) VALUES (?, 'md', 'narrative')", (P,)).lastrowid
+        "INSERT INTO writeups (name, description, writeup_type) VALUES (?, ?, 'narrative')", (P, P)).lastrowid
     structure = [
         tool('sectionheader', {'level': P, 'text': P, 'numbered': True, 'number': P}),
         tool(P, {}),
-        tool('alertbox', {'type': P, 'content': 'md'}),
+        tool('alertbox', {'type': P, 'content': P}),
         tool('cvsscard', {'score': P, 'vector': P}),
         tool('riskmatrix', {'size': P}),
         tool('imageplaceholder', {'width': P, 'caption': P}),

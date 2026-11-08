@@ -1065,11 +1065,7 @@ const ReportingManager = {
      * Render markdown content
      */
     renderMarkdown(content) {
-        if (!content) return '';
-        if (typeof marked !== 'undefined') {
-            return marked.parse(content);
-        }
-        return escapeHtml(content).replace(/\n/g, '<br>');
+        return renderMarkdown(content);   // sanitized (static/js/lib/markdown.js, H-9)
     },
 
     /**
@@ -1350,10 +1346,7 @@ const ReportingManager = {
                 'preview', 'side-by-side', 'fullscreen', '|',
                 'guide',
             ],
-            previewRender(plainText) {
-                if (typeof marked !== 'undefined') return marked.parse(plainText);
-                return plainText;
-            },
+            previewRender(plainText) { return renderMarkdown(plainText); },
         });
 
         const descEl = document.getElementById('writeupFormDescription');
@@ -1530,11 +1523,7 @@ const ReportingManager = {
         if (!textarea || !preview) return;
 
         const content = textarea.value;
-        if (typeof marked !== 'undefined') {
-            preview.innerHTML = marked.parse(content);
-        } else {
-            preview.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');
-        }
+        preview.innerHTML = renderMarkdown(content);
     },
 
     /**

@@ -490,10 +490,7 @@
                     'preview', 'side-by-side', 'fullscreen', '|',
                     'guide',
                 ],
-                previewRender: function (plainText) {
-                    if (typeof marked !== 'undefined') return marked.parse(plainText);
-                    return plainText;
-                },
+                previewRender: plainText => renderMarkdown(plainText),
             });
 
             // Clipboard image paste — uploads to /api/evidence, inserts markdown URL.

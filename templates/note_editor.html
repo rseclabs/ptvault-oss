@@ -164,6 +164,10 @@
     <input type="file" id="noteImageInput" accept="image/*" style="display:none" onchange="handleNoteImage()">
 
     <script src="/static/vendor/easymde-2.21.0/easymde.min.js"></script>
+    <!-- Markdown: marked's output is always sanitized by DOMPurify (static/js/lib/markdown.js, H-9) -->
+    <script src="/static/vendor/marked-18.1.1/marked.umd.js"></script>
+    <script src="/static/vendor/dompurify-3.4.17/purify.min.js"></script>
+    <script src="/static/js/lib/markdown.js"></script>
     <script src="/static/js/clipboard_image_paste.js?v=2"></script>
     <script type="module" src="/static/js/api.js"></script>
     <script src="/static/js/utils.js"></script>
@@ -217,13 +221,7 @@
                 'preview', 'side-by-side', 'fullscreen', '|',
                 'guide'
             ],
-            previewRender: function(plainText) {
-                // Use marked if available, otherwise return as-is
-                if (typeof marked !== 'undefined') {
-                    return marked.parse(plainText);
-                }
-                return plainText;
-            }
+            previewRender: plainText => renderMarkdown(plainText)   // sanitized (H-9)
         });
 
         // Clipboard image paste — see static/js/clipboard_image_paste.js

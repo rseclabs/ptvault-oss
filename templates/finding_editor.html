@@ -275,6 +275,10 @@
     </div>
 
     <script src="/static/vendor/easymde-2.21.0/easymde.min.js"></script>
+    <!-- Markdown: marked's output is always sanitized by DOMPurify (static/js/lib/markdown.js, H-9) -->
+    <script src="/static/vendor/marked-18.1.1/marked.umd.js"></script>
+    <script src="/static/vendor/dompurify-3.4.17/purify.min.js"></script>
+    <script src="/static/js/lib/markdown.js"></script>
     <script src="/static/js/clipboard_image_paste.js"></script>
     <script type="module" src="/static/js/api.js"></script>
     <script src="/static/js/utils.js"></script>
@@ -292,7 +296,9 @@
                 'quote', 'code', 'unordered-list', 'ordered-list', '|',
                 'link', '|',
                 'preview', 'side-by-side', 'fullscreen'
-            ]
+            ],
+            // EasyMDE's own bundled marked does not sanitize (H-9)
+            previewRender: plainText => renderMarkdown(plainText)
         });
 
         const remediationMDE = new EasyMDE({
@@ -307,7 +313,9 @@
                 'quote', 'code', 'unordered-list', 'ordered-list', '|',
                 'link', '|',
                 'preview', 'side-by-side', 'fullscreen'
-            ]
+            ],
+            // EasyMDE's own bundled marked does not sanitize (H-9)
+            previewRender: plainText => renderMarkdown(plainText)
         });
 
         // Clipboard image paste for both editors

@@ -10,10 +10,16 @@ never change the app without a commit here.
 | [Lucide](https://lucide.dev) | 1.59.0 | `lucide-1.59.0/lucide.min.js` | ISC (`LICENSE`) |
 | [EasyMDE](https://github.com/Ionaru/easy-markdown-editor) | 2.21.0 | `easymde-2.21.0/easymde.min.{js,css}` | MIT (`LICENSE`) |
 | [marked](https://marked.js.org) | 18.1.1 | `marked-18.1.1/marked.umd.js` | MIT (`LICENSE`) |
+| [DOMPurify](https://github.com/cure53/DOMPurify) | 3.4.17 | `dompurify-3.4.17/purify.min.js` | Apache 2.0 or MPL 2.0 (`LICENSE`, `LICENSE-MPL`) |
 | [D3](https://d3js.org) | 7.9.0 | `d3-7.9.0/d3.min.js` | ISC (`LICENSE`) |
 | [Font Awesome](https://fontawesome.com/v4/) | 4.7.0 | `font-awesome-4.7.0/css/font-awesome.min.css`, `fonts/fontawesome-webfont.{woff2,woff}` | Font: SIL OFL 1.1 · CSS: MIT |
 | [Host Grotesk](https://github.com/element-type/hostgrotesk) via Fontsource | 5.3.0 | `host-grotesk-5.3.0/host-grotesk.css`, `files/host-grotesk-latin{,-ext}-wght-normal.woff2` | SIL OFL 1.1 (`LICENSE`) |
 | [Atkinson Hyperlegible Mono](https://www.brailleinstitute.org/freefont/) via Fontsource | 5.3.0 | `atkinson-hyperlegible-mono-5.3.0/atkinson-hyperlegible-mono.css`, `files/atkinson-hyperlegible-mono-latin{,-ext}-wght-normal.woff2` | SIL OFL 1.1 (`LICENSE`) |
+
+marked passes raw HTML through, so its output must never reach the page
+directly: `static/js/lib/markdown.js` (`renderMarkdown()`) runs every render
+through DOMPurify, and `tests/test_markdown_xss.py` fails if anything else
+calls marked. Load marked, then DOMPurify, then `markdown.js`.
 
 Font Awesome is only here because EasyMDE's editor toolbar renders its buttons
 with it; PTVault's own icons are Lucide. Each font's CSS is Fontsource's `wght.css` with the family renamed from
@@ -40,6 +46,7 @@ Mono is reserved for measured values (IPs, ports, hashes, timestamps).
 3fa1fa7e990377c87018d62f356cc42b8db39fd88cee5724431e9f0d63b7f32f  atkinson-hyperlegible-mono-5.3.0/files/atkinson-hyperlegible-mono-latin-ext-wght-normal.woff2
 c53a3771287f883545c195c56521c8f10e3f3d8ab1551b5862d3342089211aab  atkinson-hyperlegible-mono-5.3.0/atkinson-hyperlegible-mono.css
 f2094bbf6141b359722c4fe454eb6c4b0f0e42cc10cc7af921fc158fceb86539  d3-7.9.0/d3.min.js
+cd37898f9782adf54820c413191b5691803f0f137c799d6edcfd38523b4c2c31  dompurify-3.4.17/purify.min.js
 6eee36340432776d682e7372ec4a7eb29be4fdb3ffada32c0bfa5e31a5ef34a2  easymde-2.21.0/easymde.min.css
 2c06bddfd0c89176db08ccf9d42e2beaa9b4f1a4ff8fb2ec0bf1bed25ce08e05  easymde-2.21.0/easymde.min.js
 799aeb25cc0373fdee0e1b1db7ad6c2f6a0e058dfadaa3379689f583213190bd  font-awesome-4.7.0/css/font-awesome.min.css
