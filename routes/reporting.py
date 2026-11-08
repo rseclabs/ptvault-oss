@@ -687,7 +687,7 @@ def export_report(report_id):
                 report_name=report['name']
             )
 
-            logger.info(f"Generated PDF for report: {report['name']} ({len(pdf_bytes)} bytes)")
+            logger.info("Generated PDF for report id=%s (%d bytes)", report.get('id'), len(pdf_bytes))    # L-37
 
             return Response(pdf_bytes, mimetype='application/pdf',
                           headers={'Content-Disposition': attachment_disposition(f'{report["name"]}.pdf', 'report.pdf')})

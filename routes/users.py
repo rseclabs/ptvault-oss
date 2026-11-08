@@ -133,7 +133,7 @@ def create_user():
             created_by=g.current_user
         )
 
-        logger.info(f"User created: {username} (id={user_id}) by user {g.current_user}")
+        logger.info("User created: id=%s by user %s", user_id, g.current_user)    # no names (L-37)
         audit_create('user', user_id, username=username, role=role)
 
         return jsonify({

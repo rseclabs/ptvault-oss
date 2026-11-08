@@ -469,7 +469,7 @@ class AttackPathDAO(BaseDAO):
         }
 
         path_id = self.create(data)
-        logger.info(f"Saved attack path '{name}' with {len(path_data)} steps")
+        logger.info("Saved an attack path with %d steps", len(path_data))    # no names (L-37)
         return path_id
 
     def get_path(self, path_id: int) -> Optional[Dict]:

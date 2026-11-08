@@ -47,3 +47,23 @@ def test_debug_logging_needs_ptvault_debug(monkeypatch, env, expected):
     for name, value in env.items():
         monkeypatch.setenv(name, value)
     assert log_level() == expected
+
+
+def test_routes_log_ids_not_client_names(live_app, caplog):
+    """Retest 2 L-37: client, user and attack path names were logged at INFO."""
+    from tests.conftest import ENGAGEMENT_A
+    marker = 'AcmeSecretClientName'
+    admin = live_app.client_for('admin', active_engagement=ENGAGEMENT_A)
+    with caplog.at_level(logging.INFO):
+        client = admin.post('/api/clients', json={'name': marker}).get_json()
+        admin.delete(f"/api/clients/{client['id']}")
+        admin.post('/api/users', json={'username': marker.lower(), 'email': 'm@x.co', 'full_name': marker,
+                                       'password': 'Marker-Passphrase-123', 'role': 'viewer'})
+        conn = live_app.db()
+        ev = conn.execute("INSERT INTO evidence (engagement_id, evidence_type, title) VALUES (?, 'note', 'e')",
+                          (ENGAGEMENT_A,)).lastrowid
+        conn.commit()
+        conn.close()
+        admin.post('/api/relationships/paths', json={'name': marker, 'start_id': ev, 'end_id': ev,
+                                                     'path_data': [{'id': ev}]})
+    assert marker not in caplog.text and marker.lower() not in caplog.text

@@ -342,7 +342,7 @@ def save_attack_path():
         created_by=g.current_user
     )
 
-    logger.info(f"Saved attack path '{data['name']}' with id {path_id}")
+    logger.info("Saved attack path id=%s", path_id)    # no names in logs (L-37)
     return jsonify({"id": path_id, "message": "Attack path saved"}), 201
 
 

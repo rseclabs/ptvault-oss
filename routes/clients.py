@@ -104,8 +104,7 @@ def create_client():
     payload['created_by'] = g.current_user
     new_id = client_dao.create(payload)
 
-    logger.info("Client created: %s (id=%s) by user %s",
-                payload['name'], new_id, g.current_user)
+    logger.info("Client created: id=%s by user %s", new_id, g.current_user)    # no names in logs (L-37)
     audit_create('client', new_id, name=payload['name'])
 
     created = client_dao.find_by_id(new_id)
@@ -171,8 +170,7 @@ def delete_client(client_id):
 
     client_dao.delete(client_id)
 
-    logger.info("Client deleted: %s (%s) by user %s",
-                client_id, existing['name'], g.current_user)
+    logger.info("Client deleted: id=%s by user %s", client_id, g.current_user)    # no names in logs (L-37)
     audit_update('client', client_id, action='delete',
                  deleted_by=g.current_user, name=existing['name'])
 

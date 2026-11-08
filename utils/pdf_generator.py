@@ -55,7 +55,7 @@ def generate_pdf_from_html(html_content, report_name=None):
         raise ImportError("WeasyPrint is not installed. Run: pip install WeasyPrint>=60.0")
 
     try:
-        logger.info(f"Generating PDF for report: {report_name or 'Untitled'}")
+        logger.info("Generating a PDF report")    # no report names in logs (L-37)
 
         # Create font configuration for better font handling
         font_config = FontConfiguration()
