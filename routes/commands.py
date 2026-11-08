@@ -1,7 +1,7 @@
 """Command database routes for PTVault."""
 
 from flask import Blueprint, request, jsonify, g
-from middleware.auth import require_auth
+from middleware.auth import require_auth, require_role
 from utils.error_handler import handle_errors
 import json
 
@@ -87,6 +87,7 @@ def get_command(command_id):
 
 @commands_bp.route('', methods=['POST'])
 @require_auth
+@require_role('admin', 'tester')
 @handle_errors
 def create_command():
     """
@@ -145,6 +146,7 @@ def create_command():
 
 @commands_bp.route('/<int:command_id>', methods=['PUT'])
 @require_auth
+@require_role('admin', 'tester')
 @handle_errors
 def update_command(command_id):
     """
@@ -220,6 +222,7 @@ def update_command(command_id):
 
 @commands_bp.route('/<int:command_id>', methods=['DELETE'])
 @require_auth
+@require_role('admin', 'tester')
 @handle_errors
 def delete_command(command_id):
     """
@@ -246,6 +249,7 @@ def delete_command(command_id):
 
 @commands_bp.route('/<int:command_id>/favorite', methods=['POST'])
 @require_auth
+@require_role('admin', 'tester')
 @handle_errors
 def toggle_favorite(command_id):
     """Toggle favorite status for a command."""

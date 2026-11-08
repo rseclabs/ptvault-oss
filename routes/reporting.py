@@ -5,7 +5,7 @@ import html
 import logging
 from html.parser import HTMLParser
 from flask import Blueprint, request, jsonify, g, Response
-from middleware.auth import require_auth, require_engagement_access
+from middleware.auth import require_auth, require_engagement_access, require_role
 from utils.error_handler import handle_errors
 from utils.pdf_generator import generate_pdf_from_html, generate_pdf_with_cover, HAS_WEASYPRINT
 
@@ -146,6 +146,7 @@ def list_categories():
 
 @reporting_bp.route('/writeups', methods=['POST'])
 @require_auth
+@require_role('admin', 'tester')
 @handle_errors
 def create_writeup():
     """
@@ -226,6 +227,7 @@ def create_writeup():
 
 @reporting_bp.route('/writeups/<int:writeup_id>', methods=['PUT'])
 @require_auth
+@require_role('admin', 'tester')
 @handle_errors
 def update_writeup(writeup_id):
     """Update a writeup."""
@@ -335,6 +337,7 @@ def update_writeup(writeup_id):
 
 @reporting_bp.route('/writeups/<int:writeup_id>', methods=['DELETE'])
 @require_auth
+@require_role('admin', 'tester')
 @handle_errors
 def delete_writeup(writeup_id):
     """Delete a writeup."""

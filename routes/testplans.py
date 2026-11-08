@@ -1,7 +1,7 @@
 """Test Plans routes for PTVault - MITRE ATT&CK Navigator and Atomic Red Team integration."""
 
 from flask import Blueprint, request, jsonify, g, Response
-from middleware.auth import require_auth, require_engagement_access
+from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role
 from routes.engagements import require_active_engagement
 import json
 import os
@@ -35,6 +35,22 @@ def _get_accessible_plan(cursor, plan_id):
     """, (plan_id, g.get('active_engagement_id')))
     row = cursor.fetchone()
     return _row_to_plan(cursor, row) if row else None
+
+
+def _plan_write_denied(plan):
+    """Return a 403 response unless the user may change this plan, else None.
+
+    An engagement's plan needs the editor role on that engagement; a global
+    template needs a global admin or tester (a global viewer is read-only).
+    """
+    if plan['engagement_id'] is None:
+        allowed = g.current_user_role in ('admin', 'tester')
+    else:
+        role = engagement_role(g.db, g.current_user, g.current_user_role, plan['engagement_id'])
+        allowed = role in ('editor', 'owner')
+    if allowed:
+        return None
+    return jsonify({"error": "insufficient permissions"}), 403
 
 
 def _copy_plan(cursor, source, engagement_id, name):
@@ -114,6 +130,7 @@ def get_atomics_status():
 
 @testplans_bp.route('/atomics/download', methods=['POST'])
 @require_auth
+@require_role('admin', 'tester')
 def download_atomics():
     """
     Download and parse the Atomic Red Team repository with progress streaming.
@@ -357,6 +374,7 @@ def list_layers():
 
 @testplans_bp.route('/layers/import', methods=['POST'])
 @require_auth
+@require_role('admin', 'tester')
 def import_layer():
     """
     Import a MITRE ATT&CK Navigator layer JSON file.
@@ -439,6 +457,7 @@ def get_layer(layer_id):
 
 @testplans_bp.route('/layers/<int:layer_id>', methods=['DELETE'])
 @require_auth
+@require_role('admin', 'tester')
 def delete_layer(layer_id):
     """Delete an imported layer."""
     try:
@@ -716,8 +735,12 @@ def update_plan(plan_id):
 
         cursor = g.db.cursor()
 
-        if not _get_accessible_plan(cursor, plan_id):
+        plan = _get_accessible_plan(cursor, plan_id)
+        if not plan:
             return jsonify({"error": "Test plan not found"}), 404
+        denied = _plan_write_denied(plan)
+        if denied:
+            return denied
 
         cursor.execute("""
             UPDATE test_plans
@@ -749,8 +772,12 @@ def delete_plan(plan_id):
     """Delete a test plan and all its items (executions of it are deleted too)."""
     try:
         cursor = g.db.cursor()
-        if not _get_accessible_plan(cursor, plan_id):
+        plan = _get_accessible_plan(cursor, plan_id)
+        if not plan:
             return jsonify({"error": "Test plan not found"}), 404
+        denied = _plan_write_denied(plan)
+        if denied:
+            return denied
         cursor.execute("DELETE FROM test_plans WHERE id = ?", (plan_id,))
         g.db.commit()
 
@@ -834,8 +861,12 @@ def add_plan_item(plan_id):
     try:
         cursor = g.db.cursor()
 
-        if not _get_accessible_plan(cursor, plan_id):
+        plan = _get_accessible_plan(cursor, plan_id)
+        if not plan:
             return jsonify({"error": "Test plan not found"}), 404
+        denied = _plan_write_denied(plan)
+        if denied:
+            return denied
 
         data = request.get_json()
 
@@ -904,8 +935,12 @@ def update_plan_item(plan_id, item_id):
         data = request.get_json()
         cursor = g.db.cursor()
 
-        if not _get_accessible_plan(cursor, plan_id):
+        plan = _get_accessible_plan(cursor, plan_id)
+        if not plan:
             return jsonify({"error": "Test plan not found"}), 404
+        denied = _plan_write_denied(plan)
+        if denied:
+            return denied
 
         # Verify item exists and belongs to plan
         cursor.execute("""
@@ -954,8 +989,12 @@ def delete_plan_item(plan_id, item_id):
     """Remove an item from a test plan."""
     try:
         cursor = g.db.cursor()
-        if not _get_accessible_plan(cursor, plan_id):
+        plan = _get_accessible_plan(cursor, plan_id)
+        if not plan:
             return jsonify({"error": "Test plan not found"}), 404
+        denied = _plan_write_denied(plan)
+        if denied:
+            return denied
         cursor.execute("""
             DELETE FROM test_plan_items WHERE id = ? AND test_plan_id = ?
         """, (item_id, plan_id))
@@ -990,8 +1029,12 @@ def reorder_plan_items(plan_id):
             return jsonify({"error": "item_ids array required"}), 400
 
         cursor = g.db.cursor()
-        if not _get_accessible_plan(cursor, plan_id):
+        plan = _get_accessible_plan(cursor, plan_id)
+        if not plan:
             return jsonify({"error": "Test plan not found"}), 404
+        denied = _plan_write_denied(plan)
+        if denied:
+            return denied
 
         # Update sort_order for each item
         for idx, item_id in enumerate(item_ids):
@@ -1023,8 +1066,12 @@ def add_bulk_items(plan_id):
     try:
         cursor = g.db.cursor()
 
-        if not _get_accessible_plan(cursor, plan_id):
+        plan = _get_accessible_plan(cursor, plan_id)
+        if not plan:
             return jsonify({"error": "Test plan not found"}), 404
+        denied = _plan_write_denied(plan)
+        if denied:
+            return denied
 
         data = request.get_json()
         atomic_ids = data.get('atomic_ids', [])
