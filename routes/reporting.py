@@ -5,7 +5,7 @@ import html
 import logging
 from html.parser import HTMLParser
 from flask import Blueprint, request, jsonify, g, Response
-from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role
+from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role, can_edit_shared
 from utils.error_handler import handle_errors
 from utils.pdf_generator import generate_pdf_from_html, generate_pdf_with_cover, HAS_WEASYPRINT
 
@@ -209,9 +209,9 @@ def create_writeup():
 
     cursor = g.db.cursor()
     cursor.execute('''
-        INSERT INTO writeups (name, category, criticality, cvss_score, description, remediation, tags, writeup_type, show_title_in_report, report_heading_level)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (name, category, criticality, cvss_score, description, remediation, tags, writeup_type, show_title_in_report, report_heading_level))
+        INSERT INTO writeups (name, category, criticality, cvss_score, description, remediation, tags, writeup_type, show_title_in_report, report_heading_level, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (name, category, criticality, cvss_score, description, remediation, tags, writeup_type, show_title_in_report, report_heading_level, g.current_user))
 
     g.db.commit()
     writeup_id = cursor.lastrowid
@@ -234,11 +234,13 @@ def update_writeup(writeup_id):
     cursor = g.db.cursor()
 
     # Check if writeup exists
-    cursor.execute("SELECT id FROM writeups WHERE id = ?", (writeup_id,))
+    cursor.execute("SELECT id, created_by FROM writeups WHERE id = ?", (writeup_id,))
     row = cursor.fetchone()
 
     if not row:
         return jsonify({"error": "Writeup not found"}), 404
+    if not can_edit_shared(row[1]):
+        return jsonify({"error": "only the creator or an admin can change this"}), 403
 
     data = request.get_json()
     if not data:
@@ -344,11 +346,13 @@ def delete_writeup(writeup_id):
     cursor = g.db.cursor()
 
     # Check if writeup exists
-    cursor.execute("SELECT id FROM writeups WHERE id = ?", (writeup_id,))
+    cursor.execute("SELECT id, created_by FROM writeups WHERE id = ?", (writeup_id,))
     row = cursor.fetchone()
 
     if not row:
         return jsonify({"error": "Writeup not found"}), 404
+    if not can_edit_shared(row[1]):
+        return jsonify({"error": "only the creator or an admin can change this"}), 403
 
     cursor.execute("DELETE FROM writeups WHERE id = ?", (writeup_id,))
     g.db.commit()

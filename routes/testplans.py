@@ -1,7 +1,7 @@
 """Test Plans routes for PTVault - MITRE ATT&CK Navigator and Atomic Red Team integration."""
 
 from flask import Blueprint, request, jsonify, g, Response
-from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role
+from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role, can_edit_shared
 from routes.engagements import require_active_engagement
 import json
 import os
@@ -41,12 +41,28 @@ def _plan_write_denied(plan):
     """Return a 403 response unless the user may change this plan, else None.
 
     An engagement's plan needs the editor role on that engagement; a global
-    template needs a global admin or tester (a global viewer is read-only).
+    template can be changed only by its creator or an admin.
     """
     if plan['engagement_id'] is None:
-        allowed = g.current_user_role in ('admin', 'tester')
+        allowed = can_edit_shared(plan.get('created_by'))
     else:
         role = engagement_role(g.db, g.current_user, g.current_user_role, plan['engagement_id'])
+        allowed = role in ('editor', 'owner')
+    if allowed:
+        return None
+    return jsonify({"error": "insufficient permissions"}), 403
+
+
+def _plan_create_denied(engagement_id):
+    """Return a 403 response unless the user may create a plan here, else None.
+
+    A template (engagement_id None) needs a global admin or tester; a plan in
+    an engagement needs the editor role on it.
+    """
+    if engagement_id is None:
+        allowed = g.current_user_role in ('admin', 'tester')
+    else:
+        role = engagement_role(g.db, g.current_user, g.current_user_role, engagement_id)
         allowed = role in ('editor', 'owner')
     if allowed:
         return None
@@ -60,10 +76,10 @@ def _copy_plan(cursor, source, engagement_id, name):
         source_template_id = None
     cursor.execute("""
         INSERT INTO test_plans (name, description, target_platform, tags,
-                                engagement_id, source_template_id)
-        VALUES (?, ?, ?, ?, ?, ?)
+                                engagement_id, source_template_id, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (name, source.get('description'), source.get('target_platform'),
-          source.get('tags'), engagement_id, source_template_id))
+          source.get('tags'), engagement_id, source_template_id, g.current_user))
     new_plan_id = cursor.lastrowid
     cursor.execute("""
         INSERT INTO test_plan_items (test_plan_id, atomic_id, custom_name, custom_command,
@@ -405,9 +421,9 @@ def import_layer():
 
         cursor = g.db.cursor()
         cursor.execute("""
-            INSERT INTO navigator_layers (name, description, domain, layer_json, technique_count)
-            VALUES (?, ?, ?, ?, ?)
-        """, (name, description, domain, json.dumps(layer_data), technique_count))
+            INSERT INTO navigator_layers (name, description, domain, layer_json, technique_count, created_by)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (name, description, domain, json.dumps(layer_data), technique_count, g.current_user))
         g.db.commit()
 
         layer_id = cursor.lastrowid
@@ -462,11 +478,15 @@ def delete_layer(layer_id):
     """Delete an imported layer."""
     try:
         cursor = g.db.cursor()
+        cursor.execute("SELECT created_by FROM navigator_layers WHERE id = ?", (layer_id,))
+        layer = cursor.fetchone()
+        if not layer:
+            return jsonify({"error": "Layer not found"}), 404
+        if not can_edit_shared(layer[0]):
+            return jsonify({"error": "only the creator or an admin can change this"}), 403
+
         cursor.execute("DELETE FROM navigator_layers WHERE id = ?", (layer_id,))
         g.db.commit()
-
-        if cursor.rowcount == 0:
-            return jsonify({"error": "Layer not found"}), 404
 
         return jsonify({"message": "Layer deleted"}), 200
 
@@ -628,7 +648,6 @@ def list_plans():
 
 @testplans_bp.route('/plans', methods=['POST'])
 @require_auth
-@require_engagement_access('editor')
 def create_plan():
     """
     Create a new test plan.
@@ -653,16 +672,21 @@ def create_plan():
             if not engagement_id:
                 return jsonify({"error": "Select an engagement first, or create a template"}), 400
 
+        denied = _plan_create_denied(engagement_id)
+        if denied:
+            return denied
+
         cursor = g.db.cursor()
         cursor.execute("""
-            INSERT INTO test_plans (name, description, target_platform, tags, engagement_id)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO test_plans (name, description, target_platform, tags, engagement_id, created_by)
+            VALUES (?, ?, ?, ?, ?, ?)
         """, (
             data['name'],
             data.get('description', ''),
             data.get('target_platform', 'all'),
             data.get('tags', ''),
-            engagement_id
+            engagement_id,
+            g.current_user
         ))
         g.db.commit()
 
@@ -790,7 +814,6 @@ def delete_plan(plan_id):
 
 @testplans_bp.route('/plans/<int:plan_id>/duplicate', methods=['POST'])
 @require_auth
-@require_engagement_access('editor')
 def duplicate_plan(plan_id):
     """
     Copy a test plan with all its items.
@@ -823,6 +846,10 @@ def duplicate_plan(plan_id):
                 return jsonify({"error": "Select an engagement first"}), 400
         else:
             engagement_id = None
+
+        denied = _plan_create_denied(engagement_id)
+        if denied:
+            return denied
 
         default_name = original['name'] if (original['is_template'] and target == 'engagement') \
             else f"{original['name']} (Copy)"

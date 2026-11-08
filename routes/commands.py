@@ -1,7 +1,7 @@
 """Command database routes for PTVault."""
 
 from flask import Blueprint, request, jsonify, g
-from middleware.auth import require_auth, require_role
+from middleware.auth import require_auth, require_role, can_edit_shared
 from utils.error_handler import handle_errors
 import json
 
@@ -122,9 +122,9 @@ def create_command():
 
     cursor = g.db.cursor()
     cursor.execute('''
-        INSERT INTO commands (category, name, command, description, variables, is_custom)
-        VALUES (?, ?, ?, ?, ?, 1)
-    ''', (category, name, command, description, variables_json))
+        INSERT INTO commands (category, name, command, description, variables, is_custom, created_by)
+        VALUES (?, ?, ?, ?, ?, 1, ?)
+    ''', (category, name, command, description, variables_json, g.current_user))
 
     g.db.commit()
     command_id = cursor.lastrowid
@@ -156,7 +156,7 @@ def update_command(command_id):
     cursor = g.db.cursor()
 
     # Check if command exists and is custom
-    cursor.execute("SELECT is_custom FROM commands WHERE id = ?", (command_id,))
+    cursor.execute("SELECT is_custom, created_by FROM commands WHERE id = ?", (command_id,))
     row = cursor.fetchone()
 
     if not row:
@@ -164,6 +164,8 @@ def update_command(command_id):
 
     if row[0] == 0:
         return jsonify({"error": "Cannot modify pre-built commands"}), 403
+    if not can_edit_shared(row[1]):
+        return jsonify({"error": "only the creator or an admin can change this"}), 403
 
     data = request.get_json()
     if not data:
@@ -232,7 +234,7 @@ def delete_command(command_id):
     cursor = g.db.cursor()
 
     # Check if command exists and is custom
-    cursor.execute("SELECT is_custom FROM commands WHERE id = ?", (command_id,))
+    cursor.execute("SELECT is_custom, created_by FROM commands WHERE id = ?", (command_id,))
     row = cursor.fetchone()
 
     if not row:
@@ -240,6 +242,8 @@ def delete_command(command_id):
 
     if row[0] == 0:
         return jsonify({"error": "Cannot delete pre-built commands"}), 403
+    if not can_edit_shared(row[1]):
+        return jsonify({"error": "only the creator or an admin can change this"}), 403
 
     cursor.execute("DELETE FROM commands WHERE id = ?", (command_id,))
     g.db.commit()

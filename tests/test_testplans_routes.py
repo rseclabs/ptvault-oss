@@ -35,6 +35,8 @@ def _call(app_ctx, handler, path='/', method='GET', body=None, query=None,
     with app.test_request_context(path, **kwargs):
         g.db = app_ctx
         g.user_id = 1
+        g.current_user = 1  # what require_auth sets; admin so plan logic is under test
+        g.current_user_role = 'admin'
         g.active_engagement_id = engagement_id
         resp, status = fn(*args)
         return status, resp.get_json()
@@ -437,6 +439,8 @@ def _import(db, log_text, plan_id, host_id='', apply=False, engagement_id=1):
                                   content_type='multipart/form-data'):
         g.db = db
         g.user_id = 1
+        g.current_user = 1  # what require_auth sets; admin so plan logic is under test
+        g.current_user_role = 'admin'
         g.active_engagement_id = engagement_id
         resp, status = fn()
         return status, resp.get_json()

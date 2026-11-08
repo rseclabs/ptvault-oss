@@ -25,8 +25,10 @@ EDITOR_WRITES = {
     'routes.reporting': ['create_report', 'update_report', 'delete_report', 'apply_report_template'],
     'routes.attack_maps': ['create_map', 'update_map', 'delete_map', 'duplicate_map', 'create_node',
                            'update_node', 'delete_node', 'batch_update_nodes', 'create_edge', 'delete_edge'],
-    'routes.testplans': ['create_plan', 'duplicate_plan', 'start_execution', 'update_execution',
-                         'import_session_log', 'link_evidence', 'delete_execution'],
+    # create_plan and duplicate_plan check inside the handler, since a plan can be
+    # a template with no engagement (tests/test_shared_content_ownership.py).
+    'routes.testplans': ['start_execution', 'update_execution', 'import_session_log', 'link_evidence',
+                         'delete_execution'],
 }
 EXPECTED = {f'{module}.{name}' for module, names in EDITOR_WRITES.items() for name in names}
 WRITE_METHODS = {'POST', 'PUT', 'PATCH', 'DELETE'}

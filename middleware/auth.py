@@ -44,6 +44,19 @@ def engagement_role(db, user_id, global_role, engagement_id):
     return role
 
 
+def can_edit_shared(created_by):
+    """True if the current user may change a shared row (writeup, command, template, layer).
+
+    Admins may change anything, a global viewer nothing, and a tester only
+    what they created. Rows with no recorded creator are admin-only.
+    """
+    if g.current_user_role == 'admin':
+        return True
+    if g.current_user_role != 'tester':
+        return False
+    return created_by is not None and created_by == g.current_user
+
+
 def require_engagement_role(min_role='viewer', param='engagement_id'):
     """Require a role on the engagement named in the URL. Use after @require_auth.
 

@@ -34,12 +34,16 @@ def no_atomics_download(monkeypatch):
 
 
 def _seed(live):
+    # Shared rows are owned by the outsider (a tester), who may change them (M-1).
     conn = live.db()
+    tester = live.user_ids['outsider']
     ids = {
-        'writeup': conn.execute("INSERT INTO writeups (name) VALUES ('w')").lastrowid,
+        'writeup': conn.execute("INSERT INTO writeups (name, created_by) VALUES ('w', ?)", (tester,)).lastrowid,
         'command': conn.execute(
-            "INSERT INTO commands (category, name, command) VALUES ('c', 'n', 'id')").lastrowid,
-        'template': conn.execute("INSERT INTO test_plans (name) VALUES ('Template')").lastrowid,
+            "INSERT INTO commands (category, name, command, is_custom, created_by) VALUES ('c', 'n', 'id', 1, ?)",
+            (tester,)).lastrowid,
+        'template': conn.execute("INSERT INTO test_plans (name, created_by) VALUES ('Template', ?)",
+                                 (tester,)).lastrowid,
         'plan_a': conn.execute("INSERT INTO test_plans (name, engagement_id) VALUES ('A plan', ?)",
                                (ENGAGEMENT_A,)).lastrowid,
     }
@@ -68,7 +72,7 @@ def test_viewer_can_still_record_command_usage(live_app):
 
 
 @pytest.mark.parametrize('user,expected', [('admin', 200), ('outsider', 200), ('viewer', 403)])
-def test_plan_template_needs_tester(live_app, user, expected):
+def test_plan_template_needs_owner_or_admin(live_app, user, expected):
     ids = _seed(live_app)
     client = live_app.client_for(user)
     assert client.put(f"/api/testplans/plans/{ids['template']}", json={'name': 'x'}).status_code == expected
