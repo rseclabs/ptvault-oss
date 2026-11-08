@@ -29,6 +29,7 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 from pathlib import Path
@@ -43,12 +44,31 @@ class ApiError(RuntimeError):
     pass
 
 
+class LoopbackSecurePolicy(http.cookiejar.DefaultCookiePolicy):
+    """Send Secure cookies to http://localhost, as browsers do.
+
+    With ENVIRONMENT=production (the Docker default) PTVault marks its session
+    and CSRF cookies Secure. Browsers treat loopback as a secure context, but
+    Python's cookie jar does not, so it never sent them back over plain http
+    and every write failed with "CSRF token missing". Other hosts still need
+    https.
+    """
+
+    LOOPBACK = {"localhost", "127.0.0.1", "::1"}
+
+    def return_ok_secure(self, cookie, request):
+        host = urllib.parse.urlparse(request.full_url).hostname or ""
+        if cookie.secure and request.type == "http" and host in self.LOOPBACK:
+            return True
+        return super().return_ok_secure(cookie, request)
+
+
 class Client:
     """Minimal PTVault API client: cookie session plus double-submit CSRF."""
 
     def __init__(self, base_url):
         self.base = base_url.rstrip("/")
-        self.jar = http.cookiejar.CookieJar()
+        self.jar = http.cookiejar.CookieJar(policy=LoopbackSecurePolicy())
         self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.jar))
 
     def _csrf(self):
