@@ -5,7 +5,16 @@ Provides transparent encryption for the SQLite database using SQLCipher.
 When sqlcipher3 is installed, the database is encrypted at rest using
 a 256-bit key derived from the user's master password via Argon2id.
 
-If sqlcipher3 is not installed, falls back to plain sqlite3 (no encryption).
+If sqlcipher3 is not installed, falls back to plain sqlite3 (no encryption);
+PTVAULT_ENCRYPTION_REQUIRED (on by default) makes startup refuse that instead.
+
+The key is held in memory only (M-8). After setup it stays in this process;
+after a restart the database is locked until unlock() is given the database
+passphrase (the password chosen at setup), which re-derives the key from the
+salt and checks it opens the database. A key file from older versions is
+deleted on the first successful unlock. For unattended servers,
+PTVAULT_DB_PASSPHRASE unlocks at startup and PTVAULT_STORE_KEY_FILE=1 keeps
+writing the key file (anyone who can read it can open the database).
 """
 
 import json
@@ -37,14 +46,115 @@ except ImportError:
         pass
 
 
+_SQLITE_HEADER = b'SQLite format 3\x00'
+_unlocked_key = None     # the derived key, once setup or unlock() has run in this process
+
+
+class DatabaseLocked(RuntimeError):
+    """The database is encrypted and has not been unlocked in this process."""
+
+
+class InvalidPassphrase(ValueError):
+    """The passphrase does not open the database."""
+
+
+def _encrypted_db_present():
+    """True when the database file exists and is not a plaintext SQLite file (cheap header check)."""
+    try:
+        with open(Config.DATABASE_PATH, 'rb') as f:
+            header = f.read(16)
+    except OSError:
+        return False
+    return len(header) == 16 and header != _SQLITE_HEADER and os.path.exists(Config.ENCRYPTION_SALT_FILE)
+
+
 def is_encryption_available():
     """Check if sqlcipher3 or pysqlcipher3 is installed and usable."""
     return _SQLCIPHER_AVAILABLE
 
 
 def is_encryption_enabled():
-    """Check if encryption is both available and configured (key file exists)."""
-    return _SQLCIPHER_AVAILABLE and os.path.exists(Config.ENCRYPTION_KEY_FILE)
+    """Check if encryption is available and in use (an encrypted database, or a key file)."""
+    return _SQLCIPHER_AVAILABLE and (os.path.exists(Config.ENCRYPTION_KEY_FILE) or _encrypted_db_present())
+
+
+def _key_file_in_use():
+    """A key file is used only with the PTVAULT_STORE_KEY_FILE opt-in. Without it, a key
+    file left by an older version is ignored, so the database asks for the passphrase
+    once and unlock() then deletes the file (M-8)."""
+    return getattr(Config, 'STORE_KEY_FILE', False) and os.path.exists(Config.ENCRYPTION_KEY_FILE)
+
+
+def is_locked():
+    """True when the database is encrypted and no key is available to this process."""
+    return (_unlocked_key is None and _SQLCIPHER_AVAILABLE and not _key_file_in_use()
+            and _encrypted_db_present())
+
+
+def lock():
+    """Forget the in-memory key (what a restart does; used by tests)."""
+    global _unlocked_key
+    _unlocked_key = None
+
+
+def _remember_key(derived_key):
+    """Keep the key in memory; write the key file only when explicitly configured."""
+    global _unlocked_key
+    _unlocked_key = derived_key
+    if getattr(Config, 'STORE_KEY_FILE', False):
+        _write_key_file(derived_key)
+
+
+def _key_opens_database(key):
+    try:
+        conn = _sqlcipher.connect(Config.DATABASE_PATH)
+        try:
+            conn.execute(f"PRAGMA key = \"x'{key}'\"")
+            conn.execute("SELECT count(*) FROM sqlite_master").fetchone()
+        finally:
+            conn.close()
+        return True
+    except Exception:
+        return False
+
+
+def unlock(passphrase):
+    """Re-derive the key from the passphrase and salt; keep it if it opens the database.
+
+    Raises InvalidPassphrase otherwise. A key file left by an older version is
+    removed once the passphrase is proven, unless PTVAULT_STORE_KEY_FILE is set.
+    """
+    if not _SQLCIPHER_AVAILABLE:
+        raise RuntimeError("sqlcipher3 is not installed")
+    try:
+        salt = read_salt()
+    except (OSError, ValueError):
+        raise InvalidPassphrase("No encryption salt found")
+    if not os.path.exists(Config.DATABASE_PATH) or os.path.getsize(Config.DATABASE_PATH) == 0:
+        # SQLCipher would create an empty database here that any key "opens"
+        raise InvalidPassphrase("There is no encrypted database to unlock")
+    key = derive_key(passphrase or '', salt)
+    if not _key_opens_database(key):
+        raise InvalidPassphrase("The passphrase does not open the database")
+    _remember_key(key)
+    if not getattr(Config, 'STORE_KEY_FILE', False) and os.path.exists(Config.ENCRYPTION_KEY_FILE):
+        os.remove(Config.ENCRYPTION_KEY_FILE)
+        logger.warning("Removed the plaintext encryption key file; the key is now held in memory only")
+    logger.info("Database unlocked")
+    return key
+
+
+def auto_unlock_from_env():
+    """Unlock with PTVAULT_DB_PASSPHRASE if it is set. Returns True on success."""
+    passphrase = os.environ.get('PTVAULT_DB_PASSPHRASE')
+    if not passphrase or not is_locked():
+        return False
+    try:
+        unlock(passphrase)
+        return True
+    except InvalidPassphrase:
+        logger.error("PTVAULT_DB_PASSPHRASE does not open the database; it stays locked")
+        return False
 
 
 def derive_key(password, salt):
@@ -109,15 +219,20 @@ def read_salt():
 
 def get_encryption_key():
     """
-    Read the derived encryption key from the key file.
+    The derived key: held in memory, or (legacy / PTVAULT_STORE_KEY_FILE) read
+    from the key file.
 
     Returns:
         str: 64 hex character key string.
 
     Raises:
-        FileNotFoundError: If the key file doesn't exist.
+        DatabaseLocked: If no key is available (the database must be unlocked).
         ValueError: If the key file is malformed.
     """
+    if _unlocked_key is not None:
+        return _unlocked_key
+    if not _key_file_in_use():
+        raise DatabaseLocked("The database is locked; unlock it with the database passphrase")
     with open(Config.ENCRYPTION_KEY_FILE, 'r') as f:
         data = json.load(f)
 
@@ -183,8 +298,8 @@ def setup_encryption(password):
             logger.error(f"Failed to migrate DB to encrypted: {e}")
             raise
 
-    _write_key_file(derived_key)
-    logger.info("Encryption setup complete — key file and salt file created")
+    _remember_key(derived_key)
+    logger.info("Encryption setup complete — salt file created, key held in memory")
 
 
 def recover_key(password):
@@ -203,11 +318,7 @@ def recover_key(password):
     Raises:
         FileNotFoundError: If the salt file doesn't exist.
     """
-    salt = read_salt()
-    derived_key = derive_key(password, salt)
-    _write_key_file(derived_key)
-    logger.info("Encryption key recovered from password + salt")
-    return derived_key
+    return unlock(password)
 
 
 def get_connection(db_path):
@@ -275,10 +386,7 @@ def migrate_to_encrypted(db_path):
     if not is_encryption_available():
         raise RuntimeError("sqlcipher3 is not installed")
 
-    if not os.path.exists(Config.ENCRYPTION_KEY_FILE):
-        raise RuntimeError("Encryption key file not found")
-
-    key = get_encryption_key()
+    key = get_encryption_key()   # DatabaseLocked if the key is not available
     _migrate_to_encrypted_with_key(db_path, key)
 
 
@@ -395,8 +503,6 @@ def migrate_to_plaintext(db_path):
     if not is_encryption_available():
         raise RuntimeError("sqlcipher3 is not installed")
 
-    if not os.path.exists(Config.ENCRYPTION_KEY_FILE):
-        raise RuntimeError("Encryption key file not found — cannot decrypt")
 
     if _is_plaintext_db(db_path):
         logger.info("Database is already plaintext — nothing to do")
@@ -445,10 +551,11 @@ def disable_encryption():
     # Decrypt the database first
     migrate_to_plaintext(Config.DATABASE_PATH)
 
-    # Remove key file
+    # Remove key file and forget the key
     if os.path.exists(Config.ENCRYPTION_KEY_FILE):
         os.remove(Config.ENCRYPTION_KEY_FILE)
         logger.info("Removed encryption key file")
+    lock()
 
     # Keep salt file — it's harmless and enables re-encryption later
     logger.info("Encryption disabled — database is now plaintext")

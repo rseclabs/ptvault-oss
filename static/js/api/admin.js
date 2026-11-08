@@ -48,14 +48,11 @@ export const AdminAPI = {
 
     /**
      * Enable database encryption
-     * @param {string} password - Admin password for key derivation
-     * @param {string} [keyFilePath] - Optional custom key file path
-     * @returns {Promise<Object>} { success, message, key_file, salt_file }
+     * @param {string} password - Database passphrase; the key is derived from it and held in memory
+     * @returns {Promise<Object>} { success, message, salt_file }
      */
-    async enableEncryption(password, keyFilePath) {
-        const body = { password };
-        if (keyFilePath) body.key_file_path = keyFilePath;
-        return apiRequest.post('/admin/encryption/enable', body);
+    async enableEncryption(password) {
+        return apiRequest.post('/admin/encryption/enable', { password });
     },
 
     /**

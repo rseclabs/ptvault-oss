@@ -159,7 +159,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for PyInstaller builds, systemd and reverse-p
 1. Open `http://localhost:5001` (Docker: `http://localhost:5000`). With no users yet, you are taken to the setup wizard.
 2. Create the admin account: full name, email and a password of at least 12 characters. Your username is the part of the email before the `@` (for example `admin@example.com` gives `admin`). This step also encrypts the database.
 3. Log in with that email (or username) and password.
-4. Back up `data/encryption.key` and `data/encryption.salt` along with the database. The database cannot be opened without them.
+4. Back up `data/encryption.salt` along with the database, and keep the setup password safe: it is also the **database passphrase**. The encryption key is held in memory only, so after every restart PTVault asks for this passphrase on an unlock page, and the database cannot be opened without it.
 5. Create your first engagement to begin.
 
 ---

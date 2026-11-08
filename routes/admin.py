@@ -370,12 +370,15 @@ def encryption_available():
 @handle_errors
 def encryption_status():
     """Get database encryption status. Admin only."""
-    from models.encryption import is_encryption_available, is_encryption_enabled
+    from models.encryption import is_encryption_available, is_encryption_enabled, is_locked
     from config import Config
 
     return jsonify({
         'available': is_encryption_available(),
         'enabled': is_encryption_enabled(),
+        'locked': is_locked(),
+        # 'memory': the key is never written to disk (M-8); 'file': PTVAULT_STORE_KEY_FILE opt-in
+        'key_storage': 'file' if Config.STORE_KEY_FILE else 'memory',
         'key_file_exists': os.path.exists(Config.ENCRYPTION_KEY_FILE),
         'salt_file_exists': os.path.exists(Config.ENCRYPTION_SALT_FILE),
         'encryption_required': Config.ENCRYPTION_REQUIRED
@@ -438,14 +441,11 @@ def encryption_enable():
     if not data or 'password' not in data:
         return jsonify({'error': 'Password is required to derive encryption key'}), 400
 
-    # Allow custom key file path
-    key_path = data.get('key_file_path')
-    if key_path:
-        # Validate the path is within a writable directory
-        key_dir = os.path.dirname(os.path.abspath(key_path))
-        if not os.path.isdir(key_dir):
-            return jsonify({'error': f'Directory does not exist: {key_dir}'}), 400
-        Config.ENCRYPTION_KEY_FILE = os.path.abspath(key_path)
+    # The key is held in memory (M-8). A key file location is set only through
+    # PTVAULT_ENCRYPTION_KEY_FILE: accepting a path here let an admin write, and
+    # on disable delete, a file anywhere the app can.
+    if data.get('key_file_path'):
+        return jsonify({'error': 'key_file_path is no longer accepted; the key is held in memory'}), 400
 
     try:
         # Close the active DB connection before migrating — the migration
@@ -504,7 +504,7 @@ def encryption_disable():
         return jsonify({'error': 'Encryption is not currently enabled'}), 400
 
     if Config.ENCRYPTION_REQUIRED:
-        return jsonify({'error': 'Cannot disable encryption — PTVAULT_ENCRYPTION_REQUIRED is set'}), 400
+        return jsonify({'error': 'Cannot disable encryption: encryption is required (PTVAULT_ENCRYPTION_REQUIRED, on by default; set it to 0 to allow this)'}), 400
 
     try:
         # Close the active DB connection before migrating — the migration

@@ -17,7 +17,7 @@ Log in with the email and password you just created. Add more users from **Admin
 
 ## Step 3: Back Up Your Encryption Files
 
-If encryption is enabled, `encryption.key` and `encryption.salt` are written next to the database (by default `data/`). Back them up with the database — without them an encrypted database cannot be opened.
+Setup also encrypts the database. The key is derived from the password you choose here (the **database passphrase**) and is held in memory only. After every restart PTVault shows an unlock page until the passphrase is entered. Back up `encryption.salt` with the database (by default both are in `data/`) and keep the passphrase safe: without both, an encrypted database cannot be opened. Changing your account password later does not change the database passphrase.
 
 ## Step 4: Configure Optional Settings
 

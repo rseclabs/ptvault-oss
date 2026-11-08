@@ -27,18 +27,27 @@ The status panel shows:
 
 1. Go to **Admin > Settings** → Database Encryption
 2. Click **Enable Encryption**
-3. Enter your **admin password** (used to derive the encryption key)
+3. Choose the **database passphrase** (used to derive the encryption key)
 4. Click **Confirm**
 
 PTVault will:
 1. Derive an AES-256 key from your password using Argon2id + a random salt
-2. Save the derived key to a key file (`data/ptvault.key`)
-3. Save the salt to a salt file (`data/ptvault.salt`)
-4. Encrypt the database file in-place using SQLCipher
+2. Save the salt to `encryption.salt` beside the database
+3. Encrypt the database file in place using SQLCipher
+4. Keep the key in memory only; it is never written to disk
 
 The process takes a few seconds for typical database sizes. PTVault remains available throughout.
 
-> **Important:** Store the key file and salt file securely. If both files are lost, the database cannot be decrypted.
+> **Important:** After every restart PTVault is locked: every page shows an unlock form until the database passphrase is entered (`POST /api/unlock`, limited to 5 attempts a minute). Back up `encryption.salt` with the database and keep the passphrase safe; without both the database cannot be decrypted.
+
+### Unattended restarts
+
+For a server that must come up without someone typing the passphrase:
+
+- `PTVAULT_DB_PASSPHRASE` unlocks at startup. The passphrase is then in the process environment, readable by anyone who can inspect the process or its configuration.
+- `PTVAULT_STORE_KEY_FILE=1` writes the derived key to `PTVAULT_ENCRYPTION_KEY_FILE` as older versions did. Anyone who can read that file can open the database, so the encryption then protects only a copy of the database taken without the key file.
+
+Upgrading: a key file written by an older version is deleted the first time the database is unlocked with the passphrase (unless `PTVAULT_STORE_KEY_FILE=1`).
 
 ## Disabling Encryption
 
@@ -47,20 +56,20 @@ The process takes a few seconds for typical database sizes. PTVault remains avai
 3. Enter your admin password
 4. Click **Confirm**
 
-PTVault decrypts the database and removes the key/salt files.
+PTVault decrypts the database and forgets the key (the salt file is kept).
 
-> **Note:** Disabling encryption is blocked if the `PTVAULT_ENCRYPTION_REQUIRED` environment variable is set. This prevents accidental decryption in high-security environments.
+> **Note:** Disabling encryption is blocked while encryption is required, which is the default. Set `PTVAULT_ENCRYPTION_REQUIRED=0` to allow it.
 
 ## Key Recovery
 
-If the key file is lost but the salt file is still present, you can re-derive the encryption key from your admin password:
+The key is re-derived from the database passphrase and the salt file whenever the database is unlocked, so there is no key file to lose. From the admin panel you can also re-derive it:
 
 1. Go to **Admin > Settings** → Database Encryption
 2. Click **Recover Key**
-3. Enter your admin password
-4. PTVault re-derives the key and saves a new key file
+3. Enter the database passphrase
+4. PTVault re-derives the key and holds it in memory
 
-If both the key file **and** the salt file are lost, the database **cannot be recovered** without brute-forcing the key. This is by design.
+If the salt file is lost, or the passphrase is forgotten, the database **cannot be recovered** without brute-forcing the key. This is by design.
 
 ## Security Architecture
 
@@ -68,19 +77,13 @@ If both the key file **and** the salt file are lost, the database **cannot be re
 |-----------|---------|
 | Encryption algorithm | AES-256 (via SQLCipher) |
 | Key derivation | Argon2id (time_cost=3, memory=64MiB) + random 32-byte salt |
-| Key storage | `data/ptvault.key` (derived key, not the password) |
-| Salt storage | `data/ptvault.salt` |
+| Key storage | Memory only (the `PTVAULT_STORE_KEY_FILE=1` opt-in writes `encryption.key`) |
+| Salt storage | `encryption.salt` beside the database |
 | Database format | SQLCipher-encrypted SQLite |
 
 ## Policy Enforcement
 
-For environments where encryption must always be active, set the environment variable:
-
-```bash
-export PTVAULT_ENCRYPTION_REQUIRED=1
-```
-
-With this variable set:
+Encryption is required by default (`PTVAULT_ENCRYPTION_REQUIRED` is on unless set to `0`, `false` or `no`):
 - The "Disable Encryption" button is hidden and the API endpoint returns an error
 - Encryption cannot be disabled without modifying the environment variable
 - Recommended for production deployments on shared systems

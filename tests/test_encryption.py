@@ -30,8 +30,18 @@ def tmp_data_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(Config, 'ENCRYPTION_KEY_FILE', key_file)
     monkeypatch.setattr(Config, 'ENCRYPTION_SALT_FILE', salt_file)
     monkeypatch.setattr(Config, 'DATABASE_PATH', db_path)
+    monkeypatch.setattr(Config, 'STORE_KEY_FILE', False)
+    encryption.lock()          # no key left in memory by another test (M-8)
 
-    return tmp_path
+    yield tmp_path
+    encryption.lock()
+
+
+@pytest.fixture
+def store_key_file(tmp_data_dir, monkeypatch):
+    """These tests exercise the key file itself: the PTVAULT_STORE_KEY_FILE opt-in (M-8)."""
+    monkeypatch.setattr(Config, 'STORE_KEY_FILE', True)
+    return tmp_data_dir
 
 
 class TestKeyDerivation:
@@ -99,6 +109,7 @@ class TestSaltGeneration:
         assert mode == 0o600
 
 
+@pytest.mark.usefixtures('store_key_file')
 class TestKeyFile:
     """Tests for key file management."""
 
@@ -132,8 +143,8 @@ class TestKeyFile:
             encryption.get_encryption_key()
 
     def test_missing_key_file(self, tmp_data_dir):
-        """Reading a missing key file should raise FileNotFoundError."""
-        with pytest.raises(FileNotFoundError):
+        """With no key in memory and no key file, the database is locked (M-8)."""
+        with pytest.raises(encryption.DatabaseLocked):
             encryption.get_encryption_key()
 
 
@@ -186,26 +197,19 @@ class TestSetupAndRecovery:
         assert not os.path.exists(Config.ENCRYPTION_SALT_FILE)
 
     def test_recover_key_from_salt(self, tmp_data_dir, monkeypatch):
-        """recover_key should re-derive the same key from password + salt."""
-        monkeypatch.setattr(encryption, '_SQLCIPHER_AVAILABLE', True)
+        """recover_key re-derives the key from password + salt and holds it in memory (M-8)."""
+        conn = sqlite3.connect(Config.DATABASE_PATH)
+        conn.execute("CREATE TABLE t (x INTEGER)")
+        conn.commit()
+        conn.close()
+        encryption.setup_encryption('my_password')
+        original_key = encryption.get_encryption_key()
 
-        # Generate salt and derive original key
-        salt = encryption.generate_salt()
-        original_key = encryption.derive_key('my_password', salt)
-        encryption._write_key_file(original_key)
-
-        # Verify the key matches
-        stored_key = encryption.get_encryption_key()
-        assert stored_key == original_key
-
-        # Delete the key file
-        os.remove(Config.ENCRYPTION_KEY_FILE)
-        assert not os.path.exists(Config.ENCRYPTION_KEY_FILE)
-
-        # Recover using password + salt
+        encryption.lock()          # a restart
         recovered = encryption.recover_key('my_password')
         assert recovered == original_key
-        assert os.path.exists(Config.ENCRYPTION_KEY_FILE)
+        assert encryption.get_encryption_key() == original_key
+        assert not os.path.exists(Config.ENCRYPTION_KEY_FILE)
 
     def test_recover_wrong_password(self, tmp_data_dir, monkeypatch):
         """recover_key with wrong password should produce a different key."""
@@ -214,9 +218,10 @@ class TestSetupAndRecovery:
         salt = encryption.generate_salt()
         original_key = encryption.derive_key('correct_password', salt)
 
-        os.remove(Config.ENCRYPTION_KEY_FILE) if os.path.exists(Config.ENCRYPTION_KEY_FILE) else None
-        recovered = encryption.recover_key('wrong_password')
-        assert recovered != original_key
+        # There is no encrypted database for the key to open
+        with pytest.raises(encryption.InvalidPassphrase):
+            encryption.recover_key('wrong_password')
+        assert not os.path.exists(Config.DATABASE_PATH)
 
 
 class TestPlaintextDetection:
@@ -251,6 +256,7 @@ except ImportError:
 
 
 @pytest.mark.skipif(not _has_sqlcipher, reason="sqlcipher3 not installed")
+@pytest.mark.usefixtures('store_key_file')
 class TestEncryptedOperations:
     """Tests that require sqlcipher3 (or pysqlcipher3) to be installed."""
 
@@ -307,8 +313,9 @@ class TestEncryptedOperations:
         # No plaintext copy of the data may be left behind
         assert not os.path.exists(db_path + '.backup_preencrypt')
 
-    def test_setup_encryption_full_flow(self, tmp_data_dir):
-        """Full setup flow: create plaintext DB, then encrypt it."""
+    def test_setup_encryption_full_flow(self, tmp_data_dir, monkeypatch):
+        """Full setup flow: create plaintext DB, then encrypt it (default: key in memory)."""
+        monkeypatch.setattr(Config, 'STORE_KEY_FILE', False)
         db_path = Config.DATABASE_PATH
 
         # Create a plaintext DB
@@ -321,8 +328,8 @@ class TestEncryptedOperations:
         # Run full setup
         encryption.setup_encryption('setup_password')
 
-        # Verify files exist
-        assert os.path.exists(Config.ENCRYPTION_KEY_FILE)
+        # The salt is on disk; the key is held in memory only (M-8)
+        assert not os.path.exists(Config.ENCRYPTION_KEY_FILE)
         assert os.path.exists(Config.ENCRYPTION_SALT_FILE)
 
         # Verify encrypted connection works
@@ -376,6 +383,7 @@ def _assert_fts_intact(conn):
 
 
 @pytest.mark.skipif(not _has_sqlcipher, reason="sqlcipher3 not installed")
+@pytest.mark.usefixtures('store_key_file')
 class TestMigrationPreservesFts:
     """Regression: encrypt/decrypt migration used to drop the FTS4 table."""
 

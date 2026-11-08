@@ -25,7 +25,7 @@ from config import Config
 CSRF_COOKIE = 'csrf_token'
 CSRF_HEADER = 'X-CSRF-Token'
 # Before login there is no session to bind to; these use double-submit.
-PRE_AUTH_PATHS = frozenset(['/api/auth/login', '/api/auth/setup'])
+PRE_AUTH_PATHS = frozenset(['/api/auth/login', '/api/auth/setup', '/api/unlock'])
 
 
 def session_csrf_token(auth_token):

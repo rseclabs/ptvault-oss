@@ -128,7 +128,7 @@ const AdminPanel = {
                             <span class="encryption-detail-value" id="encDetailAvailable">—</span>
                         </div>
                         <div class="encryption-detail-row">
-                            <span class="encryption-detail-label">Key File</span>
+                            <span class="encryption-detail-label">Key storage</span>
                             <span class="encryption-detail-value" id="encDetailKeyFile">—</span>
                         </div>
                         <div class="encryption-detail-row">
@@ -144,15 +144,10 @@ const AdminPanel = {
 
                 <!-- Enable Encryption Form (hidden) -->
                 <div id="encryptionEnableForm" class="admin-form" style="display:none;">
-                    <p class="form-info">Enter your password to derive the encryption key. The database will be encrypted in-place with a backup created automatically.</p>
+                    <p class="form-info">Choose the database passphrase. The key is derived from it and held in memory only: after every restart PTVault stays locked until this passphrase is entered. It cannot be recovered if lost. The database is encrypted in place with a backup created automatically.</p>
                     <div class="form-group">
-                        <label for="encryptionPassword">Password *</label>
-                        <input type="password" id="encryptionPassword" placeholder="Enter your admin password" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="encryptionKeyPath">Key File Location</label>
-                        <input type="text" id="encryptionKeyPath" placeholder="Default: data/encryption.key">
-                        <small class="form-help">Leave blank for default location. Use a custom path for external storage (e.g., USB drive).</small>
+                        <label for="encryptionPassword">Database passphrase *</label>
+                        <input type="password" id="encryptionPassword" placeholder="At least 12 characters" autocomplete="new-password" required>
                     </div>
                     <div class="form-actions">
                         <button class="btn btn-secondary" onclick="AdminPanel.hideEncryptionForm()">Cancel</button>
@@ -162,10 +157,10 @@ const AdminPanel = {
 
                 <!-- Key Recovery Form (hidden) -->
                 <div id="encryptionRecoverForm" class="admin-form" style="display:none;">
-                    <p class="form-info">Key file is missing but the salt file exists. Enter your password to re-derive the encryption key.</p>
+                    <p class="form-info">Enter the database passphrase to re-derive the encryption key.</p>
                     <div class="form-group">
-                        <label for="recoverPassword">Password *</label>
-                        <input type="password" id="recoverPassword" placeholder="Enter your admin password" required>
+                        <label for="recoverPassword">Database passphrase *</label>
+                        <input type="password" id="recoverPassword" placeholder="The passphrase chosen at setup" required>
                     </div>
                     <div class="form-actions">
                         <button class="btn btn-secondary" onclick="AdminPanel.hideRecoverForm()">Cancel</button>
@@ -741,9 +736,12 @@ const AdminPanel = {
                 avail.textContent = s.available ? 'Installed' : 'Not installed';
                 avail.className = 'encryption-detail-value ' + (s.available ? 'status-ok' : 'status-warn');
 
+                // Where the key lives (M-8): memory only, or the PTVAULT_STORE_KEY_FILE opt-in
                 const keyFile = document.getElementById('encDetailKeyFile');
-                keyFile.textContent = s.key_file_exists ? 'Present' : 'Missing';
-                keyFile.className = 'encryption-detail-value ' + (s.key_file_exists ? 'status-ok' : (s.enabled ? 'status-error' : ''));
+                keyFile.textContent = s.key_storage === 'file'
+                    ? (s.key_file_exists ? 'Key file (opt-in)' : 'Key file missing')
+                    : 'Memory only';
+                keyFile.className = 'encryption-detail-value ' + (s.key_storage === 'file' ? 'status-warn' : 'status-ok');
 
                 const saltFile = document.getElementById('encDetailSaltFile');
                 saltFile.textContent = s.salt_file_exists ? 'Present' : 'Missing';
@@ -754,7 +752,7 @@ const AdminPanel = {
                 required.className = 'encryption-detail-value';
             }
 
-            if (s.salt_file_exists && !s.key_file_exists && s.available) {
+            if (s.locked && s.available) {
                 const recoverForm = document.getElementById('encryptionRecoverForm');
                 if (recoverForm) recoverForm.style.display = 'block';
             }
@@ -797,7 +795,6 @@ const AdminPanel = {
 
     async confirmEnableEncryption() {
         const password = document.getElementById('encryptionPassword').value;
-        const keyPath = document.getElementById('encryptionKeyPath').value.trim();
 
         if (!password) {
             showToast('Password is required', 'error');
@@ -809,7 +806,7 @@ const AdminPanel = {
         btn.textContent = 'Encrypting...';
 
         try {
-            const result = await API.admin.enableEncryption(password, keyPath || undefined);
+            const result = await API.admin.enableEncryption(password);
             showToast(result.message || 'Database encrypted successfully', 'success');
             this.hideEncryptionForm();
             await this.loadEncryptionStatus();

@@ -20,6 +20,7 @@ DEFAULT_LIMIT = '100 per minute'
 LOGIN_LIMIT = '5 per minute'
 SETUP_LIMIT = '3 per minute'
 PASSWORD_CHANGE_LIMIT = '10 per minute'     # PUT /api/users/<id> (password, email, role)
+UNLOCK_LIMIT = '5 per minute'               # POST /api/unlock (database passphrase)
 
 
 def storage_uri():
@@ -40,7 +41,8 @@ def configure_rate_limits(app, auth_limits=True):
     limiter = Limiter(get_remote_address, app=app, default_limits=[DEFAULT_LIMIT], storage_uri=storage_uri())
     if auth_limits:
         for endpoint, limit in (('auth.login', LOGIN_LIMIT), ('auth.setup', SETUP_LIMIT),
-                                ('users.update_user', PASSWORD_CHANGE_LIMIT)):
+                                ('users.update_user', PASSWORD_CHANGE_LIMIT),
+                                ('unlock.unlock_database', UNLOCK_LIMIT)):
             view = app.view_functions.get(endpoint)
             if view is not None:
                 # The limit is enforced by the wrapper limit() returns, so the wrapper

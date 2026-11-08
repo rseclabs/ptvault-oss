@@ -31,7 +31,7 @@ Storing tokens in httpOnly cookies (rather than localStorage or sessionStorage) 
 
 ### Database Encryption
 
-When SQLCipher encryption is enabled, the database file is encrypted with AES-256. The encryption key is derived from the admin password using Argon2id and stored in a separate key file. See [Database Encryption](../admin/database-encryption.md).
+When SQLCipher encryption is enabled, the database file is encrypted with AES-256. The encryption key is derived from the database passphrase (the password chosen at setup) using Argon2id and is held in memory only: it is never written to disk, so after a restart PTVault stays locked until the passphrase is entered on the unlock page. See [Database Encryption](../admin/database-encryption.md).
 
 ---
 
@@ -123,7 +123,7 @@ See [DEPLOYMENT.md](../../DEPLOYMENT.md) for production deployment guidance.
 | `SECRET_KEY` | Flask session cookie signing — must be secret and random in production |
 | `JWT_SECRET_KEY` | JWT token signing — must be secret and random in production |
 | `ENVIRONMENT=production` | Enables `Secure` flag on cookies (requires HTTPS) |
-| `PTVAULT_ENCRYPTION_REQUIRED=1` | Prevents disabling database encryption |
+| `PTVAULT_ENCRYPTION_REQUIRED` | On by default: PTVault refuses to start without SQLCipher and encryption cannot be disabled. `0`, `false` or `no` turns it off |
 
 Generate strong keys for production:
 

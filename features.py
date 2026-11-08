@@ -52,5 +52,10 @@ def register_blueprints(app):
     from utils.audit_logger import audit_mutation
     app.after_request(audit_mutation)
 
+    # While the encrypted database is locked, only unlocking works (M-8)
+    from utils.unlock import locked_gate, unlock_bp
+    app.register_blueprint(unlock_bp)
+    app.before_request(locked_gate)
+
     logger.info("Registered %d blueprints", registered)
     return registered

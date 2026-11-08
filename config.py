@@ -33,6 +33,11 @@ def env_flag(name):
     return os.environ.get(name, '').strip().lower() in ('1', 'true', 'yes')
 
 
+def encryption_required():
+    """PTVAULT_ENCRYPTION_REQUIRED: on by default; 0, false or no turns it off."""
+    return os.environ.get('PTVAULT_ENCRYPTION_REQUIRED', '').strip().lower() not in ('0', 'false', 'no')
+
+
 class Config:
     """Application configuration."""
 
@@ -64,7 +69,11 @@ class Config:
         os.path.join(os.path.dirname(os.path.abspath(DATABASE_PATH)), 'encryption.key'))
     ENCRYPTION_SALT_FILE = os.environ.get('PTVAULT_ENCRYPTION_SALT_FILE',
         os.path.join(os.path.dirname(os.path.abspath(DATABASE_PATH)), 'encryption.salt'))
-    ENCRYPTION_REQUIRED = os.environ.get('PTVAULT_ENCRYPTION_REQUIRED', '').lower() == 'true'
+    # On unless set to 0/false/no: refuse to start without SQLCipher (M-8)
+    ENCRYPTION_REQUIRED = encryption_required()
+    # Keep writing the derived key to ENCRYPTION_KEY_FILE so restarts need no
+    # passphrase. Weaker: anyone who can read that file can open the database.
+    STORE_KEY_FILE = env_flag('PTVAULT_STORE_KEY_FILE')
 
     # File upload configuration
     UPLOAD_FOLDER = os.path.join(RUNTIME_DIR, 'data', 'uploads')

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTVault - Unlock</title>
+    <link rel="stylesheet" href="/static/vendor/host-grotesk-5.3.0/host-grotesk.css">
+    <link rel="stylesheet" href="/static/vendor/atkinson-hyperlegible-mono-5.3.0/atkinson-hyperlegible-mono.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body class="auth-page">
+    <main class="auth-container">
+        <section class="auth-intro" aria-label="About PTVault">
+            <p class="auth-wordmark">PTVault</p>
+            <p class="auth-lede">The database is encrypted and locked. Enter the database passphrase to open it.</p>
+        </section>
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Unlock database</h1>
+            </div>
+
+            <form id="unlockForm" class="auth-form">
+                <div class="form-group">
+                    <label for="passphrase">Database passphrase</label>
+                    <input
+                        type="password"
+                        id="passphrase"
+                        name="passphrase"
+                        placeholder="The password chosen when PTVault was set up"
+                        autocomplete="current-password"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div id="errorMessage" class="error-message" role="alert" style="display: none;"></div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span class="btn-text">Unlock</span>
+                    <span class="btn-loading" style="display: none;">Unlocking…</span>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p class="auth-notice">The key stays in memory until PTVault restarts; it is never written to disk.</p>
+            </div>
+        </div>
+    </main>
+    <script src="/static/js/unlock.js"></script>
+</body>
+</html>

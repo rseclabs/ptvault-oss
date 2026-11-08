@@ -308,7 +308,7 @@ python3 app.py -p 5002
 
 ## Security Notes
 
-- **Encryption files**: Back up `data/encryption.key` and `data/encryption.salt` with the database — an encrypted database cannot be opened without them
+- **Encryption**: the key is derived from the setup password (the database passphrase) and held in memory only; after a restart, unlock PTVault with that passphrase. Back up `data/encryption.salt` with the database and keep the passphrase safe: an encrypted database cannot be opened without them
 - **Local Only**: PTVault is designed for local or trusted-network use; put it behind HTTPS if it is reachable by others
 - **Engagement Isolation**: Users only see engagements they own or are a member of; admins see all
 - **Encryption**: The database is encrypted at rest with SQLCipher when `sqlcipher3` is installed

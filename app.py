@@ -32,7 +32,8 @@ except InsecureSecretError as e:
     sys.exit(1)
 
 from models.database import init_db, get_db_connection, run_migrations, setup_required
-from models.encryption import is_encryption_available, is_encryption_enabled, check_and_migrate_if_needed
+from models.encryption import (auto_unlock_from_env, check_and_migrate_if_needed, is_encryption_available,
+                               is_encryption_enabled, is_locked)
 from features import register_blueprints
 from middleware.auth import require_auth, require_role
 from utils.csrf import csrf_protect
@@ -54,23 +55,31 @@ register_blueprints(app)
 # handling from the environment (utils/rate_limits.py, L-8)
 limiter = configure_rate_limits(app)
 
-# Encryption status check
+# Encryption status check. The key is held in memory only (M-8): an encrypted
+# database stays locked until /unlock is given the database passphrase, unless
+# PTVAULT_DB_PASSPHRASE (or the PTVAULT_STORE_KEY_FILE opt-in) provides it.
 if is_encryption_available():
-    if is_encryption_enabled():
+    auto_unlock_from_env()
+    if is_locked():
+        logger.warning("Database is encrypted and locked: open /unlock and enter the database passphrase")
+    elif is_encryption_enabled():
         check_and_migrate_if_needed(Config.DATABASE_PATH)
         logger.info("SQLCipher encryption: ENABLED")
     else:
         logger.info("SQLCipher available but not yet configured (run setup)")
 else:
-    logger.info("SQLCipher encryption: DISABLED (pysqlcipher3 not installed)")
+    logger.info("SQLCipher encryption: DISABLED (sqlcipher3 not installed)")
 
 if Config.ENCRYPTION_REQUIRED and not is_encryption_available():
-    logger.critical("PTVAULT_ENCRYPTION_REQUIRED=true but pysqlcipher3 not installed")
+    logger.critical("Encryption is required (PTVAULT_ENCRYPTION_REQUIRED, on by default) but sqlcipher3 "
+                    "is not installed. Install requirements, or set PTVAULT_ENCRYPTION_REQUIRED=0.")
     sys.exit(1)
 
 # Initialize database on first run
 if not os.path.exists(Config.DATABASE_PATH):
     init_db()
+elif is_locked():
+    logger.info("Migrations will run when the database is unlocked")
 else:
     # Run migrations on existing database
     try:

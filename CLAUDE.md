@@ -131,7 +131,7 @@ ptvault/
 │
 └── data/                  # Runtime (gitignored)
     ├── ptvault.db         # SQLite database (SQLCipher-encrypted after setup)
-    ├── encryption.key, encryption.salt
+    ├── encryption.salt     # the key itself is held in memory (unlock at /unlock)
     ├── uploads/           # Evidence files
     └── atomics/           # Atomic Red Team library
 ```
@@ -292,9 +292,10 @@ Never load a script, stylesheet or font from a CDN: PTVault must run air-gapped,
 | `JWT_EXPIRY_HOURS` | `24` | Session token lifetime |
 | `ENVIRONMENT` | `development` | `development` or `production` (production: Secure cookies, HSTS, no debugger) |
 | `PTVAULT_DEBUG` | unset | `1` adds exception details and tracebacks to API errors and allows the Werkzeug debugger (also `python app.py --debug`; loopback, non-production only) |
-| `PTVAULT_ENCRYPTION_KEY_FILE` | `encryption.key` beside the database | SQLCipher key file |
 | `PTVAULT_ENCRYPTION_SALT_FILE` | `encryption.salt` beside the database | Key derivation salt |
-| `PTVAULT_ENCRYPTION_REQUIRED` | unset | `true` refuses to start without SQLCipher |
+| `PTVAULT_ENCRYPTION_REQUIRED` | on | Refuse to start without SQLCipher; `0`, `false` or `no` turns it off |
+| `PTVAULT_DB_PASSPHRASE` | unset | Unlock the encrypted database at startup (the key is otherwise held in memory and unlocked at `/unlock`) |
+| `PTVAULT_STORE_KEY_FILE` | unset | `1` writes the derived key to `PTVAULT_ENCRYPTION_KEY_FILE` (default `encryption.key` beside the database), as older versions did |
 
 Copy `.env.example` to `.env` and customize for production. When running a second instance or a smoke test, point every data path (database, key, salt, uploads) somewhere else, or the instance can overwrite the real key.
 
