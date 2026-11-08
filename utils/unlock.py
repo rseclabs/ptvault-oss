@@ -51,11 +51,17 @@ def unlock_database():
         logger.warning('Failed database unlock attempt from %s', request.remote_addr)
         return jsonify({'error': 'The passphrase does not open the database'}), 401
 
-    # Migrations could not run while the database was locked
+    # Migrations could not run while the database was locked. If they fail, routes
+    # that need the new schema would fail with 500 and no hint why, so stay locked
+    # and say so; the details go to the log (L-17).
     try:
-        from models.database import run_migrations
-        run_migrations()
+        from models import database
+        database.run_migrations()
     except Exception:
-        logger.exception('Migrations after unlock failed')
+        logger.exception('Migrations after unlock failed; the database stays locked')
+        encryption.lock()
+        return jsonify({'error': 'migration_failed',
+                        'message': 'The passphrase is correct, but the database could not be upgraded to this '
+                                   'version of PTVault, so it stays locked. See the server log for details.'}), 500
     logger.info('Database unlocked from %s', request.remote_addr)
     return jsonify({'status': 'unlocked'}), 200

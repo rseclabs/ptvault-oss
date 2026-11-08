@@ -163,3 +163,30 @@ def test_encryption_required_defaults_on(monkeypatch, value, expected):
     else:
         monkeypatch.setenv('PTVAULT_ENCRYPTION_REQUIRED', value)
     assert encryption_required() is expected
+
+
+# ------------------------------------------------------------------ L-17
+
+def test_a_migration_failure_after_unlock_keeps_the_database_locked(gated_app, monkeypatch):
+    """L-17: the passphrase is right but migrations fail; say so and stay locked,
+    rather than reporting "unlocked" with routes that then fail with 500."""
+    import models.database
+    real_run_migrations = models.database.run_migrations
+    failing = [True]
+
+    def migrations():
+        if failing[0]:
+            raise RuntimeError('no such column: example')
+        return real_run_migrations()
+    monkeypatch.setattr(models.database, 'run_migrations', migrations)
+    resp = _post_unlock(gated_app, PASSPHRASE)
+    assert resp.status_code == 500
+    body = resp.get_json()
+    assert body['error'] == 'migration_failed' and 'log' in body['message'].lower()
+    assert 'no such column' not in body['message']                  # details stay in the log
+    assert encryption.is_locked()
+    assert gated_app.get('/api/thing').status_code == 503
+
+    failing[0] = False                                               # fixed: the next attempt unlocks
+    assert _post_unlock(gated_app, PASSPHRASE).status_code == 200
+    assert not encryption.is_locked()

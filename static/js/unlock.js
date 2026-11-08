@@ -50,7 +50,7 @@
             }
             const data = await resp.json().catch(() => ({}));
             showError(resp.status === 429 ? 'Too many attempts. Wait a minute and try again.'
-                                          : (data.error || 'Could not unlock the database'));
+                                          : (data.message || data.error || 'Could not unlock the database'));
         } catch (e) {
             showError('Could not reach PTVault');
         } finally {
