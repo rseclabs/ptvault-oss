@@ -37,7 +37,7 @@ The Users list shows all active (and optionally deactivated) user accounts:
 
 | Requirement | Details |
 |-------------|---------|
-| Minimum length | 8 characters |
+| Minimum length | 12 characters |
 | Strength | Validated in real time with visual indicator |
 
 Passwords are hashed with Argon2id immediately upon creation. PTVault never stores plaintext passwords.

@@ -48,6 +48,32 @@ def _parse_input_arguments(raw):
     return args
 
 
+def _apply_input_overrides(args, overrides):
+    """Use a plan item's input_overrides ({name: value}) as the defaults (L-11).
+
+    Only arguments the test declares are overridden; malformed overrides are ignored.
+    """
+    if isinstance(overrides, str):
+        try:
+            overrides = json.loads(overrides)
+        except (json.JSONDecodeError, ValueError):
+            return args
+    if not isinstance(overrides, dict):
+        return args
+    for arg in args:
+        value = overrides.get(arg['name'])
+        if value is not None and not isinstance(value, (dict, list)):
+            arg['default'] = str(value)
+    return args
+
+
+def _item_input_args(item, is_custom):
+    """The test's input arguments, with the plan item's overrides as defaults."""
+    if is_custom:
+        return []
+    return _apply_input_overrides(_parse_input_arguments(item.get('input_arguments')), item.get('input_overrides'))
+
+
 def _shell_safe_name(name):
     """Sanitise an arbitrary string into a valid shell variable name. Both
     bash and PowerShell accept [A-Za-z_][A-Za-z0-9_]*."""
@@ -140,7 +166,10 @@ def _bash_prompt_block(args, indent='            '):
             default_squoted = _bash_escape_squoted(arg['default'])
             shown_default = _bash_escape_dquoted(arg['default'])
             lines.append(f'{indent}read -p "  {prompt} [{shown_default}]: " _input_{var}')
-            lines.append(f"{indent}{var}=\"${{_input_{var}:-{default_squoted}}}\"")
+            # The default is a plain single-quoted assignment: inside "${x:-'...'}"
+            # bash keeps the quotes as text and still runs $(...) in it (L-11).
+            lines.append(f"{indent}{var}='{default_squoted}'")
+            lines.append(f'{indent}if [ -n "${{_input_{var}}}" ]; then {var}="${{_input_{var}}}"; fi')
         else:
             lines.append(f'{indent}read -p "  {prompt}: " {var}')
     return '\n'.join(lines) + '\n'
@@ -430,7 +459,7 @@ def _bash_automatic_test(idx, total, item):
     item_tag = f" [item={item['id']}]" if item.get('id') is not None else ''
     is_custom = bool(item.get('custom_command'))
     raw_command = item.get('custom_command') or item.get('executor_command') or 'echo "No command defined"'
-    input_args = [] if is_custom else _parse_input_arguments(item.get('input_arguments'))
+    input_args = _item_input_args(item, is_custom)
     exec_command = _substitute_placeholders(raw_command, input_args)
     cleanup_raw = item.get('executor_cleanup') or ''
     missing = _missing_inputs(input_args)
@@ -499,7 +528,7 @@ def _powershell_automatic_test(idx, total, item):
     item_tag = f" [item={item['id']}]" if item.get('id') is not None else ''
     is_custom = bool(item.get('custom_command'))
     raw_command = item.get('custom_command') or item.get('executor_command') or 'Write-Host "No command defined"'
-    input_args = [] if is_custom else _parse_input_arguments(item.get('input_arguments'))
+    input_args = _item_input_args(item, is_custom)
     exec_command = _substitute_placeholders(raw_command, input_args)
     command_b64 = base64.b64encode(exec_command.encode('utf-8')).decode('ascii')
     variables = _powershell_defaults_hashtable(input_args)
@@ -700,7 +729,7 @@ log_event() {{
         # Parse input arguments. Custom (manually-edited) commands skip
         # placeholder substitution because users may want literal #{...}.
         is_custom = bool(item.get('custom_command'))
-        input_args = [] if is_custom else _parse_input_arguments(item.get('input_arguments'))
+        input_args = _item_input_args(item, is_custom)
 
         # Display version keeps original #{argname} so the user sees the
         # canonical Atomic command. Execution version substitutes ${ArgName}.
@@ -1158,7 +1187,7 @@ function Invoke-IsolatedCommand {{
         cleanup_raw = item.get('executor_cleanup', '')
 
         is_custom = bool(item.get('custom_command'))
-        input_args = [] if is_custom else _parse_input_arguments(item.get('input_arguments'))
+        input_args = _item_input_args(item, is_custom)
 
         # Display version preserves the original #{argname} placeholders
         # so the user sees the canonical Atomic command. Execution version

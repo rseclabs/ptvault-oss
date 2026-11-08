@@ -34,7 +34,7 @@ python app.py
 # Access at http://localhost:5001
 ```
 
-**First-time setup:** Navigate to http://localhost:5001. Until an account exists, `/` redirects to the setup wizard: create the initial admin account (full name, email, password of at least 8 characters), then log in.
+**First-time setup:** Navigate to http://localhost:5001. Until an account exists, `/` redirects to the setup wizard: create the initial admin account (full name, email, password of at least 12 characters), then log in.
 
 **Docker:** `docker compose up -d` -- Access at http://localhost:5000
 

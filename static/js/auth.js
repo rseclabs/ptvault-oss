@@ -113,8 +113,8 @@ function initSetupForm() {
             return;
         }
 
-        if (password.length < 8) {
-            showError('Password must be at least 8 characters long');
+        if (password.length < 12) {
+            showError('Password must be at least 12 characters long');
             return;
         }
 

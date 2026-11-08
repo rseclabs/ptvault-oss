@@ -6,7 +6,7 @@ PTVault ships with no user accounts. The first time you open it, the setup wizar
 
 1. Start PTVault (`python app.py`) and open `http://localhost:5001`
 2. You are redirected to `/setup`
-3. Enter a username, email, and password (minimum 8 characters) and confirm the password
+3. Enter a username, email, and password (minimum 12 characters) and confirm the password
 4. Submit — the admin account is created and, when SQLCipher is available, database encryption is set up using a key derived from this password
 
 > **Note:** The setup wizard is only available while no users exist. Once the first account is created, `/setup` returns 403.
@@ -51,7 +51,7 @@ Older PTVault installations used a single "master password" instead of multi-use
 An admin account already exists. Use the login page at `/login` instead.
 
 **"Password too short"**
-Passwords must be at least 8 characters long.
+Passwords must be at least 12 characters long.
 
 **"Email already exists"**
 That email address is registered to another account. Use a different email.

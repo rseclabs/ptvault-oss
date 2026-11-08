@@ -12,6 +12,28 @@ from utils.audit_logger import audit_create, audit_update, audit_delete, audit_e
 from utils.helpers import normalize_tags, parse_port_fields
 
 
+# Engagement imports: each collection must be a list of objects, and no
+# collection may hold more than this many records (L-12).
+MAX_IMPORT_ITEMS = 50_000
+IMPORT_COLLECTIONS = ('hosts', 'evidence', 'host_notes', 'host_ports', 'host_credentials', 'evidence_hosts',
+                      'engagement_notes', 'engagement_credentials', 'terminal_dumps', 'engagement_findings')
+
+
+def _import_shape_error(data):
+    """Return an error message if an export file is not shaped as expected, else None."""
+    if not isinstance(data, dict):
+        return 'Invalid export format: expected a JSON object'
+    if not isinstance(data.get('engagement'), dict):
+        return 'Invalid export format: engagement must be an object'
+    for name in IMPORT_COLLECTIONS:
+        records = data.get(name, [])
+        if not isinstance(records, list) or not all(isinstance(r, dict) for r in records):
+            return f'Invalid export format: {name} must be a list of objects'
+        if len(records) > MAX_IMPORT_ITEMS:
+            return f'Too many {name} records to import (limit {MAX_IMPORT_ITEMS})'
+    return None
+
+
 engagements_bp = Blueprint('engagements', __name__, url_prefix='/api/engagements')
 
 
@@ -1279,6 +1301,10 @@ def import_engagement():
         data = json.load(file)
     except json.JSONDecodeError:
         return jsonify({'error': 'Invalid JSON file'}), 400
+
+    shape_error = _import_shape_error(data)
+    if shape_error:
+        return jsonify({'error': shape_error}), 400
 
     # Validate required fields
     if 'engagement' not in data:

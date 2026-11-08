@@ -4,6 +4,10 @@ Kept outside app.py so tests can import the real code: app.py opens the
 configured database when it is imported.
 """
 
+import re
+import unicodedata
+from urllib.parse import quote
+
 from flask import request
 
 from config import Config
@@ -75,3 +79,17 @@ def apply_security_headers(response):
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
 
     return response
+
+
+def attachment_disposition(filename, fallback='download'):
+    """Content-Disposition for a download whose name comes from user data (L-12).
+
+    filename= gets an ASCII-only name (letters, digits, . _ - and spaces), so a
+    quote, line break or path in a report name cannot change the header;
+    filename*= carries the full UTF-8 name, percent-encoded (RFC 6266/5987).
+    """
+    name = str(filename or '').replace('\\', '/').split('/')[-1]
+    name = ''.join(ch for ch in name if unicodedata.category(ch)[0] != 'C').strip() or fallback
+    ascii_name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode('ascii')
+    ascii_name = re.sub(r'[^A-Za-z0-9._ -]+', '_', ascii_name).strip(' ._') or fallback
+    return f"attachment; filename=\"{ascii_name[:150]}\"; filename*=UTF-8''{quote(name[:150], safe='')}"

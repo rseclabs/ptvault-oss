@@ -3,16 +3,30 @@
 from flask import Blueprint, jsonify, g, session, Response
 from middleware.auth import require_auth
 from utils.error_handler import handle_errors
-from jinja2 import Template
+from jinja2.sandbox import SandboxedEnvironment
 from datetime import datetime
 from routes.engagements import get_engagement_export_data
 from config import BASE_DIR
 import os
+import re
+
+from utils.security_headers import attachment_disposition
 
 templates_bp = Blueprint('templates', __name__, url_prefix='/api')
 
 # Template directory — use BASE_DIR for PyInstaller compatibility
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates', 'reports')
+_TEMPLATE_NAME = re.compile(r'[A-Za-z0-9_-]{1,64}')
+# Templates are server files today; a sandbox keeps a template from reaching
+# Python internals if templates ever become user-editable (L-12).
+_JINJA = SandboxedEnvironment(autoescape=False)
+
+
+def _template_path(template_name):
+    """Path of a report template, or None for a name that is not a plain identifier."""
+    if not _TEMPLATE_NAME.fullmatch(template_name or ''):
+        return None
+    return os.path.join(TEMPLATE_DIR, f'{template_name}.md')
 
 
 @templates_bp.route('/templates', methods=['GET'])
@@ -47,9 +61,9 @@ def get_template(template_name):
     Get the raw content of a template file.
     Returns the template as Markdown text.
     """
-    template_path = os.path.join(TEMPLATE_DIR, f'{template_name}.md')
+    template_path = _template_path(template_name)
 
-    if not os.path.exists(template_path):
+    if not template_path or not os.path.exists(template_path):
         return jsonify({'error': 'Template not found'}), 404
 
     with open(template_path, 'r') as f:
@@ -73,9 +87,9 @@ def export_with_template(engagement_id, template_name):
         return jsonify({'error': 'Unauthorized - engagement must be active'}), 403
 
     # Load template
-    template_path = os.path.join(TEMPLATE_DIR, f'{template_name}.md')
+    template_path = _template_path(template_name)
 
-    if not os.path.exists(template_path):
+    if not template_path or not os.path.exists(template_path):
         return jsonify({'error': 'Template not found'}), 404
 
     with open(template_path, 'r') as f:
@@ -100,9 +114,8 @@ def export_with_template(engagement_id, template_name):
     }
 
     # Render with Jinja2
-    template = Template(template_content)
-    rendered = template.render(**context)
+    rendered = _JINJA.from_string(template_content).render(**context)
 
     response = Response(rendered, mimetype='text/markdown')
-    response.headers['Content-Disposition'] = f'attachment; filename="report-{template_name}-{engagement_id}.md"'
+    response.headers['Content-Disposition'] = attachment_disposition(f'report-{template_name}-{engagement_id}.md')
     return response

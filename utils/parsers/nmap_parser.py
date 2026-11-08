@@ -8,7 +8,8 @@ metadata including hosts, ports, services, and OS detection information.
 import logging
 from datetime import datetime
 from libnmap.parser import NmapParser, NmapParserException
-import xml.etree.ElementTree as ET
+# defusedxml refuses DTDs with entities (billion laughs, external entities) (L-12)
+import defusedxml.ElementTree as ET
 
 from .base_parser import BaseToolParser
 

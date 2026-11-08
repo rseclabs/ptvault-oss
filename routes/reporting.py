@@ -10,7 +10,7 @@ from flask import Blueprint, request, jsonify, g, Response
 from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role, can_edit_shared
 from utils.error_handler import handle_errors, internal_error
 from utils.pdf_generator import generate_pdf_from_html, generate_pdf_with_cover, HAS_WEASYPRINT
-from utils.security_headers import untrusted_response_headers
+from utils.security_headers import attachment_disposition, untrusted_response_headers
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,18 @@ try:
     HAS_MARKDOWN = True
 except ImportError:
     HAS_MARKDOWN = False
+
+# A saved report structure is a list of item objects, capped in length (L-12).
+MAX_REPORT_ITEMS = 1000
+
+
+def _structure_error(structure):
+    if not isinstance(structure, list) or not all(isinstance(item, dict) for item in structure):
+        return 'structure must be a list of objects'
+    if len(structure) > MAX_REPORT_ITEMS:
+        return f'structure has too many items (limit {MAX_REPORT_ITEMS})'
+    return None
+
 
 reporting_bp = Blueprint('reporting', __name__, url_prefix='/api/reporting')
 
@@ -481,6 +493,9 @@ def create_report():
         return jsonify({"error": "name is required"}), 400
 
     structure = data.get('structure', [])
+    error = _structure_error(structure)
+    if error:
+        return jsonify({"error": error}), 400
     structure_json = json.dumps(structure)
 
     cursor = g.db.cursor()
@@ -550,6 +565,9 @@ def update_report(report_id):
         params.append(data['name'])
 
     if 'structure' in data:
+        error = _structure_error(data['structure'])
+        if error:
+            return jsonify({"error": error}), 400
         structure_json = json.dumps(data['structure'])
         updates.append("structure = ?")
         params.append(structure_json)
@@ -633,12 +651,12 @@ def export_report(report_id):
         # Report HTML holds user and scanner content: sandboxed if a browser renders it (M-4)
         return untrusted_response_headers(Response(
             html, mimetype='text/html',
-            headers={'Content-Disposition': f'attachment; filename="{report["name"]}.html"'}))
+            headers={'Content-Disposition': attachment_disposition(f'{report["name"]}.html', 'report.html')}))
 
     elif export_format == 'markdown':
         markdown = generate_markdown_export(report, hydrated_items)
         return Response(markdown, mimetype='text/markdown',
-                      headers={'Content-Disposition': f'attachment; filename="{report["name"]}.md"'})
+                      headers={'Content-Disposition': attachment_disposition(f'{report["name"]}.md', 'report.md')})
 
     elif export_format == 'pdf':
         if not HAS_WEASYPRINT:
@@ -671,7 +689,7 @@ def export_report(report_id):
             logger.info(f"Generated PDF for report: {report['name']} ({len(pdf_bytes)} bytes)")
 
             return Response(pdf_bytes, mimetype='application/pdf',
-                          headers={'Content-Disposition': f'attachment; filename="{report["name"]}.pdf"'})
+                          headers={'Content-Disposition': attachment_disposition(f'{report["name"]}.pdf', 'report.pdf')})
 
         except Exception as e:
             return internal_error(e, 'PDF generation failed')
@@ -681,7 +699,7 @@ def export_report(report_id):
             docx_bytes = generate_docx_export(report, hydrated_items)
             return Response(docx_bytes,
                           mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                          headers={'Content-Disposition': f'attachment; filename="{report["name"]}.docx"'})
+                          headers={'Content-Disposition': attachment_disposition(f'{report["name"]}.docx', 'report.docx')})
         except ImportError:
             return jsonify({"error": "python-docx library not installed. Run: pip install python-docx"}), 500
 

@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify, g, Response
 from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role, can_edit_shared
 from routes.engagements import require_active_engagement
 from utils.error_handler import internal_error
+from utils.security_headers import attachment_disposition
 import json
 import logging
 import os
@@ -1241,7 +1242,7 @@ def generate_script_endpoint(plan_id):
                 zip_buffer.getvalue(),
                 mimetype='application/zip',
                 headers={
-                    'Content-Disposition': f'attachment; filename="{zip_filename}"'
+                    'Content-Disposition': attachment_disposition(zip_filename, 'test_plan.zip')
                 }
             )
         else:
@@ -1250,7 +1251,7 @@ def generate_script_endpoint(plan_id):
                 script_content,
                 mimetype='text/plain',
                 headers={
-                    'Content-Disposition': f'attachment; filename="{script_filename}"'
+                    'Content-Disposition': attachment_disposition(script_filename, 'test_plan.sh')
                 }
             )
 
