@@ -74,3 +74,13 @@ def test_migration_gives_each_flag_to_the_commands_creator(test_db):
     rows = sorted(tuple(r) for r in conn.execute('SELECT user_id, command_id FROM command_favorites'))
     assert rows == [(1, 11), (2, 10)]                                     # built-ins go to admins
     assert conn.execute('SELECT SUM(is_favorite) FROM commands').fetchone()[0] == 0
+
+
+def test_viewers_cannot_change_shared_usage_counts(command):
+    """Retest 2 L-28: usage_count orders the shared command list for everyone."""
+    assert command.client_for('viewer').post(f'/api/commands/{command.command_id}/usage').status_code == 403
+    assert command.client_for('editor').post(f'/api/commands/{command.command_id}/usage').status_code == 200
+    conn = command.db()
+    count = conn.execute('SELECT usage_count FROM commands WHERE id = ?', (command.command_id,)).fetchone()[0]
+    conn.close()
+    assert count == 1

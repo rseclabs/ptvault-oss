@@ -287,6 +287,7 @@ def _favorite_ids(cursor):
 
 @commands_bp.route('/<int:command_id>/usage', methods=['POST'])
 @require_auth
+@require_role('admin', 'tester')       # usage orders the shared list for everyone (L-28)
 @handle_errors
 def increment_usage(command_id):
     """Increment usage count (called when command is copied)."""

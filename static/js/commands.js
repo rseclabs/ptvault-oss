@@ -242,7 +242,7 @@ const CommandManager = {
         } else {
             // Direct copy
             await this.copyToClipboard(command.command);
-            await API.commands.trackUsage(commandId);
+            API.commands.trackUsage(commandId).catch(() => {});   // best effort; viewers may not count (L-28)
             showToast('Command copied to clipboard', 'success');
         }
     },
@@ -336,7 +336,7 @@ const CommandManager = {
         // Copy to clipboard
         const success = await this.copyToClipboard(finalCommand);
         if (success) {
-            await API.commands.trackUsage(this.activeCommand.id);
+            API.commands.trackUsage(this.activeCommand.id).catch(() => {});   // best effort (L-28)
             showToast('Command copied to clipboard', 'success');
             closeModal('variableModal');
         }
