@@ -331,6 +331,7 @@ Tests cannot import `app.py` (it opens the configured database on import); put l
 |------|---------|
 | `features.py` | Blueprint registry (`BLUEPRINTS` list) |
 | `app.py` | Web UI routes (`index`, `setup`, `dashboard`, editors), `csrf_protect`, `set_security_headers` |
+| `utils/security_headers.py` | Security headers and CSP for every response; `untrusted_response_headers` sandboxes uploaded files and exported report HTML |
 | `middleware/auth.py` | `require_auth`, `require_role`, `require_engagement_access` |
 | `models/database.py` | `get_db_connection`, `setup_required`, `init_db` |
 | `models/encryption.py` | SQLCipher keying, `migrate_to_plaintext`, encrypted export |

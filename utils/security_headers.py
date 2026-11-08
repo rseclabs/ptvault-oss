@@ -27,15 +27,21 @@ CYBERCHEF_CSP = (
 )
 
 # Every library and font is vendored under static/vendor, so nothing loads
-# from a third-party host.
+# from a third-party host (L-1). No 'unsafe-eval': only CyberChef needs it,
+# and it has its own policy above. 'unsafe-inline' remains while the app uses
+# inline event handlers; removing it needs those converted first.
 DEFAULT_CSP = (
     "default-src 'self'; "
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+    "script-src 'self' 'unsafe-inline'; "
     "style-src 'self' 'unsafe-inline'; "
     "font-src 'self'; "
     "img-src 'self' data: blob:; "
     "connect-src 'self'; "
-    "frame-src 'self' https://gchq.github.io"
+    "frame-src 'self'; "
+    "object-src 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'; "
+    "frame-ancestors 'none'"
 )
 
 

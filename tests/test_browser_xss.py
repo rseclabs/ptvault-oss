@@ -55,6 +55,9 @@ def ui(live_app, browser):
     for route, template in (('/dashboard', 'dashboard.html'), ('/note/new', 'note_editor.html'),
                             ('/finding/new', 'finding_editor.html')):
         app.add_url_rule(route, template, lambda t=template: render_template(t))
+    # The real security headers (CSP included) that app.py adds to every response.
+    from utils.security_headers import apply_security_headers
+    app.after_request(apply_security_headers)
     server = make_server('127.0.0.1', 0, app, threaded=True)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     base = f'http://127.0.0.1:{server.server_port}'
