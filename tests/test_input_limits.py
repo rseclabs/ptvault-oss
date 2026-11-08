@@ -106,3 +106,24 @@ def test_tool_detection_reads_only_the_root_element():
     assert detect_tool_type(b'not xml at all') is None
     # Entities are still refused (defusedxml)
     assert detect_tool_type(b'<!DOCTYPE x [<!ENTITY e "boom">]><nmaprun>&e;</nmaprun>') is None
+
+
+# ------------------------------------------------------------------ JSON files (retest 2: M-18)
+
+@pytest.mark.parametrize('url, name', [('/api/engagements/import', 'e.json'), ('/api/testplans/layers/import', 'l.json')])
+def test_json_files_are_capped_before_they_are_parsed(live_app, url, name):
+    import io
+    from config import Config
+    client = live_app.client_for('owner', active_engagement=ENGAGEMENT_A)
+    big = b'[' + b'{},' * ((Config.MAX_JSON_SIZE + 1_000_000) // 3) + b'{}]'
+    resp = client.post(url, data={'file': (io.BytesIO(big), name)}, content_type='multipart/form-data')
+    assert resp.status_code == 413, resp.get_json()
+
+
+@pytest.mark.parametrize('url, name', [('/api/engagements/import', 'e.json'), ('/api/testplans/layers/import', 'l.json')])
+def test_deeply_nested_json_files_are_a_400(live_app, url, name):
+    import io
+    client = live_app.client_for('owner', active_engagement=ENGAGEMENT_A)
+    deep = b'[' * 100_000 + b']' * 100_000
+    resp = client.post(url, data={'file': (io.BytesIO(deep), name)}, content_type='multipart/form-data')
+    assert resp.status_code == 400

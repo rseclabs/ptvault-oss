@@ -13,6 +13,7 @@ from utils.helpers import (
     validate_date, validate_email, validate_status,
 )
 from utils.engagement_import import ImportValidationError, validate_import
+from utils.request_limits import InvalidJSONFile, JSONFileTooLarge, load_json_upload
 from models.dao.note_tree_dao import NoteTreeDAO, optional_int
 from models.engagement_cleanup import delete_engagement as delete_engagement_rows, remove_upload_folder
 from config import Config
@@ -1263,8 +1264,10 @@ def import_engagement():
         return jsonify({'error': 'No file selected'}), 400
 
     try:
-        data = json.load(file)
-    except json.JSONDecodeError:
+        data = load_json_upload(file)          # capped before parsing (M-18)
+    except JSONFileTooLarge as e:
+        return jsonify({'error': str(e)}), 413
+    except InvalidJSONFile:
         return jsonify({'error': 'Invalid JSON file'}), 400
 
     shape_error = _import_shape_error(data)

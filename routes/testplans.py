@@ -9,6 +9,8 @@ import json
 import logging
 import os
 
+from utils.request_limits import InvalidJSONFile, JSONFileTooLarge, load_json_upload
+
 testplans_bp = Blueprint('testplans', __name__, url_prefix='/api/testplans')
 
 
@@ -410,9 +412,13 @@ def import_layer():
 
         # Read and parse JSON
         try:
-            layer_data = json.load(file)
-        except json.JSONDecodeError as e:
-            return jsonify({"error": f"Invalid JSON: {str(e)}"}), 400
+            layer_data = load_json_upload(file)          # capped before parsing (M-18)
+        except JSONFileTooLarge as e:
+            return jsonify({"error": str(e)}), 413
+        except InvalidJSONFile as e:
+            return jsonify({"error": f"Invalid JSON: {e}"}), 400
+        if not isinstance(layer_data, dict):
+            return jsonify({"error": "Invalid Navigator layer: expected a JSON object"}), 400
 
         # Validate layer structure
         if 'techniques' not in layer_data:
