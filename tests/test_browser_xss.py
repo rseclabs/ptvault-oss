@@ -287,3 +287,48 @@ def test_test_plan_item_modal_uses_the_raw_command(ui):
     }""", P)
     assert value == P
     _assert_clean(ui.page)
+
+
+# ------------------------------------------------------------------ retest: H-13
+
+def _hostile_vuln():
+    """A vulnerability record with the payload in every field the tab reads."""
+    fields = ('plugin_id', 'plugin_name', 'plugin_family', 'port', 'service', 'protocol', 'risk_factor',
+              'synopsis', 'description', 'solution', 'plugin_output', 'cvss_base_score', 'cvss_vector',
+              'exploit_available', 'confidence', 'location', 'name', 'id', 'evidence_title', 'source_tool')
+    vuln = {f: P for f in fields}
+    vuln.update(severity=3, cves=[P], is_engagement_finding=True, include_in_report=P)
+    return vuln
+
+
+def test_host_vulnerabilities_tab_escapes_every_field(ui):
+    """H-13: the tab builds its list from evidence metadata JSON, which an editor or a scan file controls."""
+    conn = ui.db()
+    host_id = conn.execute("INSERT INTO hosts (engagement_id, ip) VALUES (?, '10.0.0.9')", (ENGAGEMENT_A,)).lastrowid
+    nessus = {'tool': 'nessus', 'hosts': [{'ip': '10.0.0.9', 'vulnerabilities': [_hostile_vuln()]}]}
+    burp = {'tool': 'burp', 'issues': [{**_hostile_vuln(), 'host': f'http://10.0.0.9:{P}', 'severity': 'High',
+                                        'issue_detail': P, 'remediation': P, 'path': P}]}
+    for meta in (nessus, burp):
+        conn.execute("INSERT INTO evidence (engagement_id, evidence_type, title, metadata) VALUES (?, 'tool_output', ?, ?)",
+                     (ENGAGEMENT_A, P, json.dumps(meta)))
+    conn.execute("INSERT INTO engagement_findings (engagement_id, title, ip_address, criticality, cvss_score, "
+                 "finding_content, remediation_content) VALUES (?, ?, '10.0.0.9', ?, ?, ?, ?)",
+                 (ENGAGEMENT_A, P, P, P, P, P))
+    conn.commit()
+    conn.close()
+
+    ui.page.evaluate("""async hostId => {
+        if (!document.getElementById('vulnerabilitiesList')) {
+            const div = document.createElement('div');
+            div.id = 'vulnerabilitiesList';
+            document.body.appendChild(div);
+        }
+        AppState.activeEngagement = AppState.activeEngagement || { id: %d };
+        HostManager.hosts = [{ id: hostId, ip: '10.0.0.9' }];
+        await HostManager.loadVulnerabilities(hostId);
+    }""" % ENGAGEMENT_A, host_id)
+    assert ui.page.evaluate('() => HostManager.currentVulnerabilities.length') == 3
+    _assert_clean(ui.page)
+    # A metadata record cannot pose as an editable engagement finding
+    assert ui.page.evaluate("""() => HostManager.currentVulnerabilities
+        .filter(v => v.is_engagement_finding).every(v => Number.isInteger(v.id))""")

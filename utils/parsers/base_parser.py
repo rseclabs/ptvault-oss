@@ -121,6 +121,24 @@ class BaseToolParser(ABC):
         """
         return []
 
+    @staticmethod
+    def to_port(value) -> Optional[int]:
+        """A port number (0-65535) or None; scan files are untrusted (H-13)."""
+        try:
+            port = int(str(value).strip())
+        except (TypeError, ValueError):
+            return None
+        return port if 0 <= port <= 65535 else None
+
+    @staticmethod
+    def to_score(value) -> Optional[float]:
+        """A CVSS score (0.0-10.0) or None; scan files are untrusted (H-13)."""
+        try:
+            score = float(str(value).strip())
+        except (TypeError, ValueError):
+            return None
+        return score if 0.0 <= score <= 10.0 else None   # NaN and inf fail both comparisons
+
     def normalize_severity(self, severity: str) -> str:
         """
         Normalize severity levels to PTVault standard.

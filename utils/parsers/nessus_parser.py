@@ -127,7 +127,7 @@ class NessusToolParser(BaseToolParser):
                             "plugin_id": item.get('pluginID'),
                             "plugin_name": item.get('pluginName'),
                             "plugin_family": item.get('pluginFamily'),
-                            "port": item.get('port'),
+                            "port": self.to_port(item.get('port')),
                             "service": item.get('svc_name'),
                             "protocol": item.get('protocol'),
                             "severity": severity,
@@ -137,7 +137,7 @@ class NessusToolParser(BaseToolParser):
                             "solution": item.findtext('solution'),
                             "plugin_output": item.findtext('plugin_output'),
                             "cves": cves,
-                            "cvss_base_score": item.findtext('cvss_base_score'),
+                            "cvss_base_score": self.to_score(item.findtext('cvss_base_score')),
                             "cvss_vector": item.findtext('cvss_vector'),
                             "exploit_available": item.findtext('exploit_available')
                         }

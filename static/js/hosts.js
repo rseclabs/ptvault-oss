@@ -3,6 +3,9 @@
  * Handles host-centric evidence view
  */
 
+// Burp Suite confidence values; anything else gets no class suffix (H-13)
+const VULN_CONFIDENCE = ['certain', 'firm', 'tentative'];
+
 const HostManager = {
     selectedHostId: null,  // null = nothing selected, 'general' = General section, number = host ID
     hosts: [],
@@ -1493,6 +1496,9 @@ const HostManager = {
                                 for (const vuln of metaHost.vulnerabilities) {
                                     vulnerabilities.push({
                                         ...vuln,
+                                        // Metadata never poses as an editable engagement finding (H-13)
+                                        id: undefined,
+                                        is_engagement_finding: false,
                                         source_tool: 'Nessus',
                                         evidence_id: ev.id,
                                         evidence_title: ev.title
@@ -1665,8 +1671,15 @@ const HostManager = {
             const cves = vuln.cves && vuln.cves.length > 0
                 ? vuln.cves.map(cve => `<span class="cve-badge">${escapeHtml(cve)}</span>`).join('')
                 : '';
-            const cvssScore = vuln.cvss_base_score ? `<span class="cvss-score">CVSS: ${vuln.cvss_base_score}</span>` : '';
-            const confidence = vuln.confidence ? `<span class="confidence-badge confidence-${vuln.confidence.toLowerCase()}">${vuln.confidence}</span>` : '';
+            // Scan metadata is attacker-supplied: numbers are parsed, the class suffix is allow-listed (H-13)
+            const score = Number.parseFloat(vuln.cvss_base_score);
+            const cvssScore = Number.isFinite(score) && score >= 0 && score <= 10
+                ? `<span class="cvss-score">CVSS: ${score.toFixed(1)}</span>` : '';
+            const confidenceKey = String(vuln.confidence || '').toLowerCase();
+            const confidence = vuln.confidence
+                ? `<span class="confidence-badge${VULN_CONFIDENCE.includes(confidenceKey) ? ' confidence-' + confidenceKey : ''}">${escapeHtml(vuln.confidence)}</span>`
+                : '';
+            const port = vuln.port ? `${escapeHtml(vuln.port)}/${escapeHtml(vuln.protocol || 'tcp')}` : '';
             const toolBadge = `<span class="tool-badge tool-${vuln.source_tool.toLowerCase().replace(' ', '-')}">${escapeHtml(vuln.source_tool)}</span>`;
 
             return `
@@ -1680,8 +1693,8 @@ const HostManager = {
                         <div class="vuln-meta">
                             ${cvssScore}
                             ${confidence}
-                            <span class="vuln-port">${vuln.port ? vuln.port + '/' + (vuln.protocol || 'tcp') : ''}</span>
-                            ${vuln.is_engagement_finding ? `<button class="btn-send-to-report"
+                            <span class="vuln-port">${port}</span>
+                            ${vuln.is_engagement_finding && Number.isInteger(vuln.id) ? `<button class="btn-send-to-report"
                                     onclick="event.stopPropagation(); HostManager.editEngagementFinding(${vuln.id})"
                                     title="Edit Finding">
                                 <i data-lucide="pencil"></i>
