@@ -243,3 +243,23 @@ def test_uploads_are_not_spooled_to_a_temp_file(monkeypatch):
     big = b'x' * (2 * 1024 * 1024)
     resp = app.test_client().post('/up', data={'file': (io.BytesIO(big), 'big.png')}, content_type='multipart/form-data')
     assert resp.status_code == 200 and resp.data == str(len(big)).encode()
+
+
+def test_content_that_looks_sealed_is_still_stored_and_read_as_plaintext(tmp_path, monkeypatch):
+    """Retest 2 L-30: a plaintext file starting with the sealed marker was taken for ciphertext."""
+    spoof = upload_store.MAGIC + b'just text'
+    state = {'key': None}
+
+    def database_key():
+        return state['key']
+    monkeypatch.setattr(upload_store, '_database_key', database_key)
+    path = tmp_path / '1' / 'x.txt'
+    upload_store.write_file(str(path), '1/x.txt', spoof)                  # encryption off
+    assert upload_store.read_file(str(path), '1/x.txt') == spoof
+
+    state['key'] = KEY                                                    # encryption enabled
+    assert upload_store.encrypt_existing(str(tmp_path)) == 1
+    assert upload_store.read_file(str(path), '1/x.txt') == spoof
+    assert upload_store.decrypt_existing(str(tmp_path)) == 1
+    state['key'] = None                                                   # disabled again
+    assert upload_store.read_file(str(path), '1/x.txt') == spoof

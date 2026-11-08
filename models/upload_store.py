@@ -34,6 +34,9 @@ from models import encryption
 logger = logging.getLogger(__name__)
 
 MAGIC = b'PTVAULT-ENC1\n'
+# Plaintext that itself starts with MAGIC (or RAW) is stored behind RAW, so file
+# content can never pass for a sealed file (retest 2 L-30).
+RAW = b'PTVAULT-RAW1\n'
 _PERSON = b'ptvault-upload1'           # BLAKE2b personalisation (max 16 bytes)
 _TMP_SUFFIX = '.ptvault-tmp'
 FILE_MODE = 0o600
@@ -105,14 +108,21 @@ def _atomic_write(full_path, data):
         raise
 
 
+def _plain(data):
+    """Plaintext as stored: behind RAW when it would otherwise look like a marker."""
+    return RAW + data if data.startswith((MAGIC, RAW)) else data
+
+
 def _seal(relative_path, data):
     key = _file_key(relative_path)
     if key is None:
-        return data
+        return _plain(data)
     return MAGIC + nacl.secret.SecretBox(key).encrypt(data)
 
 
 def _open(relative_path, stored):
+    if stored.startswith(RAW):
+        return stored[len(RAW):]
     if not stored.startswith(MAGIC):
         return stored
     key = _file_key(relative_path)
@@ -183,6 +193,8 @@ def encrypt_existing(upload_folder=None):
             continue
         with open(full_path, 'rb') as f:
             data = f.read()
+        if data.startswith(RAW):
+            data = data[len(RAW):]
         write_file(full_path, relative_path, data)
         converted += 1
     harden_permissions(upload_folder)
@@ -204,7 +216,7 @@ def decrypt_existing(upload_folder=None):
         if not is_sealed(full_path):
             continue
         data = read_file(full_path, relative_path)
-        _atomic_write(full_path, data)
+        _atomic_write(full_path, _plain(data))
         converted += 1
     if converted:
         logger.info('Decrypted %d evidence file(s)', converted)
