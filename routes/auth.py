@@ -95,7 +95,10 @@ def setup():
         except Exception:
             pass  # Don't fail setup if audit logging fails
 
-        # Set up database encryption if pysqlcipher3 is available
+        # Set up database encryption if pysqlcipher3 is available. Encryption
+        # replaces the database file, so this plaintext connection must not be
+        # used afterwards (L-13): close it now and reopen the encrypted copy.
+        conn.close()
         enable_encryption = data.get('enable_encryption', True)
         if enable_encryption and is_encryption_available():
             try:
@@ -103,6 +106,7 @@ def setup():
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).warning(f"Encryption setup skipped: {e}")
+        conn = get_db_connection()
 
         # Create JWT token and set session cookie (auto-login after setup)
         token = create_session_token(user_id, role='admin', username=username)
