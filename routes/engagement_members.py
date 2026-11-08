@@ -1,7 +1,7 @@
 """Engagement members management routes for team collaboration."""
 
 from flask import Blueprint, request, jsonify, g
-from middleware.auth import require_auth, require_engagement_access
+from middleware.auth import require_auth, require_engagement_role
 from models.dao.user_dao import UserDAO
 from utils.error_handler import (
     handle_errors,
@@ -21,7 +21,7 @@ user_dao = UserDAO()
 
 @engagement_members_bp.route('', methods=['GET'])
 @require_auth
-@require_engagement_access('viewer')
+@require_engagement_role('viewer')
 @handle_errors
 def list_members(engagement_id):
     """
@@ -54,7 +54,7 @@ def list_members(engagement_id):
 
 @engagement_members_bp.route('', methods=['POST'])
 @require_auth
-@require_engagement_access('owner')
+@require_engagement_role('owner')
 @handle_errors
 def add_member(engagement_id):
     """
@@ -119,7 +119,7 @@ def add_member(engagement_id):
 
 @engagement_members_bp.route('/<int:member_id>', methods=['PUT'])
 @require_auth
-@require_engagement_access('owner')
+@require_engagement_role('owner')
 @handle_errors
 def update_member(engagement_id, member_id):
     """
@@ -183,7 +183,7 @@ def update_member(engagement_id, member_id):
 
 @engagement_members_bp.route('/<int:member_id>', methods=['DELETE'])
 @require_auth
-@require_engagement_access('owner')
+@require_engagement_role('owner')
 @handle_errors
 def remove_member(engagement_id, member_id):
     """

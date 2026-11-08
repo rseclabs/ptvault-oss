@@ -1,7 +1,7 @@
 """Engagement management routes for PTVault."""
 
 from flask import Blueprint, request, jsonify, g, session, Response
-from middleware.auth import require_auth, require_role
+from middleware.auth import engagement_role, require_auth, require_engagement_role, require_role
 from functools import wraps
 from utils.error_handler import handle_errors
 import re
@@ -434,6 +434,7 @@ def get_engagement_export_data(engagement_id):
 
 @engagements_bp.route('', methods=['POST'])
 @require_auth
+@require_role('admin', 'tester')
 @handle_errors
 def create_engagement():
     """
@@ -570,6 +571,7 @@ def list_engagements():
 
 @engagements_bp.route('/<int:engagement_id>', methods=['GET'])
 @require_auth
+@require_engagement_role('viewer')
 @handle_errors
 def get_engagement(engagement_id):
     """Get a single engagement by ID."""
@@ -585,6 +587,7 @@ def get_engagement(engagement_id):
 
 @engagements_bp.route('/<int:engagement_id>', methods=['PUT'])
 @require_auth
+@require_engagement_role('owner')
 @handle_errors
 def update_engagement(engagement_id):
     """Update an engagement. Only updates provided fields."""
@@ -722,32 +725,8 @@ def set_active_engagement():
 
     engagement_id = data['engagement_id']
 
-    cursor = g.db.cursor()
-
-    # Validate engagement exists
-    cursor.execute("SELECT id, team_id FROM engagements WHERE id = ?", (engagement_id,))
-    eng_row = cursor.fetchone()
-    if not eng_row:
+    if engagement_role(g.db, g.current_user, g.current_user_role, engagement_id) is None:
         return jsonify({"error": "engagement not found"}), 404
-
-    # Non-admins must have access via engagement_members or team membership
-    if g.current_user_role != 'admin':
-        cursor.execute(
-            'SELECT 1 FROM engagement_members WHERE engagement_id = ? AND user_id = ?',
-            (engagement_id, g.current_user)
-        )
-        has_direct = cursor.fetchone() is not None
-
-        has_team = False
-        if eng_row[1]:  # team_id
-            cursor.execute(
-                'SELECT 1 FROM team_members WHERE team_id = ? AND user_id = ?',
-                (eng_row[1], g.current_user)
-            )
-            has_team = cursor.fetchone() is not None
-
-        if not has_direct and not has_team:
-            return jsonify({"error": "access denied"}), 403
 
     # Store in session
     session['active_engagement_id'] = engagement_id
@@ -803,6 +782,7 @@ def _verify_engagement_exists(engagement_id):
 
 @engagements_bp.route('/<int:engagement_id>/notes', methods=['GET'])
 @require_auth
+@require_engagement_role('viewer')
 @handle_errors
 def get_engagement_notes(engagement_id):
     """Get all notes for an engagement (flat list for tree-build)."""
@@ -814,6 +794,7 @@ def get_engagement_notes(engagement_id):
 
 @engagements_bp.route('/<int:engagement_id>/notes/<int:note_id>', methods=['GET'])
 @require_auth
+@require_engagement_role('viewer')
 @handle_errors
 def get_engagement_note(engagement_id, note_id):
     """Get full content for a single engagement note (lazy-load companion)."""
@@ -825,6 +806,7 @@ def get_engagement_note(engagement_id, note_id):
 
 @engagements_bp.route('/<int:engagement_id>/notes', methods=['POST'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def create_engagement_note(engagement_id):
     """Create a new note for an engagement.
@@ -856,6 +838,7 @@ def create_engagement_note(engagement_id):
 
 @engagements_bp.route('/<int:engagement_id>/notes/<int:note_id>', methods=['PUT'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def update_engagement_note(engagement_id, note_id):
     """Update an engagement note's content and/or title."""
@@ -880,6 +863,7 @@ def update_engagement_note(engagement_id, note_id):
 
 @engagements_bp.route('/<int:engagement_id>/notes/<int:note_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def delete_engagement_note(engagement_id, note_id):
     """Delete an engagement note. Blocked when it has children."""
@@ -906,6 +890,7 @@ def delete_engagement_note(engagement_id, note_id):
     '/<int:engagement_id>/notes/<int:note_id>/move', methods=['POST']
 )
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def move_engagement_note(engagement_id, note_id):
     """Move/reorder an engagement note within the tree.
@@ -933,17 +918,13 @@ def move_engagement_note(engagement_id, note_id):
 
 @engagements_bp.route('/<int:engagement_id>/export/json', methods=['GET'])
 @require_auth
+@require_engagement_role('viewer')
 @handle_errors
 def export_engagement_json(engagement_id):
     """
     Export engagement data to JSON format.
     Returns complete engagement data with evidence, tags, metadata, and statistics.
     """
-    # Verify engagement belongs to active engagement (security)
-    active_id = session.get('active_engagement_id')
-    if engagement_id != active_id:
-        return jsonify({'error': 'Unauthorized - engagement must be active'}), 403
-
     try:
         # Get complete engagement data
         export_data = get_engagement_export_data(engagement_id)
@@ -959,17 +940,13 @@ def export_engagement_json(engagement_id):
 
 @engagements_bp.route('/<int:engagement_id>/export/markdown', methods=['GET'])
 @require_auth
+@require_engagement_role('viewer')
 @handle_errors
 def export_engagement_markdown(engagement_id):
     """
     Export engagement data to Markdown format.
     Returns a well-formatted Markdown report ready for report writing.
     """
-    # Verify engagement belongs to active engagement (security)
-    active_id = session.get('active_engagement_id')
-    if engagement_id != active_id:
-        return jsonify({'error': 'Unauthorized - engagement must be active'}), 403
-
     try:
         # Get complete engagement data
         export_data = get_engagement_export_data(engagement_id)
@@ -1231,6 +1208,7 @@ def import_engagement_data(data):
 
 @engagements_bp.route('/import', methods=['POST'])
 @require_auth
+@require_role('admin', 'tester')
 @handle_errors
 def import_engagement():
     """
@@ -1281,6 +1259,7 @@ def import_engagement():
 
 @engagements_bp.route('/<int:engagement_id>/credentials', methods=['GET'])
 @require_auth
+@require_engagement_role('viewer')
 @handle_errors
 def get_engagement_credentials(engagement_id):
     """Get all credentials for an engagement."""
@@ -1317,6 +1296,7 @@ def get_engagement_credentials(engagement_id):
 
 @engagements_bp.route('/<int:engagement_id>/credentials', methods=['POST'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def create_engagement_credential(engagement_id):
     """Create a new credential for an engagement."""
@@ -1373,6 +1353,7 @@ def create_engagement_credential(engagement_id):
 
 @engagements_bp.route('/<int:engagement_id>/credentials/<int:cred_id>', methods=['PUT'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def update_engagement_credential(engagement_id, cred_id):
     """Update an engagement credential."""
@@ -1439,6 +1420,7 @@ def update_engagement_credential(engagement_id, cred_id):
 
 @engagements_bp.route('/<int:engagement_id>/credentials/<int:cred_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def delete_engagement_credential(engagement_id, cred_id):
     """Delete an engagement credential."""
@@ -1464,6 +1446,7 @@ def delete_engagement_credential(engagement_id, cred_id):
 
 @engagements_bp.route('/<int:engagement_id>/terminal-dumps', methods=['GET'])
 @require_auth
+@require_engagement_role('viewer')
 @handle_errors
 def get_terminal_dumps(engagement_id):
     """Get all terminal dumps for an engagement."""
@@ -1504,6 +1487,7 @@ def get_terminal_dumps(engagement_id):
 
 @engagements_bp.route('/<int:engagement_id>/terminal-dumps/<int:dump_id>', methods=['GET'])
 @require_auth
+@require_engagement_role('viewer')
 @handle_errors
 def get_terminal_dump(engagement_id, dump_id):
     """Get full content for a single terminal dump (lazy-load companion)."""
@@ -1530,6 +1514,7 @@ def get_terminal_dump(engagement_id, dump_id):
 
 @engagements_bp.route('/<int:engagement_id>/terminal-dumps', methods=['POST'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def create_terminal_dump(engagement_id):
     """Create a new terminal dump for an engagement."""
@@ -1583,6 +1568,7 @@ def create_terminal_dump(engagement_id):
 
 @engagements_bp.route('/<int:engagement_id>/terminal-dumps/<int:dump_id>', methods=['PUT'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def update_terminal_dump(engagement_id, dump_id):
     """Update a terminal dump."""
@@ -1641,6 +1627,7 @@ def update_terminal_dump(engagement_id, dump_id):
 
 @engagements_bp.route('/<int:engagement_id>/terminal-dumps/<int:dump_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def delete_terminal_dump(engagement_id, dump_id):
     """Delete a terminal dump."""
@@ -1666,6 +1653,7 @@ def delete_terminal_dump(engagement_id, dump_id):
 
 @engagements_bp.route('/<int:engagement_id>/findings', methods=['GET'])
 @require_auth
+@require_engagement_role('viewer')
 @handle_errors
 def get_engagement_findings(engagement_id):
     """Get all findings for an engagement."""
@@ -1716,6 +1704,7 @@ def get_engagement_findings(engagement_id):
 
 @engagements_bp.route('/<int:engagement_id>/findings', methods=['POST'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def create_engagement_finding(engagement_id):
     """Create a new finding for an engagement."""
@@ -1794,6 +1783,7 @@ def create_engagement_finding(engagement_id):
 
 @engagements_bp.route('/<int:engagement_id>/findings/<int:finding_id>', methods=['PUT'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def update_engagement_finding(engagement_id, finding_id):
     """Update an engagement finding."""
@@ -1879,6 +1869,7 @@ def update_engagement_finding(engagement_id, finding_id):
 
 @engagements_bp.route('/<int:engagement_id>/findings/<int:finding_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def delete_engagement_finding(engagement_id, finding_id):
     """Delete an engagement finding."""
@@ -1900,6 +1891,7 @@ def delete_engagement_finding(engagement_id, finding_id):
 
 @engagements_bp.route('/<int:engagement_id>/findings/<int:finding_id>/toggle-report', methods=['POST'])
 @require_auth
+@require_engagement_role('editor')
 @handle_errors
 def toggle_finding_report_inclusion(engagement_id, finding_id):
     """Toggle whether a finding is included in the final report."""

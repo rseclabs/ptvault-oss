@@ -16,7 +16,8 @@ def engagement_role(db, user_id, global_role, engagement_id):
 
     None means no access, including when the engagement does not exist.
     Admins are owners of every engagement. Direct membership wins over team
-    membership; a team lead is an editor and a team member a viewer.
+    membership; a team lead is an editor and a team member a viewer. A global
+    viewer is read-only everywhere, so its role is capped at 'viewer'.
     """
     engagement = db.execute('SELECT team_id FROM engagements WHERE id = ?', (engagement_id,)).fetchone()
     if engagement is None:
@@ -24,21 +25,45 @@ def engagement_role(db, user_id, global_role, engagement_id):
     if global_role == 'admin':
         return 'owner'
 
+    role = None
     member = db.execute(
         'SELECT role FROM engagement_members WHERE engagement_id = ? AND user_id = ?',
         (engagement_id, user_id)
     ).fetchone()
     if member is not None:
-        return member[0] if member[0] in ENGAGEMENT_ROLE_RANK else 'viewer'
-
-    team_id = engagement[0]
-    if team_id is not None:
+        role = member[0] if member[0] in ENGAGEMENT_ROLE_RANK else 'viewer'
+    elif engagement[0] is not None:
         team = db.execute(
-            'SELECT role FROM team_members WHERE team_id = ? AND user_id = ?', (team_id, user_id)
+            'SELECT role FROM team_members WHERE team_id = ? AND user_id = ?', (engagement[0], user_id)
         ).fetchone()
         if team is not None:
-            return 'editor' if team[0] == 'lead' else 'viewer'
-    return None
+            role = 'editor' if team[0] == 'lead' else 'viewer'
+
+    if role is not None and global_role == 'viewer':
+        return 'viewer'
+    return role
+
+
+def require_engagement_role(min_role='viewer', param='engagement_id'):
+    """Require a role on the engagement named in the URL. Use after @require_auth.
+
+    The engagement comes from the route's `param` argument, never from the
+    session or the request body. No access (or no such engagement) is 404 so
+    engagement ids cannot be probed; a role below min_role is 403. Sets
+    g.engagement_role.
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            role = engagement_role(g.db, g.current_user, g.current_user_role, kwargs[param])
+            if role is None:
+                return jsonify({"error": "engagement not found"}), 404
+            if ENGAGEMENT_ROLE_RANK[role] < ENGAGEMENT_ROLE_RANK[min_role]:
+                return jsonify({"error": "insufficient permissions"}), 403
+            g.engagement_role = role
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 # NOTE: Inline migrations have been moved to models/migrations/versions/019_consolidate_middleware_tables.py
 
