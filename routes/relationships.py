@@ -87,7 +87,7 @@ def create_relationship():
             relationship_type=data['type'],
             label=data.get('label'),
             description=data.get('description'),
-            created_by=getattr(g, 'user_id', None)
+            created_by=g.current_user
         )
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
@@ -287,6 +287,17 @@ def list_attack_paths():
     return jsonify({"paths": paths}), 200
 
 
+def _all_engagement_evidence(ids):
+    """True if every ID is an integer naming evidence in the active engagement."""
+    if not ids or not all(isinstance(i, int) and not isinstance(i, bool) for i in ids):
+        return False
+    unique = sorted(set(ids))
+    marks = ','.join('?' * len(unique))
+    found = g.db.execute(f'SELECT COUNT(*) FROM evidence WHERE id IN ({marks}) AND engagement_id = ?',
+                         [*unique, g.active_engagement_id]).fetchone()[0]
+    return found == len(unique)
+
+
 @relationships_bp.route('/paths', methods=['POST'])
 @require_auth
 @require_engagement_access('editor')
@@ -315,6 +326,12 @@ def save_attack_path():
     if not all(k in data for k in ['name', 'start_id', 'end_id', 'path_data']):
         return jsonify({"error": "name, start_id, end_id, and path_data are required"}), 400
 
+    # Every evidence ID must be the active engagement's (sibling of M-15, retest 2 L-27)
+    path_ids = [step.get('id') if isinstance(step, dict) else step for step in data['path_data']] \
+        if isinstance(data['path_data'], list) else None
+    if path_ids is None or not _all_engagement_evidence([data['start_id'], data['end_id'], *path_ids]):
+        return jsonify({"error": "start_id, end_id and path_data must be evidence in the active engagement"}), 400
+
     dao = AttackPathDAO()
     path_id = dao.save_path(
         name=data['name'],
@@ -322,7 +339,7 @@ def save_attack_path():
         end_id=data['end_id'],
         path_data=data['path_data'],
         description=data.get('description'),
-        created_by=getattr(g, 'user_id', None)
+        created_by=g.current_user
     )
 
     logger.info(f"Saved attack path '{data['name']}' with id {path_id}")

@@ -60,3 +60,21 @@ def test_ids_must_be_integers(evidence, body):
     resp = viewer.post('/api/relationships/path', json=body) if body is not None else \
         viewer.post('/api/relationships/path', data='x', content_type='text/plain')
     assert resp.status_code == 400
+
+
+# ------------------------------------------------------------------ saving a path (retest 2: L-27)
+
+def test_a_saved_path_may_name_only_the_active_engagements_evidence(evidence):
+    outsider = evidence.client_for('outsider', active_engagement=ENGAGEMENT_B)
+    a, b = evidence.evidence[ENGAGEMENT_A], evidence.evidence[ENGAGEMENT_B]
+    for body in ({'start_id': a, 'end_id': b}, {'start_id': b, 'end_id': b, 'path_data': [{'id': a}]},
+                 {'start_id': 'x', 'end_id': b}):
+        resp = outsider.post('/api/relationships/paths', json={'name': 'p', 'path_data': [{'id': b}], **body})
+        assert resp.status_code == 400, body
+    ok = outsider.post('/api/relationships/paths', json={'name': 'p', 'start_id': b, 'end_id': b,
+                                                          'path_data': [{'id': b}]})
+    assert ok.status_code == 201
+    conn = evidence.db()
+    row = conn.execute('SELECT engagement_id, created_by FROM attack_paths').fetchall()
+    conn.close()
+    assert [tuple(r) for r in row] == [(ENGAGEMENT_B, evidence.user_ids['outsider'])]

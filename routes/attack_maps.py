@@ -45,7 +45,7 @@ def create_map():
         'name': data['name'],
         'description': data.get('description', ''),
         'canvas_data': json.dumps(data.get('canvas_data', {})),
-        'created_by': getattr(g, 'user_id', None)
+        'created_by': g.current_user
     })
 
     attack_map = dao.find_by_id(map_id)

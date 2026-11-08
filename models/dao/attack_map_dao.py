@@ -66,7 +66,7 @@ class AttackMapDAO(BaseDAO):
             'name': f"{source['name']} (Copy)",
             'description': source.get('description', ''),
             'canvas_data': json.dumps(source.get('canvas_data', {})) if source.get('canvas_data') else None,
-            'created_by': getattr(g, 'user_id', None)
+            'created_by': getattr(g, 'current_user', None)
         })
 
         node_dao = AttackMapNodeDAO()
