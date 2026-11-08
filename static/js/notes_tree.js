@@ -203,25 +203,18 @@
                     const dragId = this._dragId;
                     const target = this._findNote(noteId);
 
-                    let parentId, sortOrder;
-                    if (li.classList.contains('drop-into')) {
-                        parentId = noteId;
-                        sortOrder = null;  // append to end of children
-                    } else if (li.classList.contains('drop-before')) {
-                        parentId = target.parent_id ?? null;
-                        sortOrder = target.sort_order;  // insert before; siblings stay >=
-                    } else {
-                        parentId = target.parent_id ?? null;
-                        sortOrder = target.sort_order + 0.5;
-                        // Tell server null and let it append below; we'll
-                        // refine ordering by passing sort_order = target+1
-                        // and bumping target side via reorder is overkill
-                        // for v1. Use null = "max+1 at the end" instead.
-                        sortOrder = null;
-                    }
-
+                    const into = li.classList.contains('drop-into');
+                    const before = li.classList.contains('drop-before');
                     li.classList.remove('drop-into', 'drop-before', 'drop-after');
-                    await this._move(dragId, parentId, sortOrder);
+                    if (into) {
+                        await this._move(dragId, noteId, null);   // append to end of children
+                        return;
+                    }
+                    // Before or after the target: renumber its siblings (whole numbers only, L-23)
+                    const dragged = this._findNote(dragId);
+                    const order = this._siblingsOf(target).filter(n => n.id !== dragId);
+                    order.splice(order.findIndex(n => n.id === noteId) + (before ? 0 : 1), 0, dragged);
+                    await this._reorder(target.parent_id ?? null, order);
                 });
             });
 
@@ -306,9 +299,8 @@
             const siblings = this._siblingsOf(note);
             const idx = siblings.findIndex(s => s.id === note.id);
             if (idx <= 0) return;
-            const above = siblings[idx - 1];
-            // Swap by giving us above's sort_order; bump above to ours
-            await this._move(note.id, note.parent_id ?? null, above.sort_order - 0.5);
+            [siblings[idx - 1], siblings[idx]] = [siblings[idx], siblings[idx - 1]];
+            await this._reorder(note.parent_id ?? null, siblings);
         }
 
         async _moveDown() {
@@ -317,8 +309,8 @@
             const siblings = this._siblingsOf(note);
             const idx = siblings.findIndex(s => s.id === note.id);
             if (idx === -1 || idx >= siblings.length - 1) return;
-            const below = siblings[idx + 1];
-            await this._move(note.id, note.parent_id ?? null, below.sort_order + 0.5);
+            [siblings[idx], siblings[idx + 1]] = [siblings[idx + 1], siblings[idx]];
+            await this._reorder(note.parent_id ?? null, siblings);
         }
 
         async _indent() {
@@ -411,6 +403,27 @@
                 console.error('Move failed:', err);
                 showToast(err.message || 'Failed to move note', 'error');
             }
+        }
+
+        /**
+         * Give `ordered` (all children of parentId, in their new order) the
+         * positions 1..n. The server accepts only whole-number sort orders (H-15),
+         * so a note is never placed "between" two others with a fraction (L-23);
+         * only notes whose parent or position changes are sent.
+         */
+        async _reorder(parentId, ordered) {
+            const sid = this.cfg.scopeId();
+            try {
+                for (const [i, n] of ordered.entries()) {
+                    if (n.sort_order !== i + 1 || (n.parent_id ?? null) !== parentId) {
+                        await this.cfg.api.moveNote(sid, n.id, { parent_id: parentId, sort_order: i + 1 });
+                    }
+                }
+            } catch (err) {
+                console.error('Reorder failed:', err);
+                showToast(err.message || 'Failed to move note', 'error');
+            }
+            await this.refresh();
         }
 
         // ---------- helpers ----------

@@ -819,3 +819,29 @@ def test_every_declared_handler_in_the_source_exists(ui):
         editor_only[route] = set(missing) - set(still)
     missing = set(missing) - editor_only['/note/new'] - editor_only['/finding/new']
     assert {n: paths[n] for n in missing} == {}
+
+
+# ------------------------------------------------------------------ notes tree ordering (retest 2: L-23)
+
+def test_notes_tree_move_up_and_down_reorder_the_notes(ui):
+    """The tree sent fractional sort orders, which the H-15 integer check refuses."""
+    conn = ui.db()
+    ids = [conn.execute('INSERT INTO engagement_notes (engagement_id, content, title, sort_order) VALUES (?, ?, ?, ?)',
+                        (ENGAGEMENT_A, t, t, o)).lastrowid for t, o in (('one', 1), ('two', 2.5), ('three', 3))]
+    conn.commit()
+    conn.close()
+    order = ui.page.evaluate("""async ([engagementId, ids]) => {
+        const div = document.createElement('div');
+        div.id = 'orderTree';
+        document.body.appendChild(div);
+        const view = new NotesTreeView({ containerId: 'orderTree', toolbarId: 'x', editorPaneId: 'y',
+                                         api: API.engagements, apiNoun: 'engagement', scopeId: () => engagementId });
+        await view.refresh();
+        const titles = () => view._siblingsOf(view.notes[0]).map(n => n.title);
+        const seen = [titles()];
+        view.selectedId = ids[2]; await view._moveUp(); seen.push(titles());
+        view.selectedId = ids[0]; await view._moveDown(); seen.push(titles());
+        seen.push(view.notes.map(n => n.sort_order).every(Number.isInteger));
+        return seen;
+    }""", [ENGAGEMENT_A, ids])
+    assert order == [['one', 'two', 'three'], ['one', 'three', 'two'], ['three', 'one', 'two'], True]
