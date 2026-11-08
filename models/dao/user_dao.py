@@ -136,6 +136,7 @@ class UserDAO(BaseDAO):
         cursor.execute('DELETE FROM user_sessions WHERE user_id = ?', (user_id,))
         cursor.execute('DELETE FROM engagement_members WHERE user_id = ?', (user_id,))
         cursor.execute('DELETE FROM team_members WHERE user_id = ?', (user_id,))
+        cursor.execute('DELETE FROM command_favorites WHERE user_id = ?', (user_id,))
         cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
         deleted = cursor.rowcount > 0
         self.db.commit()

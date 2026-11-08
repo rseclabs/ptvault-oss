@@ -36,18 +36,19 @@ def list_commands():
         search_pattern = f"%{search}%"
         params.extend([search_pattern, search_pattern, search_pattern])
 
-    is_favorite = request.args.get('is_favorite')
-    if is_favorite == 'true':
-        query += " AND is_favorite = 1"
-
-    query += " ORDER BY is_favorite DESC, usage_count DESC, name ASC"
-
+    # Favorites are each user's own (L-22): command_favorites, not the shared row
+    favorites = _favorite_ids(cursor)
     cursor.execute(query, params)
     rows = cursor.fetchall()
 
     # Convert to list of dicts
     columns = [desc[0] for desc in cursor.description]
     commands = [dict(zip(columns, row)) for row in rows]
+    for cmd in commands:
+        cmd['is_favorite'] = 1 if cmd['id'] in favorites else 0
+    if request.args.get('is_favorite') == 'true':
+        commands = [cmd for cmd in commands if cmd['is_favorite']]
+    commands.sort(key=lambda cmd: (-cmd['is_favorite'], -(cmd.get('usage_count') or 0), cmd.get('name') or ''))
 
     # Parse variables JSON for each command
     for cmd in commands:
@@ -74,6 +75,7 @@ def get_command(command_id):
 
     columns = [desc[0] for desc in cursor.description]
     command = dict(zip(columns, row))
+    command['is_favorite'] = 1 if command_id in _favorite_ids(cursor) else 0
 
     # Parse variables JSON
     if command.get('variables'):
@@ -245,6 +247,7 @@ def delete_command(command_id):
     if not can_edit_shared(row[1]):
         return jsonify({"error": "only the creator or an admin can change this"}), 403
 
+    cursor.execute("DELETE FROM command_favorites WHERE command_id = ?", (command_id,))
     cursor.execute("DELETE FROM commands WHERE id = ?", (command_id,))
     g.db.commit()
 
@@ -256,21 +259,30 @@ def delete_command(command_id):
 @require_role('admin', 'tester')
 @handle_errors
 def toggle_favorite(command_id):
-    """Toggle favorite status for a command."""
+    """Toggle the current user's favorite on a command (L-22: per user, not shared)."""
     cursor = g.db.cursor()
 
-    # Check if command exists
-    cursor.execute("SELECT is_favorite FROM commands WHERE id = ?", (command_id,))
-    row = cursor.fetchone()
-
-    if not row:
+    cursor.execute("SELECT 1 FROM commands WHERE id = ?", (command_id,))
+    if not cursor.fetchone():
         return jsonify({"error": "Command not found"}), 404
 
-    new_status = 0 if row[0] == 1 else 1
-    cursor.execute("UPDATE commands SET is_favorite = ? WHERE id = ?", (new_status, command_id))
+    if command_id in _favorite_ids(cursor):
+        cursor.execute("DELETE FROM command_favorites WHERE user_id = ? AND command_id = ?",
+                       (g.current_user, command_id))
+        new_status = 0
+    else:
+        cursor.execute("INSERT OR IGNORE INTO command_favorites (user_id, command_id) VALUES (?, ?)",
+                       (g.current_user, command_id))
+        new_status = 1
     g.db.commit()
 
     return jsonify({"is_favorite": new_status}), 200
+
+
+def _favorite_ids(cursor):
+    """IDs of the commands the current user has starred."""
+    cursor.execute("SELECT command_id FROM command_favorites WHERE user_id = ?", (g.current_user,))
+    return {row[0] for row in cursor.fetchall()}
 
 
 @commands_bp.route('/<int:command_id>/usage', methods=['POST'])
