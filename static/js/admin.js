@@ -147,7 +147,7 @@ const AdminPanel = {
                     <p class="form-info">Choose the database passphrase. The key is derived from it and held in memory only: after every restart PTVault stays locked until this passphrase is entered. It cannot be recovered if lost. The database is encrypted in place with a backup created automatically.</p>
                     <div class="form-group">
                         <label for="encryptionPassword">Database passphrase *</label>
-                        <input type="password" id="encryptionPassword" placeholder="At least 12 characters" autocomplete="new-password" required>
+                        <input type="password" id="encryptionPassword" placeholder="12+ characters, upper and lower case, a digit" autocomplete="new-password" minlength="12" required>
                     </div>
                     <div class="form-actions">
                         <button class="btn btn-secondary" onclick="AdminPanel.hideEncryptionForm()">Cancel</button>
@@ -785,7 +785,6 @@ const AdminPanel = {
     hideEncryptionForm() {
         document.getElementById('encryptionEnableForm').style.display = 'none';
         document.getElementById('encryptionPassword').value = '';
-        document.getElementById('encryptionKeyPath').value = '';
     },
 
     hideRecoverForm() {
@@ -796,8 +795,15 @@ const AdminPanel = {
     async confirmEnableEncryption() {
         const password = document.getElementById('encryptionPassword').value;
 
-        if (!password) {
-            showToast('Password is required', 'error');
+        // The same policy the server applies (validate_password_strength, M-12).
+        const problem = !password ? 'Password is required'
+            : password.length < 12 ? 'Passphrase must be at least 12 characters'
+            : !/\p{Lu}/u.test(password) ? 'Passphrase must contain an uppercase letter'
+            : !/\p{Ll}/u.test(password) ? 'Passphrase must contain a lowercase letter'
+            : !/\p{Nd}/u.test(password) ? 'Passphrase must contain a digit'
+            : null;
+        if (problem) {
+            showToast(problem, 'error');
             return;
         }
 

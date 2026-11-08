@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify, g, send_from_directory, redirect
 from middleware.auth import require_auth, require_role
 from models.auth import revoke_all_sessions
 from utils.audit_logger import AuditLogger
-from utils.error_handler import handle_errors, internal_error
+from utils.error_handler import handle_errors, internal_error, validate_password_strength
 from utils.security_headers import CYBERCHEF_CSP
 import logging
 import os
@@ -440,6 +440,11 @@ def encryption_enable():
     data = request.get_json()
     if not data or 'password' not in data:
         return jsonify({'error': 'Password is required to derive encryption key'}), 400
+    # The passphrase is the only protection for the key (M-8): the same policy as
+    # setup applies (M-12). ValidationError becomes a 400.
+    if not isinstance(data['password'], str):
+        return jsonify({'error': 'Password must be text'}), 400
+    validate_password_strength(data['password'])
 
     # The key is held in memory (M-8). A key file location is set only through
     # PTVAULT_ENCRYPTION_KEY_FILE: accepting a path here let an admin write, and

@@ -683,3 +683,31 @@ def test_editor_pages_render_stored_values_as_text(swept, path):
     page.wait_for_timeout(300)
     _assert_clean(page)
     assert page.evaluate(SHOWN, ['body', [P, SHORT_P]]) > 0, page.evaluate('() => document.body.innerText.slice(0, 600)')
+
+
+# ------------------------------------------------------------------ form checks
+
+def test_encrypt_database_form_applies_the_passphrase_policy(ui):
+    """M-12: the Admin > Settings form refuses a weak passphrase before sending it."""
+    got = ui.page.evaluate("""async () => {
+        AdminPanel.activeTab = 'settings';
+        document.getElementById('xssScratch').innerHTML = AdminPanel.renderSettingsTab();
+        const sent = [], toasts = [];
+        const enable = API.admin.enableEncryption, toast = window.showToast;
+        API.admin.enableEncryption = async p => { sent.push(p); return { message: 'ok' }; };
+        window.showToast = (m, kind) => toasts.push(kind);
+        AdminPanel.loadEncryptionStatus = async () => {};
+        try {
+            for (const p of ['', 'short-Pass1', 'alllowercase-123', 'ALLUPPERCASE-123', 'No-Digits-Here-At-All',
+                             'Enable-Passphrase-123', 'Élan-passphrase-1']) {
+                document.getElementById('encryptionPassword').value = p;
+                await AdminPanel.confirmEnableEncryption();
+            }
+        } finally {
+            API.admin.enableEncryption = enable;
+            window.showToast = toast;
+        }
+        return { sent, toasts };
+    }""")
+    assert got['sent'] == ['Enable-Passphrase-123', 'Élan-passphrase-1']
+    assert got['toasts'] == ['error'] * 5 + ['success'] * 2
