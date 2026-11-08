@@ -407,31 +407,9 @@ class EngagementDAO(BaseDAO):
         if not self.exists({'id': engagement_id}):
             return False
 
-        # Get all host IDs for this engagement
-        cursor.execute("SELECT id FROM hosts WHERE engagement_id = ?", (engagement_id,))
-        host_ids = [row[0] for row in cursor.fetchall()]
-
-        # Delete host-related data
-        for host_id in host_ids:
-            cursor.execute("DELETE FROM host_notes WHERE host_id = ?", (host_id,))
-            cursor.execute("DELETE FROM host_ports WHERE host_id = ?", (host_id,))
-            cursor.execute("DELETE FROM host_credentials WHERE host_id = ?", (host_id,))
-            cursor.execute("DELETE FROM evidence_hosts WHERE host_id = ?", (host_id,))
-
-        # Delete hosts
-        cursor.execute("DELETE FROM hosts WHERE engagement_id = ?", (engagement_id,))
-
-        # Delete evidence
-        cursor.execute("DELETE FROM evidence WHERE engagement_id = ?", (engagement_id,))
-
-        # Delete engagement-level tables
-        cursor.execute("DELETE FROM engagement_notes WHERE engagement_id = ?", (engagement_id,))
-        cursor.execute("DELETE FROM engagement_credentials WHERE engagement_id = ?", (engagement_id,))
-        cursor.execute("DELETE FROM terminal_dumps WHERE engagement_id = ?", (engagement_id,))
-        cursor.execute("DELETE FROM engagement_findings WHERE engagement_id = ?", (engagement_id,))
-
-        # Delete the engagement itself
-        cursor.execute("DELETE FROM engagements WHERE id = ?", (engagement_id,))
+        # Every engagement-scoped table (M-13); see models/engagement_cleanup.py
+        from models.engagement_cleanup import delete_engagement
+        delete_engagement(cursor, engagement_id)
 
         self.db.commit()
 

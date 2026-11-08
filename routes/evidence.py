@@ -27,6 +27,7 @@ from utils.audit_logger import audit_create, audit_delete
 from utils.helpers import EVIDENCE_TYPES, normalize_tags
 from config import Config
 from models import encryption, upload_store
+from models.engagement_cleanup import delete_evidence_rows
 import io
 import os
 import json
@@ -610,8 +611,9 @@ def delete_evidence(evidence_id):
                 # Log but don't fail the deletion
                 logger.warning("Could not delete file %s: %s", full_path, e)
 
-    # Delete evidence record
-    cursor.execute("DELETE FROM evidence WHERE id = ?", (evidence_id,))
+    # Delete the record and every link to it (tags, hosts, relationships), so
+    # nothing is left for another record to pick up (M-13)
+    delete_evidence_rows(cursor, [evidence_id])
     audit_delete('evidence', evidence_id, engagement_id=g.active_engagement_id)
     g.db.commit()
 
@@ -1096,8 +1098,8 @@ def bulk_evidence_operation():
                 row = cursor.fetchone()
                 file_path = row[0] if row else None
 
-                # Delete evidence record
-                cursor.execute("DELETE FROM evidence WHERE id = ?", (evidence_id,))
+                # Delete the record and every link to it (M-13)
+                delete_evidence_rows(cursor, [evidence_id])
 
                 # Delete the file only if it lies inside this engagement's upload folder
                 full_path = resolve_evidence_file(file_path, g.active_engagement_id, Config.UPLOAD_FOLDER)

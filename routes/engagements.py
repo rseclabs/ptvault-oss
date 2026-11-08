@@ -14,6 +14,8 @@ from utils.helpers import (
 )
 from utils.engagement_import import ImportValidationError, validate_import
 from models.dao.note_tree_dao import NoteTreeDAO, optional_int
+from models.engagement_cleanup import delete_engagement as delete_engagement_rows, remove_upload_folder
+from config import Config
 
 
 # Engagement imports: each collection must be a list of objects, and no
@@ -715,43 +717,20 @@ def delete_engagement(engagement_id):
     if not cursor.fetchone():
         return jsonify({"error": "engagement not found"}), 404
 
-    # Get all host IDs for this engagement
-    cursor.execute("SELECT id FROM hosts WHERE engagement_id = ?", (engagement_id,))
-    host_ids = [row[0] for row in cursor.fetchall()]
-
-    # Delete host-related data for each host
-    for host_id in host_ids:
-        cursor.execute("DELETE FROM host_notes WHERE host_id = ?", (host_id,))
-        cursor.execute("DELETE FROM host_ports WHERE host_id = ?", (host_id,))
-        cursor.execute("DELETE FROM host_credentials WHERE host_id = ?", (host_id,))
-        cursor.execute("DELETE FROM evidence_hosts WHERE host_id = ?", (host_id,))
-
-    # Delete all hosts for this engagement
-    cursor.execute("DELETE FROM hosts WHERE engagement_id = ?", (engagement_id,))
-
-    # Delete all evidence for this engagement
-    cursor.execute("DELETE FROM evidence WHERE engagement_id = ?", (engagement_id,))
-
-    # Delete engagement notes
-    cursor.execute("DELETE FROM engagement_notes WHERE engagement_id = ?", (engagement_id,))
-
-    # Delete engagement credentials
-    cursor.execute("DELETE FROM engagement_credentials WHERE engagement_id = ?", (engagement_id,))
-
-    # Delete terminal dumps
-    cursor.execute("DELETE FROM terminal_dumps WHERE engagement_id = ?", (engagement_id,))
-
-    # Delete engagement findings
-    cursor.execute("DELETE FROM engagement_findings WHERE engagement_id = ?", (engagement_id,))
+    # Every engagement-scoped table, in one transaction (M-13): members, reports,
+    # attack maps, plans and the rest used to survive and pass to the next
+    # engagement that reused the ID.
+    delete_engagement_rows(cursor, engagement_id)
 
     # Clear active engagement if it's the one being deleted
     if session.get('active_engagement_id') == engagement_id:
         session.pop('active_engagement_id', None)
 
-    # Delete the engagement
-    cursor.execute("DELETE FROM engagements WHERE id = ?", (engagement_id,))
     audit_delete('engagement', engagement_id)
     g.db.commit()
+
+    # The evidence files go too, once the rows are gone
+    remove_upload_folder(Config.UPLOAD_FOLDER, engagement_id)
 
     return '', 204
 
