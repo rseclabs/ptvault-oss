@@ -3220,11 +3220,11 @@ const ReportingManager = {
                     <div class="form-row">
                         <div class="form-group">
                             <label>CVSS Score</label>
-                            <input type="number" id="editorScore" value="${d.score || 0}" min="0" max="10" step="0.1" class="form-control" onchange="ReportingManager.updateCvssPreview()">
+                            <input type="number" id="editorScore" value="${this._number(d.score, 0, 0, 10)}" min="0" max="10" step="0.1" class="form-control" onchange="ReportingManager.updateCvssPreview()">
                         </div>
                         <div class="form-group cvss-severity-display">
                             <label>Severity</label>
-                            <span id="cvssSeverityBadge" class="severity-badge severity-${this.getCvssSeverity(d.score || 0).toLowerCase()}">${this.getCvssSeverity(d.score || 0)}</span>
+                            <span id="cvssSeverityBadge" class="severity-badge severity-${this.getCvssSeverity(this._number(d.score, 0, 0, 10)).toLowerCase()}">${this.getCvssSeverity(this._number(d.score, 0, 0, 10))}</span>
                         </div>
                     </div>
                     <div class="form-group">
@@ -3652,12 +3652,14 @@ const ReportingManager = {
             'A': { name: 'Availability', values: { 'N': 'None', 'L': 'Low', 'H': 'High' } }
         };
 
+        // The vector is stored text: look metrics up as own properties only
+        // (not "constructor" or "__proto__"), and escape what is shown (H-16).
         const breakdown = parts.map(part => {
             const [key, val] = part.split(':');
+            if (!Object.hasOwn(labels, key)) return null;
             const label = labels[key];
-            if (!label) return null;
-            const valueName = label.values[val] || val;
-            return `<span class="cvss-metric"><span class="metric-name">${label.name}:</span> <span class="metric-value">${valueName}</span></span>`;
+            const valueName = Object.hasOwn(label.values, val) ? label.values[val] : val;
+            return `<span class="cvss-metric"><span class="metric-name">${escapeHtml(label.name)}:</span> <span class="metric-value">${escapeHtml(valueName)}</span></span>`;
         }).filter(Boolean).join('');
 
         return `<div class="cvss-breakdown">${breakdown}</div>`;

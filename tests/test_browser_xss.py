@@ -383,3 +383,27 @@ def test_note_trees_escape_stored_ordering_fields(ui):
     }""", [host_id, ENGAGEMENT_A])
     assert count == 4
     _assert_clean(ui.page)
+
+
+# The breakdown splits the vector on '/' and ':', so this payload uses neither.
+CVSS_P = '<img src=x data-pwn=1 onerror="window.__xss.push(\'cvss\')">'
+
+
+def test_cvss_card_breakdown_escapes_vector_values(ui):
+    """H-16: a CVSS card's vector values (and the editor's score) render as text."""
+    vectors = [f'CVSS:3.1/AV:{CVSS_P}/AC:L', f'CVSS:3.1/{CVSS_P}:N', 'CVSS:3.1/constructor:N/__proto__:x/AV:N']
+    rendered = ui.page.evaluate("""([vectors, p]) => {
+        const out = [];
+        for (const vector of vectors) {
+            out.push(ReportingManager.renderCvssBreakdown(vector));
+            ReportingManager.workspaceItems = [{ id: 'c1', type: 'format_tool', format_tool_id: 'cvsscard',
+                                                 title: 'c', toolData: { score: p, vector } }];
+            document.getElementById('reportPreview').innerHTML = ReportingManager.renderPreview();
+            ReportingManager.editingToolData = { score: p, vector };
+            document.getElementById('xssScratch').innerHTML = ReportingManager.getEditorBodyForTool('cvsscard');
+        }
+        document.getElementById('workspaceItems').innerHTML = out.join('');
+        return out;
+    }""", [vectors, P])
+    _assert_clean(ui.page)
+    assert 'Attack Complexity' in rendered[0] and 'Network' in rendered[2]
