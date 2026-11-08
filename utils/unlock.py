@@ -56,7 +56,9 @@ def unlock_database():
     # and say so; the details go to the log (L-17).
     try:
         from models import database
-        database.run_migrations()
+        # run_migrations() reports a failed migration by returning False
+        if database.run_migrations() is False:
+            raise RuntimeError('a migration failed (see the log above)')
     except Exception:
         logger.exception('Migrations after unlock failed; the database stays locked')
         encryption.lock()

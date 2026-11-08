@@ -113,8 +113,12 @@ def test_passphrase_from_the_environment_unlocks_at_start(data_dir, monkeypatch)
 
 @pytest.fixture
 def gated_app(data_dir):
+    from tests.conftest import _init_test_db
     from utils.unlock import locked_gate, unlock_bp
     from utils.csrf import csrf_protect
+    conn = encryption.get_connection(Config.DATABASE_PATH)   # the real schema, so migrations on unlock succeed
+    _init_test_db(conn)
+    conn.close()
     encryption.setup_encryption(PASSPHRASE)
     _restart()
     app = Flask(__name__, template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'templates'))
@@ -190,3 +194,12 @@ def test_a_migration_failure_after_unlock_keeps_the_database_locked(gated_app, m
     failing[0] = False                                               # fixed: the next attempt unlocks
     assert _post_unlock(gated_app, PASSPHRASE).status_code == 200
     assert not encryption.is_locked()
+
+
+def test_a_migration_reported_as_failed_also_keeps_it_locked(gated_app, monkeypatch):
+    """L-17: run_migrations() reports a failed migration by returning False, not by raising."""
+    import models.database
+    monkeypatch.setattr(models.database, 'run_migrations', lambda: False)
+    resp = _post_unlock(gated_app, PASSPHRASE)
+    assert resp.status_code == 500 and resp.get_json()['error'] == 'migration_failed'
+    assert encryption.is_locked()
