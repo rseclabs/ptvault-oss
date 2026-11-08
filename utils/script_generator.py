@@ -81,6 +81,37 @@ def _bash_escape_dquoted(s):
     return s
 
 
+# Characters that end a line for bash or PowerShell (PowerShell also accepts
+# NEL and the Unicode line/paragraph separators in some hosts).
+_LINE_BREAKS = ('\r\n', '\r', '\n', '\x0b', '\x0c', '\x85', '\u2028', '\u2029')
+
+# PowerShell treats these Unicode quotes exactly like " and ' (its tokenizer
+# maps them), so escaping only the ASCII quote leaves a way out of a string.
+_PS_DOUBLE_QUOTES = ('"', '\u201c', '\u201d', '\u201e')
+_PS_SINGLE_QUOTES = ("'", '\u2018', '\u2019', '\u201a', '\u201b')
+
+
+def _comment_text(s):
+    """Text for a '#' comment line in bash or PowerShell: line breaks become spaces.
+
+    A newline in a plan name or description would otherwise end the comment and
+    put the rest of the text at the top of the script as code, before the
+    hostname confirmation.
+    """
+    s = str(s)
+    for brk in _LINE_BREAKS:
+        s = s.replace(brk, ' ')
+    return s
+
+
+def _powershell_escape_squoted(s):
+    """Escape a string for a PowerShell single-quoted string: double every quote character."""
+    s = str(s)
+    for quote in _PS_SINGLE_QUOTES:
+        s = s.replace(quote, quote * 2)
+    return s
+
+
 def _bash_escape_squoted(s):
     """Escape a string for safe interpolation inside bash single quotes."""
     # In single-quoted bash, the only special char is ' itself.
@@ -124,9 +155,10 @@ def _powershell_escape_dquoted(s):
     that confuse the Windows PowerShell 5.1 parser and cascade into
     unrelated parse errors further down the script.
     """
+    s = s.replace('`', '``')
+    for quote in _PS_DOUBLE_QUOTES:
+        s = s.replace(quote, '`' + quote)
     return (s
-            .replace('`', '``')
-            .replace('"', '`"')
             .replace('$', '`$')
             .replace('\r', '`r')
             .replace('\n', '`n')
@@ -181,7 +213,7 @@ def _powershell_defaults_hashtable(args):
     if not args:
         return '@{}'
     pairs = '; '.join(
-        f"'{_shell_safe_name(a['name'])}' = '{a['default'].replace(chr(39), chr(39) * 2)}'" for a in args
+        f"'{_shell_safe_name(a['name'])}' = '{_powershell_escape_squoted(a['default'])}'" for a in args
     )
     return '@{ ' + pairs + ' }'
 
@@ -584,10 +616,10 @@ def generate_bash_script(plan, items):
 
     script = f'''#!/bin/bash
 # ============================================================================
-# PTVault Test Plan: {plan.get('name', 'Unnamed Plan')}
+# PTVault Test Plan: {_comment_text(plan.get('name') or 'Unnamed Plan')}
 # Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 # ============================================================================
-# Description: {plan.get('description', 'No description')}
+# Description: {_comment_text(plan.get('description') or 'No description')}
 # Total Tests: {len(compatible_items)}
 # ============================================================================
 #
@@ -766,7 +798,7 @@ show_menu() {
     echo -e "${CYAN}+==============================================================+${NC}"
 '''
 
-    script += f'    echo -e "${{CYAN}}|${{NC}}  Plan: {plan.get("name", "Unnamed")[:50]:<52} ${{CYAN}}|${{NC}}"\n'
+    script += f'    echo -e "${{CYAN}}|${{NC}}  Plan: {_bash_escape_dquoted(str(plan.get("name") or "Unnamed")[:50]):<52} ${{CYAN}}|${{NC}}"\n'
     script += '''    echo -e "${CYAN}+==============================================================+${NC}"
     echo ""
 '''
@@ -892,7 +924,7 @@ select_execution_mode() {
     echo -e "${CYAN}+==============================================================+${NC}"
 '''
 
-    script += f'    echo -e "${{CYAN}}|${{NC}}  Plan: {plan.get("name", "Unnamed")[:50]:<52} ${{CYAN}}|${{NC}}"\n'
+    script += f'    echo -e "${{CYAN}}|${{NC}}  Plan: {_bash_escape_dquoted(str(plan.get("name") or "Unnamed")[:50]):<52} ${{CYAN}}|${{NC}}"\n'
     script += f'    echo -e "${{CYAN}}|${{NC}}  Tests: {len(compatible_items):<53} ${{CYAN}}|${{NC}}"\n'
 
     script += '''    echo -e "${CYAN}+==============================================================+${NC}"
@@ -996,10 +1028,10 @@ def generate_powershell_script(plan, items):
             compatible_items.append(item)
 
     script = f'''﻿# ============================================================================
-# PTVault Test Plan: {plan.get('name', 'Unnamed Plan')}
+# PTVault Test Plan: {_comment_text(plan.get('name') or 'Unnamed Plan')}
 # Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 # ============================================================================
-# Description: {plan.get('description', 'No description')}
+# Description: {_comment_text(plan.get('description') or 'No description')}
 # Total Tests: {len(compatible_items)}
 # ============================================================================
 #
@@ -1270,7 +1302,7 @@ function Show-Menu {
     Write-Host "+==============================================================+" -ForegroundColor Cyan
 '''
 
-    script += f'    Write-Host "|  Plan: {plan.get("name", "Unnamed")[:50]:<52} |" -ForegroundColor Cyan\n'
+    script += f'    Write-Host "|  Plan: {_powershell_escape_dquoted(str(plan.get("name") or "Unnamed")[:50]):<52} |" -ForegroundColor Cyan\n'
     script += '''    Write-Host "+==============================================================+" -ForegroundColor Cyan
     Write-Host ""
 '''
@@ -1400,7 +1432,7 @@ function Select-ExecutionMode {
     Write-Host "+==============================================================+" -ForegroundColor Cyan
 '''
 
-    script += f'    Write-Host "|  Plan: {plan.get("name", "Unnamed")[:50]:<52} |" -ForegroundColor Cyan\n'
+    script += f'    Write-Host "|  Plan: {_powershell_escape_dquoted(str(plan.get("name") or "Unnamed")[:50]):<52} |" -ForegroundColor Cyan\n'
     script += f'    Write-Host "|  Tests: {len(compatible_items):<53} |" -ForegroundColor Cyan\n'
 
     script += '''    Write-Host "+==============================================================+" -ForegroundColor Cyan
