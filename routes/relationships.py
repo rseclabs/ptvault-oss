@@ -191,6 +191,7 @@ def delete_node_relationships(node_type, node_id):
 
 @relationships_bp.route('/path', methods=['POST'])
 @require_auth
+@require_engagement_access('viewer')
 @handle_errors
 def find_attack_path():
     """Find attack path between two evidence items.
@@ -208,10 +209,10 @@ def find_attack_path():
         POST /api/relationships/path
         -> {"path": [...], "length": 3}
     """
-    data = request.get_json()
-
-    if not all(k in data for k in ['start_id', 'end_id']):
-        return jsonify({"error": "start_id and end_id are required"}), 400
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or not all(
+            isinstance(data.get(k), int) and not isinstance(data.get(k), bool) for k in ('start_id', 'end_id')):
+        return jsonify({"error": "start_id and end_id must be integers"}), 400
 
     dao = RelationshipDAO()
     path = dao.find_path(data['start_id'], data['end_id'])

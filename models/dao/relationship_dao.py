@@ -206,9 +206,9 @@ class RelationshipDAO(BaseDAO):
                 GROUP_CONCAT(DISTINCT eh.host_id) as host_ids
             FROM evidence e
             LEFT JOIN evidence_hosts eh ON e.id = eh.evidence_id
-            WHERE e.id IN ({placeholders})
+            WHERE e.id IN ({placeholders}) AND e.engagement_id = ?
             GROUP BY e.id
-        ''', evidence_ids)
+        ''', [*evidence_ids, self.engagement_id])          # only the active engagement's evidence (M-15)
 
         evidence_map = {}
         for row in cursor.fetchall():
