@@ -108,7 +108,9 @@ def setup():
             except Exception:
                 import logging
                 logging.getLogger(__name__).exception("Database encryption failed during setup")
-                if required:
+                # Roll back only while the plaintext database is still the live file;
+                # an encrypted one that opens means encryption did complete (L-33)
+                if required and not _encrypted_and_open():
                     _undo_setup(user_id)
                     return jsonify({"error": "Could not encrypt the database, so setup was not completed. "
                                              "Check free disk space and permissions on the data folder, "
@@ -158,6 +160,12 @@ def setup():
     finally:
         if conn is not None:
             conn.close()
+
+
+def _encrypted_and_open():
+    """True when the live database is encrypted and its key is available."""
+    from models import encryption
+    return encryption.is_encryption_enabled() and not encryption.is_locked()
 
 
 def _undo_setup(user_id):

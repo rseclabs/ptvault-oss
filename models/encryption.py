@@ -125,7 +125,14 @@ def _remember_key(derived_key):
     global _unlocked_key
     _unlocked_key = derived_key
     if getattr(Config, 'STORE_KEY_FILE', False):
-        _write_key_file(derived_key)
+        # The database is already encrypted with this key: failing to also write
+        # the opt-in key file must not fail the caller (setup would roll back
+        # against the encrypted file; retest 2 L-33). Unlock asks next time.
+        try:
+            _write_key_file(derived_key)
+        except OSError as e:
+            logger.error("Could not write the key file %s (%s); the key is held in memory only",
+                         Config.ENCRYPTION_KEY_FILE, e)
 
 
 def _key_opens_database(key):
@@ -341,6 +348,9 @@ def setup_encryption(password):
     if not is_encryption_available():
         logger.warning("pysqlcipher3 not installed — skipping encryption setup")
         return
+    # A new salt would make the existing encrypted database unopenable (L-33)
+    if _encrypted_db_present():
+        raise RuntimeError("The database is already encrypted")
 
     salt = generate_salt()
     derived_key = derive_key(password, salt)

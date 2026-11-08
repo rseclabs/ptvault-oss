@@ -204,3 +204,31 @@ def test_evidence_files_follow_the_database_encryption(fresh_app, monkeypatch):
     resp = client.post('/api/admin/encryption/enable', json={'password': PASSWORD}, headers=headers)
     assert resp.status_code == 200, resp.get_json()
     assert on_disk().startswith(upload_store.MAGIC) and downloaded() == secret
+
+
+# ------------------------------------------------------------------ retest 2: L-33
+
+def test_a_key_file_that_cannot_be_written_does_not_undo_an_encrypted_setup(fresh_app, monkeypatch):
+    from config import Config
+    monkeypatch.setattr(Config, 'ENCRYPTION_REQUIRED', True)
+    monkeypatch.setattr(Config, 'STORE_KEY_FILE', True)
+
+    def unwritable(key):
+        raise OSError('read-only key folder')
+    monkeypatch.setattr(encryption, '_write_key_file', unwritable)
+    client = fresh_app.test_client()
+    resp = _setup(client)
+    assert resp.status_code == 201, resp.get_json()
+    assert _is_encrypted() and _user_count() == 1
+    assert client.get('/api/engagements').status_code == 200
+
+
+def test_setup_encryption_never_replaces_the_salt_of_an_encrypted_database(fresh_app):
+    from config import Config
+    encryption.setup_encryption(PASSWORD)
+    salt = open(Config.ENCRYPTION_SALT_FILE).read()
+    with pytest.raises(RuntimeError):
+        encryption.setup_encryption('Another-Passphrase-123')
+    assert open(Config.ENCRYPTION_SALT_FILE).read() == salt
+    encryption.lock()
+    encryption.unlock(PASSWORD)                                       # still opens with the first passphrase
