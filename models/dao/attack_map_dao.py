@@ -114,8 +114,11 @@ class AttackMapNodeDAO(BaseDAO):
     def __init__(self):
         super().__init__('attack_map_nodes', engagement_scoped=False)
 
-    def batch_update_positions(self, updates: List[Dict[str, Any]]) -> int:
-        """Batch update node positions. Returns count of updated nodes."""
+    def batch_update_positions(self, map_id: int, updates: List[Dict[str, Any]]) -> int:
+        """Batch update positions of nodes on one map. Returns count of updated nodes.
+
+        Node ids that are not on map_id are ignored.
+        """
         cursor = self.db.cursor()
         count = 0
         for update in updates:
@@ -124,8 +127,8 @@ class AttackMapNodeDAO(BaseDAO):
             y = update.get('y')
             if node_id is not None and x is not None and y is not None:
                 cursor.execute(
-                    'UPDATE attack_map_nodes SET x = ?, y = ? WHERE id = ?',
-                    (x, y, node_id)
+                    'UPDATE attack_map_nodes SET x = ?, y = ? WHERE id = ? AND map_id = ?',
+                    (x, y, node_id, map_id)
                 )
                 count += cursor.rowcount
         self.db.commit()

@@ -86,8 +86,10 @@ class BaseDAO:
             >>> dao._build_where_clause({'status': 'active', 'name': 'Test'})
             ("status = ? AND name = ? AND engagement_id = ?", ['active', 'Test', 1])
         """
-        # Add engagement filter if scoped
-        if self.engagement_scoped and self.engagement_id:
+        # Scoped tables always filter by engagement. With no active
+        # engagement the filter is "engagement_id = NULL", which matches no
+        # rows: fail closed rather than return every engagement's data.
+        if self.engagement_scoped:
             filters = {**filters, 'engagement_id': self.engagement_id}
 
         where_parts = []
@@ -220,8 +222,10 @@ class BaseDAO:
             >>> dao.create({'name': 'Test', 'status': 'active'})
             123
         """
-        # Add engagement_id if scoped
-        if self.engagement_scoped and self.engagement_id:
+        # Scoped records always belong to the active engagement.
+        if self.engagement_scoped:
+            if not self.engagement_id:
+                raise ValueError(f"no active engagement for {self.table_name} record")
             data = {**data, 'engagement_id': self.engagement_id}
 
         columns = ', '.join(data.keys())

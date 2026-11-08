@@ -44,6 +44,9 @@ class RelationshipDAO(BaseDAO):
         """
         if source_node_type == target_node_type and source_node_id == target_node_id:
             raise ValueError("Cannot create relationship from node to itself")
+        for node_type, node_id in ((source_node_type, source_node_id), (target_node_type, target_node_id)):
+            if not self.node_in_engagement(node_type, node_id):
+                raise ValueError(f"{node_type} {node_id} not found in the active engagement")
 
         data = {
             'source_node_type': source_node_type,
@@ -59,6 +62,29 @@ class RelationshipDAO(BaseDAO):
         rel_id = self.create(data)
         logger.info(f"Created relationship: {source_node_type}_{source_node_id} -> {target_node_type}_{target_node_id} ({relationship_type})")
         return rel_id
+
+    # Where each node type lives; notes and credentials belong either to the
+    # engagement directly or to one of its hosts.
+    _NODE_LOOKUPS = {
+        'evidence': ['SELECT 1 FROM evidence WHERE id = ? AND engagement_id = ?'],
+        'finding': ['SELECT 1 FROM engagement_findings WHERE id = ? AND engagement_id = ?'],
+        'note': ['SELECT 1 FROM engagement_notes WHERE id = ? AND engagement_id = ?',
+                 'SELECT 1 FROM host_notes n JOIN hosts h ON n.host_id = h.id WHERE n.id = ? AND h.engagement_id = ?'],
+        'credential': ['SELECT 1 FROM engagement_credentials WHERE id = ? AND engagement_id = ?',
+                       'SELECT 1 FROM host_credentials c JOIN hosts h ON c.host_id = h.id '
+                       'WHERE c.id = ? AND h.engagement_id = ?'],
+    }
+
+    def node_in_engagement(self, node_type: str, node_id: int) -> bool:
+        """True if the node exists in the active engagement."""
+        if not self.engagement_id:
+            return False
+        cursor = self.db.cursor()
+        for query in self._NODE_LOOKUPS.get(node_type, []):
+            cursor.execute(query, (node_id, self.engagement_id))
+            if cursor.fetchone():
+                return True
+        return False
 
     def get_relationships_for_node(self, node_type: str, node_id: int) -> List[Dict]:
         """Get all relationships for a node (both incoming and outgoing).

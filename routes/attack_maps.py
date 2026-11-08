@@ -198,6 +198,8 @@ def update_node(map_id, node_id):
     data = request.get_json()
     if not data:
         return jsonify({"error": "No data provided"}), 400
+    if not _map_in_engagement(map_id):
+        return jsonify({"error": "Map not found"}), 404
 
     node_dao = AttackMapNodeDAO()
     existing = node_dao.find_by_id(node_id)
@@ -231,6 +233,8 @@ def update_node(map_id, node_id):
 @handle_errors
 def delete_node(map_id, node_id):
     """Delete a node and its connected edges."""
+    if not _map_in_engagement(map_id):
+        return jsonify({"error": "Map not found"}), 404
     node_dao = AttackMapNodeDAO()
     existing = node_dao.find_by_id(node_id)
     if not existing or existing['map_id'] != map_id:
@@ -254,9 +258,11 @@ def batch_update_nodes(map_id):
     data = request.get_json()
     if not data or not isinstance(data.get('updates'), list):
         return jsonify({"error": "updates array is required"}), 400
+    if not _map_in_engagement(map_id):
+        return jsonify({"error": "Map not found"}), 404
 
     node_dao = AttackMapNodeDAO()
-    count = node_dao.batch_update_positions(data['updates'])
+    count = node_dao.batch_update_positions(map_id, data['updates'])
     _touch_map(map_id)
 
     return jsonify({"updated": count}), 200
@@ -273,6 +279,8 @@ def create_edge(map_id):
     data = request.get_json()
     if not data or not data.get('source_node_id') or not data.get('target_node_id'):
         return jsonify({"error": "source_node_id and target_node_id are required"}), 400
+    if not _map_in_engagement(map_id):
+        return jsonify({"error": "Map not found"}), 404
 
     # Verify both nodes exist on this map
     node_dao = AttackMapNodeDAO()
@@ -302,6 +310,8 @@ def create_edge(map_id):
 @handle_errors
 def delete_edge(map_id, edge_id):
     """Delete an edge."""
+    if not _map_in_engagement(map_id):
+        return jsonify({"error": "Map not found"}), 404
     edge_dao = AttackMapEdgeDAO()
     existing = edge_dao.find_by_id(edge_id)
     if not existing or existing['map_id'] != map_id:
@@ -332,6 +342,11 @@ def get_svg(map_id):
 
 
 # ── Helpers ────────────────────────────────────────────────────────
+
+def _map_in_engagement(map_id):
+    """True if the map belongs to the active engagement (AttackMapDAO is scoped)."""
+    return AttackMapDAO().find_by_id(map_id) is not None
+
 
 def _touch_map(map_id):
     """Update map's updated_at timestamp."""
