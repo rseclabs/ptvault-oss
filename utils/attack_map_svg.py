@@ -123,12 +123,7 @@ def _render_node_svg(node):
     is_logic = node_type in ('connector',)
     label = node.get('label', '') or NODE_LABELS.get(node_type, '')
     type_label = NODE_LABELS.get(node_type, node_type)
-    props = node.get('properties', {})
-    if isinstance(props, str):
-        try:
-            props = json.loads(props)
-        except (json.JSONDecodeError, TypeError):
-            props = {}
+    props = _properties(node)
 
     parts = []
 
@@ -183,16 +178,22 @@ def _render_node_svg(node):
     return '\n'.join(parts)
 
 
-def _node_height(node):
-    """Calculate approximate rendered height."""
-    if node.get('node_type') in ('connector',):
-        return 40
-    props = node.get('properties') or {}
+def _properties(node):
+    """A node's properties as a dict; anything else stored (null, a list, bad JSON) is empty."""
+    props = node.get('properties')
     if isinstance(props, str):
         try:
             props = json.loads(props)
         except (json.JSONDecodeError, TypeError):
-            props = {}
+            props = None
+    return props if isinstance(props, dict) else {}
+
+
+def _node_height(node):
+    """Calculate approximate rendered height."""
+    if node.get('node_type') in ('connector',):
+        return 40
+    props = _properties(node)
     lines = 1
     if props.get('description'):
         lines += 1

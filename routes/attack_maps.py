@@ -144,6 +144,19 @@ def duplicate_map(map_id):
 
 # ── Node CRUD ──────────────────────────────────────────────────────
 
+def _properties_json(value):
+    """(JSON text, None) for a node's properties, or (None, 400 response).
+
+    Properties are an object; null clears them. Anything else used to be stored
+    as given and broke the SVG export with a 500.
+    """
+    if value is None:
+        return '{}', None
+    if isinstance(value, dict):
+        return json.dumps(value), None
+    return None, (jsonify({"error": "properties must be an object"}), 400)
+
+
 @attack_maps_bp.route('/<int:map_id>/nodes', methods=['POST'])
 @require_auth
 @require_engagement_access('editor')
@@ -160,9 +173,9 @@ def create_node(map_id):
         return jsonify({"error": "node_type is required"}), 400
 
     node_dao = AttackMapNodeDAO()
-    properties = data.get('properties', {})
-    if isinstance(properties, dict):
-        properties = json.dumps(properties)
+    properties, error = _properties_json(data.get('properties'))
+    if error:
+        return error
 
     node_id = node_dao.create({
         'map_id': map_id,
@@ -211,8 +224,9 @@ def update_node(map_id, node_id):
         if field in data:
             update_data[field] = data[field]
     if 'properties' in data:
-        props = data['properties']
-        update_data['properties'] = json.dumps(props) if isinstance(props, dict) else props
+        update_data['properties'], error = _properties_json(data['properties'])
+        if error:
+            return error
 
     if update_data:
         node_dao.update(node_id, update_data)
