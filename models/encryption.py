@@ -226,6 +226,27 @@ def generate_salt():
     return salt
 
 
+def remove_stale_backups(db_path=None):
+    """Remove backups left by an interrupted encrypt or decrypt; return how many (M-17).
+
+    Either the transition finished (the backup is redundant) or it failed before
+    replacing the database (the original is untouched), so a backup is never
+    needed after the fact; a pre-encrypt backup is a full plaintext copy.
+    """
+    db_path = db_path or Config.DATABASE_PATH
+    removed = 0
+    for suffix in ('.backup_preencrypt', '.backup_predecrypt'):
+        path = db_path + suffix
+        if os.path.exists(path):
+            try:
+                os.remove(path)
+                removed += 1
+                logger.warning("Removed %s, left by an interrupted encryption change", path)
+            except OSError as e:
+                logger.error("Could not remove %s: %s", path, e)
+    return removed
+
+
 def harden_database_permissions(db_path=None):
     """Make the database, its WAL/SHM files, the salt and any key file 0600 (M-14).
 
@@ -469,10 +490,12 @@ def _migrate_to_encrypted_with_key(db_path, key):
     backup_path = db_path + '.backup_preencrypt'
     encrypted_tmp = db_path + '.encrypted_tmp'
 
-    # Back up the original
+    # Back up the original (private: it is a full plaintext copy, M-17)
     shutil.copy2(db_path, backup_path)
+    os.chmod(backup_path, 0o600)
     logger.info(f"Backed up plaintext DB to {backup_path}")
 
+    swapped = False
     try:
         # Remove temp file if it exists from a previous failed attempt
         if os.path.exists(encrypted_tmp):
@@ -488,6 +511,7 @@ def _migrate_to_encrypted_with_key(db_path, key):
 
         # Atomically replace the original with the encrypted version
         os.replace(encrypted_tmp, db_path)
+        swapped = True
         harden_database_permissions(db_path)
         logger.info("Database successfully migrated to encrypted format")
 
@@ -506,6 +530,14 @@ def _migrate_to_encrypted_with_key(db_path, key):
         # Clean up temp file on failure
         if os.path.exists(encrypted_tmp):
             os.remove(encrypted_tmp)
+        # Leave no plaintext copy behind (M-17). Before the swap the original is
+        # untouched; after it, put the plaintext original back so the live file
+        # is never left half-way (the caller still sees the error).
+        if os.path.exists(backup_path):
+            if swapped:
+                os.replace(backup_path, db_path)
+            else:
+                os.remove(backup_path)
         logger.error(f"Encryption migration failed: {e}")
         raise
 
@@ -538,6 +570,7 @@ def migrate_to_plaintext(db_path):
     shutil.copy2(db_path, backup_path)
     logger.info(f"Backed up encrypted DB to {backup_path}")
 
+    swapped = False
     try:
         if os.path.exists(plaintext_tmp):
             os.remove(plaintext_tmp)
@@ -551,11 +584,20 @@ def migrate_to_plaintext(db_path):
                 os.remove(wal_file)
 
         os.replace(plaintext_tmp, db_path)
+        swapped = True
+        # The plaintext database is created with the umask; keep it private (M-17)
+        harden_database_permissions(db_path)
         logger.info("Database successfully decrypted to plaintext format")
+        os.remove(backup_path)
 
     except Exception as e:
         if os.path.exists(plaintext_tmp):
             os.remove(plaintext_tmp)
+        if os.path.exists(backup_path):
+            if swapped:
+                os.replace(backup_path, db_path)      # back to the encrypted original
+            else:
+                os.remove(backup_path)
         logger.error(f"Decryption migration failed: {e}")
         raise
 

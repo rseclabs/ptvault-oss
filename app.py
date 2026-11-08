@@ -33,7 +33,7 @@ except InsecureSecretError as e:
 
 from models.database import init_db, get_db_connection, run_migrations, setup_required
 from models.encryption import (auto_unlock_from_env, check_and_migrate_if_needed, is_encryption_available,
-                               harden_database_permissions, is_encryption_enabled, is_locked,
+                               harden_database_permissions, is_encryption_enabled, is_locked, remove_stale_backups,
                                plaintext_database_refusal, retire_stray_key_file)
 from models import upload_store
 from features import register_blueprints
@@ -101,6 +101,7 @@ else:
 # Evidence and the database are readable by their owner only (M-14). While the
 # key is available at start (PTVAULT_DB_PASSPHRASE, key file opt-in), evidence
 # stored unencrypted is encrypted now; otherwise that happens at /unlock.
+remove_stale_backups()            # no plaintext copy outlives an encryption change (M-17)
 harden_database_permissions()
 upload_store.harden_permissions()
 if is_encryption_enabled() and not is_locked():
