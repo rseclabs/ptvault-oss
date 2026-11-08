@@ -5,7 +5,7 @@ import html
 import logging
 from html.parser import HTMLParser
 from flask import Blueprint, request, jsonify, g, Response
-from middleware.auth import require_auth, require_engagement_access, require_role
+from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role
 from utils.error_handler import handle_errors
 from utils.pdf_generator import generate_pdf_from_html, generate_pdf_with_cover, HAS_WEASYPRINT
 
@@ -360,6 +360,34 @@ def delete_writeup(writeup_id):
 # REPORT GENERATOR ENDPOINTS
 # ============================================
 
+def _engagement_from_request(raw_engagement_id):
+    """Resolve an engagement id from a query string or body; returns (id, error).
+
+    Falls back to the active engagement. The caller must have at least viewer
+    access to it; otherwise 404, so engagement ids cannot be probed.
+    """
+    if raw_engagement_id in (None, ''):
+        engagement_id = g.active_engagement_id
+        if not engagement_id:
+            return None, (jsonify({"error": "engagement_id is required"}), 400)
+    else:
+        try:
+            engagement_id = int(raw_engagement_id)
+        except (TypeError, ValueError):
+            return None, (jsonify({"error": "engagement_id must be an integer"}), 400)
+    if engagement_role(g.db, g.current_user, g.current_user_role, engagement_id) is None:
+        return None, (jsonify({"error": "engagement not found"}), 404)
+    return engagement_id, None
+
+
+def _requested_engagement_mismatch(data):
+    """Writes go to the verified active engagement; reject a different id in the body."""
+    requested = data.get('engagement_id')
+    if requested not in (None, '') and str(requested) != str(g.active_engagement_id):
+        return jsonify({"error": "engagement_id must be the active engagement"}), 400
+    return None
+
+
 @reporting_bp.route('/reports', methods=['GET'])
 @require_auth
 @handle_errors
@@ -369,9 +397,9 @@ def list_reports():
     Query params:
         - engagement_id: Required - filter by engagement
     """
-    engagement_id = request.args.get('engagement_id')
-    if not engagement_id:
-        return jsonify({"error": "engagement_id is required"}), 400
+    engagement_id, error = _engagement_from_request(request.args.get('engagement_id'))
+    if error:
+        return error
 
     cursor = g.db.cursor()
     cursor.execute('''
@@ -413,7 +441,7 @@ def get_report(report_id):
     # Hydrate each item with source data
     hydrated_items = []
     for item in structure:
-        hydrated = hydrate_report_item(cursor, item)
+        hydrated = hydrate_report_item(cursor, item, report['engagement_id'])
         hydrated_items.append(hydrated)
 
     report['structure'] = structure
@@ -436,9 +464,10 @@ def create_report():
     if not data:
         return jsonify({"error": "Request body required"}), 400
 
-    engagement_id = data.get('engagement_id')
-    if not engagement_id:
-        return jsonify({"error": "engagement_id is required"}), 400
+    mismatch = _requested_engagement_mismatch(data)
+    if mismatch:
+        return mismatch
+    engagement_id = g.active_engagement_id
 
     name = data.get('name')
     if not name:
@@ -589,7 +618,7 @@ def export_report(report_id):
     # Hydrate items
     hydrated_items = []
     for item in structure:
-        hydrated = hydrate_report_item(cursor, item)
+        hydrated = hydrate_report_item(cursor, item, report['engagement_id'])
         hydrated_items.append(hydrated)
 
     if export_format == 'html':
@@ -653,10 +682,11 @@ def export_report(report_id):
 # HELPER FUNCTIONS
 # ============================================
 
-def hydrate_report_item(cursor, item):
+def hydrate_report_item(cursor, item, engagement_id):
     """
     Hydrate a report item with its source data.
-    Returns merged data with customizations applied.
+    Returns merged data with customizations applied. Engagement findings are
+    looked up only within the report's own engagement.
     """
     hydrated = {
         'id': item.get('id'),
@@ -677,7 +707,8 @@ def hydrate_report_item(cursor, item):
         return hydrated
 
     if item['type'] == 'engagement_finding':
-        cursor.execute("SELECT * FROM engagement_findings WHERE id = ?", (item['source_id'],))
+        cursor.execute("SELECT * FROM engagement_findings WHERE id = ? AND engagement_id = ?",
+                       (item['source_id'], engagement_id))
         row = cursor.fetchone()
         if row:
             columns = [desc[0] for desc in cursor.description]
@@ -1791,9 +1822,10 @@ def apply_report_template(template_id):
 
     data = request.get_json() or {}
 
-    engagement_id = data.get('engagement_id') or g.active_engagement_id
-    if not engagement_id:
-        return jsonify({'error': 'engagement_id is required'}), 400
+    mismatch = _requested_engagement_mismatch(data)
+    if mismatch:
+        return mismatch
+    engagement_id = g.active_engagement_id
 
     report_name = data.get('report_name')
 
@@ -1826,9 +1858,9 @@ def preview_report_template(template_id):
     from models.dao.template_dao import TemplateDAO
     from utils.template_renderer import TemplateRenderer
 
-    engagement_id = request.args.get('engagement_id', type=int) or g.active_engagement_id
-    if not engagement_id:
-        return jsonify({'error': 'engagement_id is required'}), 400
+    engagement_id, error = _engagement_from_request(request.args.get('engagement_id'))
+    if error:
+        return error
 
     template_dao = TemplateDAO()
     template = template_dao.find_by_id(template_id)
@@ -1871,8 +1903,17 @@ def compare_engagements():
 
     engagement_ids = data.get('engagement_ids', [])
 
-    if not engagement_ids or len(engagement_ids) < 2:
+    if not isinstance(engagement_ids, list) or len(engagement_ids) < 2:
         return jsonify({'error': 'At least 2 engagement IDs required'}), 400
+
+    # Every engagement compared must be one the caller can read.
+    checked_ids = []
+    for raw_id in engagement_ids:
+        eid, error = _engagement_from_request(raw_id if raw_id not in (None, '') else 'invalid')
+        if error:
+            return error
+        checked_ids.append(eid)
+    engagement_ids = checked_ids
 
     from models.dao.engagement_dao import EngagementDAO
 
@@ -1898,7 +1939,7 @@ def compare_engagements():
         comparison['engagements'].append({
             'id': eid,
             'name': engagement['name'],
-            'client': engagement['client'],
+            'client': engagement.get('client_name'),
             'start_date': engagement.get('start_date'),
             'end_date': engagement.get('end_date'),
             'status': engagement.get('status'),
