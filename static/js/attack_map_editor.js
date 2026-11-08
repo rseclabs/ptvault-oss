@@ -193,6 +193,16 @@ const AttackMapEditor = {
         }
     },
 
+    /** The map selector passes its value as text. */
+    loadMapFromSelect(value) {
+        return this.loadMap(parseInt(value, 10));
+    },
+
+    /** Close the reference picker (its close button). */
+    _closeRefPicker() {
+        document.getElementById('refPickerModal')?.remove();
+    },
+
     async loadMap(mapId) {
         try {
             const data = await API.attackMaps.get(mapId);
@@ -800,7 +810,7 @@ const AttackMapEditor = {
                 <div class="prop-field">
                     <label>${isLogic ? 'Name' : 'Label'}</label>
                     <input type="text" value="${this._esc(node.label || '')}"
-                           onchange="AttackMapEditor.updateNodeProp(${node.id}, 'label', this.value)" />
+                           ${on('change', 'AttackMapEditor.updateNodeProp', node.id, 'label', ARG.value)} />
                 </div>
             `;
 
@@ -810,12 +820,12 @@ const AttackMapEditor = {
                         <label>MITRE TTP</label>
                         <input type="text" value="${this._esc(props.ttp || '')}"
                                placeholder="e.g. T1595.001"
-                               onchange="AttackMapEditor.updateNodeProp(${node.id}, 'ttp', this.value)" />
+                               ${on('change', 'AttackMapEditor.updateNodeProp', node.id, 'ttp', ARG.value)} />
                     </div>
                     <div class="prop-field">
                         <label>Description</label>
                         <textarea rows="3"
-                            onchange="AttackMapEditor.updateNodeProp(${node.id}, 'description', this.value)">${this._esc(props.description || '')}</textarea>
+                            ${on('change', 'AttackMapEditor.updateNodeProp', node.id, 'description', ARG.value)}>${this._esc(props.description || '')}</textarea>
                     </div>
                 `;
             } else if (node.node_type === 'tactic') {
@@ -824,12 +834,12 @@ const AttackMapEditor = {
                         <label>MITRE TTP</label>
                         <input type="text" value="${this._esc(props.ttp || '')}"
                                placeholder="e.g. T1059.001"
-                               onchange="AttackMapEditor.updateNodeProp(${node.id}, 'ttp', this.value)" />
+                               ${on('change', 'AttackMapEditor.updateNodeProp', node.id, 'ttp', ARG.value)} />
                     </div>
                     <div class="prop-field">
                         <label>Description</label>
                         <textarea rows="3"
-                            onchange="AttackMapEditor.updateNodeProp(${node.id}, 'description', this.value)">${this._esc(props.description || '')}</textarea>
+                            ${on('change', 'AttackMapEditor.updateNodeProp', node.id, 'description', ARG.value)}>${this._esc(props.description || '')}</textarea>
                     </div>
                 `;
             } else if (node.node_type === 'exploit') {
@@ -838,18 +848,18 @@ const AttackMapEditor = {
                         <label>Service</label>
                         <input type="text" value="${this._esc(props.service || '')}"
                                placeholder="e.g. Apache 2.4, SMB"
-                               onchange="AttackMapEditor.updateNodeProp(${node.id}, 'service', this.value)" />
+                               ${on('change', 'AttackMapEditor.updateNodeProp', node.id, 'service', ARG.value)} />
                     </div>
                     <div class="prop-field">
                         <label>CVE</label>
                         <input type="text" value="${this._esc(props.cve || '')}"
                                placeholder="e.g. CVE-2024-1234"
-                               onchange="AttackMapEditor.updateNodeProp(${node.id}, 'cve', this.value)" />
+                               ${on('change', 'AttackMapEditor.updateNodeProp', node.id, 'cve', ARG.value)} />
                     </div>
                     <div class="prop-field">
                         <label>Description</label>
                         <textarea rows="3"
-                            onchange="AttackMapEditor.updateNodeProp(${node.id}, 'description', this.value)">${this._esc(props.description || '')}</textarea>
+                            ${on('change', 'AttackMapEditor.updateNodeProp', node.id, 'description', ARG.value)}>${this._esc(props.description || '')}</textarea>
                     </div>
                 `;
             } else if (node.node_type === 'evidence_ref' || node.node_type === 'finding_ref') {
@@ -866,17 +876,17 @@ const AttackMapEditor = {
                     <div class="prop-field">
                         <label>Hostname</label>
                         <input type="text" value="${this._esc(props.hostname || '')}"
-                               onchange="AttackMapEditor.updateNodeProp(${node.id}, 'hostname', this.value)" />
+                               ${on('change', 'AttackMapEditor.updateNodeProp', node.id, 'hostname', ARG.value)} />
                     </div>
                     <div class="prop-field">
                         <label>IP Address</label>
                         <input type="text" value="${this._esc(props.ip || '')}"
-                               onchange="AttackMapEditor.updateNodeProp(${node.id}, 'ip', this.value)" />
+                               ${on('change', 'AttackMapEditor.updateNodeProp', node.id, 'ip', ARG.value)} />
                     </div>
                     <div class="prop-field">
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
                             <input type="checkbox" ${props.compromised ? 'checked' : ''}
-                                   onchange="AttackMapEditor.updateNodeProp(${node.id}, 'compromised', this.checked)"
+                                   ${on('change', 'AttackMapEditor.updateNodeProp', node.id, 'compromised', ARG.checked)}
                                    style="width:15px;height:15px;cursor:pointer;accent-color:var(--color-bad);" />
                             <span>Compromised ☠</span>
                         </label>
@@ -897,7 +907,7 @@ const AttackMapEditor = {
                 </div>
                 ${fieldsHtml}
                 <button class="btn btn-sm btn-danger" style="margin-top:12px;width:100%;"
-                        onclick="AttackMapEditor.deleteSelected()">
+                        ${on('click', 'AttackMapEditor.deleteSelected')}>
                     Delete Node
                 </button>
             `;
@@ -913,10 +923,10 @@ const AttackMapEditor = {
                 <div class="prop-field">
                     <label>Label</label>
                     <input type="text" value="${this._esc(edge.label || '')}"
-                           onchange="AttackMapEditor.updateEdgeLabel(${edge.id}, this.value)" />
+                           ${on('change', 'AttackMapEditor.updateEdgeLabel', edge.id, ARG.value)} />
                 </div>
                 <button class="btn btn-sm btn-danger" style="margin-top:12px;width:100%;"
-                        onclick="AttackMapEditor.deleteSelected()">
+                        ${on('click', 'AttackMapEditor.deleteSelected')}>
                     Delete Connection
                 </button>
             `;
@@ -1022,19 +1032,17 @@ const AttackMapEditor = {
                     <div style="padding:16px;border-bottom:1px solid var(--color-rule);">
                         <div style="display:flex;justify-content:space-between;align-items:center;">
                             <h4 style="margin:0;color:var(--color-ink);">${title}</h4>
-                            <button onclick="document.getElementById('refPickerModal').remove()" style="background:none;border:none;color:var(--color-muted);cursor:pointer;font-size:18px;">&times;</button>
+                            <button ${on('click', 'AttackMapEditor._closeRefPicker')} style="background:none;border:none;color:var(--color-muted);cursor:pointer;font-size:18px;">&times;</button>
                         </div>
                         <input type="text" id="refPickerSearch" placeholder="Search..."
                                style="width:100%;margin-top:8px;padding:8px;background:var(--color-paper-4);border:1px solid var(--color-rule);border-radius:6px;color:var(--color-ink);outline:none;"
-                               oninput="AttackMapEditor._filterRefPicker(this.value)" />
+                               ${on('input', 'AttackMapEditor._filterRefPicker', ARG.value)} />
                     </div>
                     <div id="refPickerList" style="overflow-y:auto;max-height:350px;padding:8px;">
                         ${items.map((item, idx) => `
                             <div class="ref-picker-item" data-search="${this._esc(item.label.toLowerCase())}" data-idx="${idx}"
                                  style="padding:10px 12px;cursor:pointer;border-radius:6px;margin-bottom:2px;color:var(--color-ink);"
-                                 onmouseover="this.style.background='var(--color-paper-4)'"
-                                 onmouseout="this.style.background='transparent'"
-                                 onclick="AttackMapEditor._selectRefByIndex(${idx})">
+                                 ${on('click', 'AttackMapEditor._selectRefByIndex', idx)}>
                                 <div style="font-weight:500;">${this._esc(item.label)}</div>
                                 ${item.sub ? `<div style="font-size:11px;color:var(--color-muted);">${this._esc(item.sub)}</div>` : ''}
                             </div>
@@ -1108,7 +1116,7 @@ const AttackMapEditor = {
         ).join('');
 
         selector.innerHTML = `
-            <select id="attackMapSelect" onchange="AttackMapEditor.loadMap(parseInt(this.value))"
+            <select id="attackMapSelect" ${on('change', 'AttackMapEditor.loadMapFromSelect', ARG.value)}
                     style="background:var(--color-paper-4);border:1px solid var(--color-rule);color:var(--color-ink);padding:6px 10px;border-radius:6px;min-width:180px;">
                 ${this.maps.length ? options : '<option value="">No maps</option>'}
             </select>

@@ -228,6 +228,17 @@ function _dispatchDeclared(event) {
 DELEGATED_EVENTS.forEach(type => document.addEventListener(type, _dispatchDeclared));
 
 /**
+ * For handlers that stopped the event before calling a method:
+ *   on('click', 'stopAndCall', ARG.event, 'HostManager.editEngagementFinding', id)
+ * The method is looked up the same way as in data-on-* attributes.
+ */
+function stopAndCall(event, path, ...args) {
+    event.stopPropagation();
+    const handler = _resolveHandler(path);
+    if (handler) handler.fn.apply(handler.owner, args);
+}
+
+/**
  * Show toast notification
  * @param {string} message - Message to display
  * @param {string} type - Toast type (success, error, warning, info)
@@ -498,6 +509,7 @@ window.safeUrl = safeUrl;
 window.registerAction = registerAction;
 window.on = on;
 window.ARG = ARG;
+window.stopAndCall = stopAndCall;
 window.showToast = showToast;
 window.ThemeManager = ThemeManager;
 window.openModal = openModal;

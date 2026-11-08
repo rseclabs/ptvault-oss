@@ -41,7 +41,7 @@ const AdminPanel = {
         nav.innerHTML = items.map(item => `
             <button class="admin-nav-item ${item.id === this.activeTab ? 'active' : ''}"
                     data-admin-tab="${item.id}"
-                    onclick="AdminPanel.switchTab('${item.id}')">
+                    ${on('click', 'AdminPanel.switchTab', String(item.id))}>
                 <i data-lucide="${item.icon}" class="icon-sm"></i>
                 <span>${item.label}</span>
             </button>
@@ -117,7 +117,7 @@ const AdminPanel = {
                             <span class="admin-item-status" id="encryptionStatusBadge">Checking...</span>
                         </div>
                         <div class="admin-item-actions">
-                            <button class="btn btn-sm" id="encryptionToggleBtn" style="display:none;" onclick="AdminPanel.toggleEncryption()">
+                            <button class="btn btn-sm" id="encryptionToggleBtn" style="display:none;" ${on('click', 'AdminPanel.toggleEncryption')}>
                                 Enable
                             </button>
                         </div>
@@ -150,8 +150,8 @@ const AdminPanel = {
                         <input type="password" id="encryptionPassword" placeholder="12+ characters, upper and lower case, a digit" autocomplete="new-password" minlength="12" required>
                     </div>
                     <div class="form-actions">
-                        <button class="btn btn-secondary" onclick="AdminPanel.hideEncryptionForm()">Cancel</button>
-                        <button class="btn btn-primary" onclick="AdminPanel.confirmEnableEncryption()">Encrypt Database</button>
+                        <button class="btn btn-secondary" ${on('click', 'AdminPanel.hideEncryptionForm')}>Cancel</button>
+                        <button class="btn btn-primary" ${on('click', 'AdminPanel.confirmEnableEncryption')}>Encrypt Database</button>
                     </div>
                 </div>
             </div>
@@ -166,7 +166,7 @@ const AdminPanel = {
                         <span class="admin-item-status" id="cyberchefVersionDisplay">Checking...</span>
                     </div>
                     <div class="admin-item-actions">
-                        <button class="btn btn-sm btn-secondary" onclick="AdminPanel.checkCyberChefUpdate()" id="checkUpdateBtn">
+                        <button class="btn btn-sm btn-secondary" ${on('click', 'AdminPanel.checkCyberChefUpdate')} id="checkUpdateBtn">
                             Check for Updates
                         </button>
                         <button class="btn btn-sm btn-primary" id="updateCyberChefBtn" style="display:none;">
@@ -196,7 +196,7 @@ const AdminPanel = {
                                min="1" max="1440" value="15"
                                style="width: 100px; text-align: center;">
                         <span style="color: var(--text-muted); font-size: 0.875rem;">minutes (1–1440)</span>
-                        <button class="btn btn-sm btn-primary" onclick="AdminPanel.saveIdleTimeout()" id="saveIdleTimeoutBtn">
+                        <button class="btn btn-sm btn-primary" ${on('click', 'AdminPanel.saveIdleTimeout')} id="saveIdleTimeoutBtn">
                             Save
                         </button>
                     </div>
@@ -212,7 +212,7 @@ const AdminPanel = {
         return `
             <div class="admin-tab-header">
                 <h2>User Management</h2>
-                <button class="btn btn-primary" onclick="UserManager.showUserForm()">
+                <button class="btn btn-primary" ${on('click', 'UserManager.showUserForm')}>
                     + Add User
                 </button>
             </div>
@@ -254,8 +254,8 @@ const AdminPanel = {
                     </div>
                 </div>
                 <div class="form-actions" style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;margin-top:var(--spacing-md);">
-                    <button class="btn btn-secondary" onclick="UserManager.hideUserForm()">Cancel</button>
-                    <button class="btn btn-primary" onclick="UserManager.saveUser()">Save User</button>
+                    <button class="btn btn-secondary" ${on('click', 'UserManager.hideUserForm')}>Cancel</button>
+                    <button class="btn btn-primary" ${on('click', 'UserManager.saveUser')}>Save User</button>
                 </div>
             </div>
 
@@ -272,7 +272,7 @@ const AdminPanel = {
         return `
             <div class="admin-tab-header">
                 <h2>Team Management</h2>
-                <button class="btn btn-primary" onclick="TeamManager.showTeamForm()">
+                <button class="btn btn-primary" ${on('click', 'TeamManager.showTeamForm')}>
                     + Create Team
                 </button>
             </div>
@@ -290,8 +290,8 @@ const AdminPanel = {
                     <textarea id="teamDescription" class="form-input" rows="3"></textarea>
                 </div>
                 <div class="form-actions" style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;margin-top:var(--spacing-md);">
-                    <button class="btn btn-secondary" onclick="TeamManager.hideTeamForm()">Cancel</button>
-                    <button class="btn btn-primary" onclick="TeamManager.saveTeam()">Save Team</button>
+                    <button class="btn btn-secondary" ${on('click', 'TeamManager.hideTeamForm')}>Cancel</button>
+                    <button class="btn btn-primary" ${on('click', 'TeamManager.saveTeam')}>Save Team</button>
                 </div>
             </div>
 
@@ -304,7 +304,7 @@ const AdminPanel = {
             <div id="teamMembersPanel" style="display: none; margin-top: 1rem;">
                 <div class="admin-section-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-md);">
                     <h4 id="teamMembersPanelTitle">Members</h4>
-                    <button class="btn btn-sm btn-primary" onclick="TeamManager.showMemberForm()">
+                    <button class="btn btn-sm btn-primary" ${on('click', 'TeamManager.showMemberForm')}>
                         + Add Member
                     </button>
                 </div>
@@ -327,8 +327,8 @@ const AdminPanel = {
                         </div>
                     </div>
                     <div class="form-actions" style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;margin-top:var(--spacing-md);">
-                        <button class="btn btn-secondary" onclick="TeamManager.hideMemberForm()">Cancel</button>
-                        <button class="btn btn-primary" onclick="TeamManager.saveTeamMember()">Add Member</button>
+                        <button class="btn btn-secondary" ${on('click', 'TeamManager.hideMemberForm')}>Cancel</button>
+                        <button class="btn btn-primary" ${on('click', 'TeamManager.saveTeamMember')}>Add Member</button>
                     </div>
                 </div>
 
@@ -345,7 +345,7 @@ const AdminPanel = {
         return `
             <div class="admin-tab-header">
                 <h2>Client Management</h2>
-                <button class="btn btn-primary" onclick="ClientManager.showClientForm()">
+                <button class="btn btn-primary" ${on('click', 'ClientManager.showClientForm')}>
                     + Add Client
                 </button>
             </div>
@@ -409,8 +409,8 @@ const AdminPanel = {
                 </div>
 
                 <div class="form-actions" style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;margin-top:var(--spacing-md);">
-                    <button class="btn btn-secondary" onclick="ClientManager.hideClientForm()">Cancel</button>
-                    <button class="btn btn-primary" onclick="ClientManager.saveClient()">Save Client</button>
+                    <button class="btn btn-secondary" ${on('click', 'ClientManager.hideClientForm')}>Cancel</button>
+                    <button class="btn btn-primary" ${on('click', 'ClientManager.saveClient')}>Save Client</button>
                 </div>
             </div>
 
@@ -430,7 +430,7 @@ const AdminPanel = {
         return `
             <div class="admin-tab-header">
                 <h2>Shell One-Liners</h2>
-                <button class="btn btn-primary" onclick="AdminPanel.showAddOnelinerForm()">
+                <button class="btn btn-primary" ${on('click', 'AdminPanel.showAddOnelinerForm')}>
                     + Add One-Liner
                 </button>
             </div>
@@ -466,20 +466,20 @@ const AdminPanel = {
                     <input type="text" id="onelinerDescription" placeholder="Brief description of the command">
                 </div>
                 <div class="form-actions" style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;margin-top:var(--spacing-md);">
-                    <button class="btn btn-secondary" onclick="AdminPanel.hideOnelinerForm()">Cancel</button>
-                    <button class="btn btn-primary" onclick="AdminPanel.saveOneliner()">Save</button>
+                    <button class="btn btn-secondary" ${on('click', 'AdminPanel.hideOnelinerForm')}>Cancel</button>
+                    <button class="btn btn-primary" ${on('click', 'AdminPanel.saveOneliner')}>Save</button>
                 </div>
             </div>
 
             <!-- Filter and Search -->
             <div class="admin-filter-bar" style="display:flex;gap:var(--spacing-sm);margin-bottom:var(--spacing-md);">
-                <select id="adminOnelinerCategoryFilter" onchange="AdminPanel.filterOneliners()" class="form-input" style="width:auto;">
+                <select id="adminOnelinerCategoryFilter" ${on('change', 'AdminPanel.filterOneliners')} class="form-input" style="width:auto;">
                     <option value="all">All Categories</option>
                     <option value="shells">Shells</option>
                     <option value="reverse_shells">Reverse Shells</option>
                     <option value="shell_upgrades">Shell Upgrades</option>
                 </select>
-                <input type="text" id="adminOnelinerSearch" placeholder="Search..." oninput="AdminPanel.filterOneliners()" class="form-input" style="flex:1;">
+                <input type="text" id="adminOnelinerSearch" placeholder="Search..." ${on('input', 'AdminPanel.filterOneliners')} class="form-input" style="flex:1;">
             </div>
 
             <!-- One-liners List -->
@@ -562,10 +562,10 @@ const AdminPanel = {
                                 ${item.is_builtin ? `
                                 <span class="admin-list-item-builtin" title="Ships with PTVault and can't be changed">Built-in</span>
                                 ` : `
-                                <button class="btn btn-icon btn-sm" onclick="AdminPanel.editOneliner(${item.id})" title="Edit" aria-label="Edit ${escapeHtml(item.name)}">
+                                <button class="btn btn-icon btn-sm" ${on('click', 'AdminPanel.editOneliner', item.id)} title="Edit" aria-label="Edit ${escapeHtml(item.name)}">
                                     <i data-lucide="edit-2" class="icon-sm"></i>
                                 </button>
-                                <button class="btn btn-icon btn-sm btn-danger" onclick="AdminPanel.deleteOneliner(${item.id})" title="Delete" aria-label="Delete ${escapeHtml(item.name)}">
+                                <button class="btn btn-icon btn-sm btn-danger" ${on('click', 'AdminPanel.deleteOneliner', item.id)} title="Delete" aria-label="Delete ${escapeHtml(item.name)}">
                                     <i data-lucide="trash-2" class="icon-sm"></i>
                                 </button>
                                 `}
@@ -974,7 +974,7 @@ const AdminPanel = {
                                 <td style="padding:10px 12px;">${escapeHtml(eng.start_date || '')}${eng.end_date ? ' – ' + escapeHtml(eng.end_date) : ''}</td>
                                 <td style="padding:10px 12px;text-align:right;display:flex;gap:8px;justify-content:flex-end;">
                                     <button class="btn btn-sm btn-secondary"
-                                            onclick="AdminPanel.editEngagement(${eng.id})">
+                                            ${on('click', 'AdminPanel.editEngagement', eng.id)}>
                                         Edit
                                     </button>
                                     <button class="btn btn-sm btn-danger"

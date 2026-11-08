@@ -15956,6 +15956,8 @@ body.auth-page {
 
 .atk-palette-btn:hover { background: var(--color-paper-4); }
 .atk-palette-btn:active { background: var(--color-rule); }
+/* Attack map reference picker rows (was an inline onmouseover, L-21) */
+.ref-picker-item:hover { background: var(--color-paper-4); }
 
 .atk-palette-dot {
     width: 20px;
