@@ -1,7 +1,7 @@
 """Test Plans routes for PTVault - MITRE ATT&CK Navigator and Atomic Red Team integration."""
 
 from flask import Blueprint, request, jsonify, g, Response
-from middleware.auth import require_auth
+from middleware.auth import require_auth, require_engagement_access
 from routes.engagements import require_active_engagement
 import json
 import os
@@ -609,6 +609,7 @@ def list_plans():
 
 @testplans_bp.route('/plans', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 def create_plan():
     """
     Create a new test plan.
@@ -762,6 +763,7 @@ def delete_plan(plan_id):
 
 @testplans_bp.route('/plans/<int:plan_id>/duplicate', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 def duplicate_plan(plan_id):
     """
     Copy a test plan with all its items.
@@ -1274,6 +1276,7 @@ def list_executions():
 
 @testplans_bp.route('/executions/start', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 def start_execution():
     """
@@ -1409,6 +1412,7 @@ def get_execution(execution_id):
 
 @testplans_bp.route('/executions/<int:execution_id>', methods=['PUT'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 def update_execution(execution_id):
     """
@@ -1568,6 +1572,7 @@ def _match_log_results(cursor, plan_id, results):
 
 @testplans_bp.route('/executions/import-log', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 def import_session_log():
     """
@@ -1710,6 +1715,7 @@ def import_session_log():
 
 @testplans_bp.route('/executions/<int:execution_id>/link-evidence', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 def link_evidence(execution_id):
     """
@@ -1755,6 +1761,7 @@ def link_evidence(execution_id):
 
 @testplans_bp.route('/executions/<int:execution_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 def delete_execution(execution_id):
     """Delete an execution record."""

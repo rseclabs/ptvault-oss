@@ -5,7 +5,7 @@ import html
 import logging
 from html.parser import HTMLParser
 from flask import Blueprint, request, jsonify, g, Response
-from middleware.auth import require_auth
+from middleware.auth import require_auth, require_engagement_access
 from utils.error_handler import handle_errors
 from utils.pdf_generator import generate_pdf_from_html, generate_pdf_with_cover, HAS_WEASYPRINT
 
@@ -421,6 +421,7 @@ def get_report(report_id):
 
 @reporting_bp.route('/reports', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def create_report():
     """
@@ -472,6 +473,7 @@ def create_report():
 
 @reporting_bp.route('/reports/<int:report_id>', methods=['PUT'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def update_report(report_id):
     """Update a report's name or structure."""
@@ -535,6 +537,7 @@ def update_report(report_id):
 
 @reporting_bp.route('/reports/<int:report_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def delete_report(report_id):
     """Delete a report."""
@@ -1770,6 +1773,7 @@ def get_report_template(template_id):
 
 @reporting_bp.route('/templates/<int:template_id>/apply', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def apply_report_template(template_id):
     """Apply template to create a new report.

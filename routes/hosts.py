@@ -3,7 +3,7 @@
 import logging
 
 from flask import Blueprint, request, jsonify, g, session
-from middleware.auth import require_auth
+from middleware.auth import require_auth, require_engagement_access
 from models.database import run_migrations
 from utils.error_handler import handle_errors
 from utils.host_extractor import (
@@ -252,6 +252,7 @@ def get_host(host_id):
 
 @hosts_bp.route('', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def create_host():
     """
@@ -307,6 +308,7 @@ def create_host():
 
 @hosts_bp.route('/<int:host_id>', methods=['PUT'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def update_host(host_id):
     """Update host details (hostname, os, notes)."""
@@ -386,6 +388,7 @@ def update_host(host_id):
 
 @hosts_bp.route('/<int:host_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def delete_host(host_id):
     """Delete a host. This unlinks all evidence from this host but doesn't delete the evidence."""
@@ -413,6 +416,7 @@ def delete_host(host_id):
 
 @hosts_bp.route('/<int:host_id>/evidence', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def link_evidence(host_id):
     """
@@ -457,6 +461,7 @@ def link_evidence(host_id):
 
 @hosts_bp.route('/<int:host_id>/evidence/<int:evidence_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def unlink_evidence(host_id, evidence_id):
     """Unlink evidence from a host."""
@@ -535,6 +540,7 @@ def get_note(host_id, note_id):
 
 @hosts_bp.route('/<int:host_id>/notes', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def create_note(host_id):
     """Create a new note for a host.
@@ -566,6 +572,7 @@ def create_note(host_id):
 
 @hosts_bp.route('/<int:host_id>/notes/<int:note_id>', methods=['PUT'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def update_note(host_id, note_id):
     """Update a host note's content."""
@@ -596,6 +603,7 @@ def update_note(host_id, note_id):
 
 @hosts_bp.route('/<int:host_id>/notes/<int:note_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def delete_note(host_id, note_id):
     """Delete a host note. Blocked when it has children."""
@@ -625,6 +633,7 @@ def delete_note(host_id, note_id):
 
 @hosts_bp.route('/<int:host_id>/notes/<int:note_id>/move', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def move_note(host_id, note_id):
     """Move/reorder a host note within the tree.
@@ -703,6 +712,7 @@ def list_ports(host_id):
 
 @hosts_bp.route('/<int:host_id>/ports', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def create_port(host_id):
     """Create a new port entry for a host."""
@@ -756,6 +766,7 @@ def create_port(host_id):
 
 @hosts_bp.route('/<int:host_id>/ports/<int:port_id>', methods=['PUT'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def update_port(host_id, port_id):
     """Update a port entry."""
@@ -826,6 +837,7 @@ def update_port(host_id, port_id):
 
 @hosts_bp.route('/<int:host_id>/ports/<int:port_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def delete_port(host_id, port_id):
     """Delete a port entry."""
@@ -978,6 +990,7 @@ def list_credentials(host_id):
 
 @hosts_bp.route('/<int:host_id>/credentials', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def create_credential(host_id):
     """Create a new credential entry for a host."""
@@ -1026,6 +1039,7 @@ def create_credential(host_id):
 
 @hosts_bp.route('/<int:host_id>/credentials/<int:cred_id>', methods=['PUT'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def update_credential(host_id, cred_id):
     """Update a credential entry."""
@@ -1095,6 +1109,7 @@ def update_credential(host_id, cred_id):
 
 @hosts_bp.route('/<int:host_id>/credentials/<int:cred_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def delete_credential(host_id, cred_id):
     """Delete a credential entry."""

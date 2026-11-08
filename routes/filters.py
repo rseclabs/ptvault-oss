@@ -1,7 +1,7 @@
 """Saved filter routes for PTVault."""
 
 from flask import Blueprint, request, jsonify, g
-from middleware.auth import require_auth
+from middleware.auth import require_auth, require_engagement_access
 from routes.engagements import require_active_engagement
 from utils.error_handler import (
     handle_errors,
@@ -149,6 +149,7 @@ def list_filters():
 
 @filters_bp.route('', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 @handle_errors
 def create_filter():
@@ -213,6 +214,7 @@ def create_filter():
 
 @filters_bp.route('/<int:filter_id>', methods=['PUT'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 @handle_errors
 def update_filter(filter_id):
@@ -301,6 +303,7 @@ def update_filter(filter_id):
 
 @filters_bp.route('/<int:filter_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 @handle_errors
 def delete_filter(filter_id):

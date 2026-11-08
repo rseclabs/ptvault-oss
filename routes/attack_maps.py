@@ -8,7 +8,7 @@ import json
 import logging
 from flask import Blueprint, request, jsonify, g
 
-from middleware.auth import require_auth
+from middleware.auth import require_auth, require_engagement_access
 from models.dao.attack_map_dao import AttackMapDAO, AttackMapNodeDAO, AttackMapEdgeDAO
 from utils.error_handler import handle_errors
 
@@ -31,6 +31,7 @@ def list_maps():
 
 @attack_maps_bp.route('', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def create_map():
     """Create a new attack map."""
@@ -64,6 +65,7 @@ def get_map(map_id):
 
 @attack_maps_bp.route('/<int:map_id>', methods=['PUT'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def update_map(map_id):
     """Update map metadata or canvas_data."""
@@ -112,6 +114,7 @@ def update_map(map_id):
 
 @attack_maps_bp.route('/<int:map_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def delete_map(map_id):
     """Delete a map and all its nodes/edges (cascade)."""
@@ -126,6 +129,7 @@ def delete_map(map_id):
 
 @attack_maps_bp.route('/<int:map_id>/duplicate', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def duplicate_map(map_id):
     """Duplicate a map with all nodes and edges."""
@@ -142,6 +146,7 @@ def duplicate_map(map_id):
 
 @attack_maps_bp.route('/<int:map_id>/nodes', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def create_node(map_id):
     """Create a node on a map."""
@@ -186,6 +191,7 @@ def create_node(map_id):
 
 @attack_maps_bp.route('/<int:map_id>/nodes/<int:node_id>', methods=['PUT'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def update_node(map_id, node_id):
     """Update a node's position or properties."""
@@ -221,6 +227,7 @@ def update_node(map_id, node_id):
 
 @attack_maps_bp.route('/<int:map_id>/nodes/<int:node_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def delete_node(map_id, node_id):
     """Delete a node and its connected edges."""
@@ -240,6 +247,7 @@ def delete_node(map_id, node_id):
 
 @attack_maps_bp.route('/<int:map_id>/nodes/batch', methods=['PUT'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def batch_update_nodes(map_id):
     """Batch update node positions."""
@@ -258,6 +266,7 @@ def batch_update_nodes(map_id):
 
 @attack_maps_bp.route('/<int:map_id>/edges', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def create_edge(map_id):
     """Create an edge between two nodes."""
@@ -289,6 +298,7 @@ def create_edge(map_id):
 
 @attack_maps_bp.route('/<int:map_id>/edges/<int:edge_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def delete_edge(map_id, edge_id):
     """Delete an edge."""

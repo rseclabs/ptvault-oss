@@ -3,7 +3,7 @@
 import logging
 
 from flask import Blueprint, request, jsonify, g, send_file
-from middleware.auth import require_auth
+from middleware.auth import require_auth, require_engagement_access
 from routes.engagements import require_active_engagement
 from utils.file_helpers import sanitize_filename, allowed_file, create_safe_filepath
 from utils.parsers import nmap_parser, burp_parser, nessus_parser
@@ -147,6 +147,7 @@ def auto_generate_tags(metadata):
 
 @evidence_bp.route('', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 @handle_errors
 def create_evidence():
@@ -474,6 +475,7 @@ def get_evidence(evidence_id):
 
 @evidence_bp.route('/<int:evidence_id>', methods=['PUT'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 @handle_errors
 def update_evidence(evidence_id):
@@ -551,6 +553,7 @@ def update_evidence(evidence_id):
 
 @evidence_bp.route('/<int:evidence_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 @handle_errors
 def delete_evidence(evidence_id):
@@ -675,6 +678,7 @@ def view_evidence_file(evidence_id):
 
 @evidence_bp.route('/<int:evidence_id>/parse', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 @handle_errors
 def parse_evidence(evidence_id):
@@ -947,6 +951,7 @@ def filter_evidence():
 
 @evidence_bp.route('/bulk', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @require_active_engagement
 @handle_errors
 def bulk_evidence_operation():

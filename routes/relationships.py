@@ -7,7 +7,7 @@ evidence items and finding attack paths through the evidence graph.
 import logging
 from flask import Blueprint, request, jsonify, g
 
-from middleware.auth import require_auth
+from middleware.auth import require_auth, require_engagement_access
 from models.dao.relationship_dao import RelationshipDAO, AttackPathDAO
 from utils.error_handler import handle_errors
 
@@ -37,6 +37,7 @@ def get_all_relationships():
 
 @relationships_bp.route('', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def create_relationship():
     """Create new relationship between any nodes (evidence, findings, notes, credentials).
@@ -97,6 +98,7 @@ def create_relationship():
 
 @relationships_bp.route('/<int:rel_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def delete_relationship(rel_id):
     """Delete relationship.
@@ -159,6 +161,7 @@ def get_node_relationships(node_type, node_id):
 
 @relationships_bp.route('/node/<string:node_type>/<int:node_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def delete_node_relationships(node_type, node_id):
     """Delete all relationships involving a node.
@@ -285,6 +288,7 @@ def list_attack_paths():
 
 @relationships_bp.route('/paths', methods=['POST'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def save_attack_path():
     """Save an attack path.
@@ -351,6 +355,7 @@ def get_attack_path(path_id):
 
 @relationships_bp.route('/paths/<int:path_id>', methods=['DELETE'])
 @require_auth
+@require_engagement_access('editor')
 @handle_errors
 def delete_attack_path(path_id):
     """Delete saved attack path.
