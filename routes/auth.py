@@ -13,6 +13,7 @@ from models.auth import (
     revoke_session
 )
 from middleware.auth import require_auth
+from utils.csrf import issue_csrf_token, session_csrf_token, set_csrf_cookie
 from config import Config
 from models.database import get_db_connection
 from models.encryption import is_encryption_available, setup_encryption
@@ -130,6 +131,8 @@ def setup():
             samesite='Lax',
             max_age=86400  # 24 hours
         )
+        # CSRF token bound to this new session (L-8)
+        set_csrf_cookie(response, session_csrf_token(token))
 
         return response, 201
 
@@ -265,6 +268,8 @@ def login():
             samesite='Lax',
             max_age=86400  # 24 hours
         )
+        # CSRF token bound to this new session (L-8)
+        set_csrf_cookie(response, session_csrf_token(token))
 
         return response, 200
 
@@ -326,15 +331,8 @@ def get_csrf_token():
     - Returns token in response body
     - Client must send token in X-CSRF-Token header on mutating requests
     """
-    import secrets
-    token = secrets.token_hex(32)
+    # Bound to the session when logged in, random before login (utils/csrf.py, L-8)
+    token = issue_csrf_token()
     response = make_response(jsonify({"csrf_token": token}))
-    response.set_cookie(
-        'csrf_token',
-        token,
-        httponly=False,  # JS needs to read this
-        secure=(Config.ENVIRONMENT == 'production'),
-        samesite='Lax',
-        max_age=86400
-    )
+    set_csrf_cookie(response, token)
     return response, 200

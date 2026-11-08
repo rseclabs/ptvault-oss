@@ -1,7 +1,7 @@
 """Audit logging utility for security and compliance tracking."""
 
 from typing import Optional, Dict, Any
-from flask import g, request
+from flask import g, request, session
 import json
 import logging
 
@@ -81,6 +81,7 @@ class AuditLogger:
                 user_agent
             ))
             db.commit()
+            g._audit_logged = True   # audit_mutation() skips requests a route logged itself
 
             logger.debug(f"Audit log: user={user_id} action={action} resource={resource_type}/{resource_id}")
 
@@ -212,3 +213,47 @@ def audit_view(resource_type: str, resource_id: int, engagement_id: Optional[int
 def audit_export(resource_type: str, resource_id: int, engagement_id: Optional[int] = None, **details):
     """Log data export."""
     AuditLogger.log_action('export', resource_type, resource_id, engagement_id, details or None)
+
+
+# ============================================
+# AUDIT EVERY SUCCESSFUL MUTATION (L-9)
+# ============================================
+
+_MUTATION_ACTIONS = {'POST': 'create', 'PUT': 'update', 'PATCH': 'update', 'DELETE': 'delete'}
+# Session plumbing, not data changes
+_UNAUDITED_PATHS = frozenset(['/api/auth/login', '/api/auth/logout', '/api/auth/setup',
+                              '/api/auth/heartbeat', '/api/auth/csrf-token'])
+
+
+def audit_mutation(response):
+    """after_request hook: record every successful mutating API call.
+
+    Routes that write their own, more detailed entry are not logged twice.
+    Covers routes that had none (engagement update/import, bulk delete,
+    notes, hosts, credentials, findings, relationships, filters) and any
+    route added later.
+    """
+    try:
+        action = _MUTATION_ACTIONS.get(request.method)
+        if (action is None or not request.path.startswith('/api/') or response.status_code >= 400
+                or request.path in _UNAUDITED_PATHS or g.get('_audit_logged')
+                or g.get('current_user') is None or g.get('db') is None):
+            return response
+        view_args = request.view_args or {}
+        ids = [v for v in view_args.values() if isinstance(v, int)]
+        blueprint = (request.endpoint or '').split('.')[0] or 'api'
+        engagement_id = (view_args.get('engagement_id') or g.get('active_engagement_id')
+                         or session.get('active_engagement_id'))
+        if blueprint == 'engagements' and ids and 'engagement_id' not in view_args:
+            engagement_id = ids[0]
+        AuditLogger.log_action(
+            action=action,
+            resource_type=blueprint,
+            resource_id=ids[0] if ids else None,
+            engagement_id=engagement_id,
+            details={'endpoint': request.endpoint, 'method': request.method, 'path': request.path,
+                     'status': response.status_code},
+        )
+    except Exception as e:   # auditing must never break the response
+        logger.error(f"Audit hook failed: {e}")
+    return response

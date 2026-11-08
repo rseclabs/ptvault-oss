@@ -48,5 +48,9 @@ def register_blueprints(app):
         except Exception as e:
             logger.error("Failed to register blueprint %s.%s: %s", module_path, bp_name, e)
 
+    # Every successful mutating API call is audited (L-9)
+    from utils.audit_logger import audit_mutation
+    app.after_request(audit_mutation)
+
     logger.info("Registered %d blueprints", registered)
     return registered

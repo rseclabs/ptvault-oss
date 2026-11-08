@@ -135,21 +135,10 @@ def app():
         if db is not None:
             db.close()
 
-    # Mirror the CSRF protection from app.py
-    @flask_app.before_request
-    def csrf_protect():
-        if flask_request.method in ('GET', 'HEAD', 'OPTIONS'):
-            return
-        if flask_request.path in ('/api/auth/setup', '/api/auth/login', '/api/auth/csrf-token'):
-            return
-        if not flask_request.path.startswith('/api/'):
-            return
-        cookie_token = flask_request.cookies.get('csrf_token')
-        header_token = flask_request.headers.get('X-CSRF-Token')
-        if not cookie_token or not header_token:
-            return jsonify({'error': 'CSRF token missing'}), 403
-        if cookie_token != header_token:
-            return jsonify({'error': 'CSRF token mismatch'}), 403
+    # The real CSRF check app.py registers (utils/csrf.py)
+    from utils.csrf import csrf_protect
+    flask_app.before_request(csrf_protect)
+    flask_app.test_client_class = _FrontEndClient
 
     # The real security-header hook app.py registers (utils/security_headers.py)
     from utils.security_headers import apply_security_headers
@@ -171,6 +160,30 @@ def app():
 def client(app):
     """Flask test client."""
     return app.test_client()
+
+
+from flask.testing import FlaskClient  # noqa: E402
+
+
+class _FrontEndClient(FlaskClient):
+    """Sends X-CSRF-Token the way static/js/lib/request.js does: from the
+    csrf_token cookie, fetching one first if there is none. Set
+    auto_csrf = False to send requests without it."""
+    auto_csrf = True
+
+    def open(self, *args, **kwargs):
+        method = (kwargs.get('method') or 'GET').upper()
+        path = args[0] if args and isinstance(args[0], str) else kwargs.get('path', '')
+        headers = dict(kwargs.get('headers') or {})
+        if (self.auto_csrf and method in ('POST', 'PUT', 'PATCH', 'DELETE') and path.startswith('/api/')
+                and 'X-CSRF-Token' not in headers):
+            if self.get_cookie('csrf_token') is None:
+                super().open('/api/auth/csrf-token', method='GET')
+            cookie = self.get_cookie('csrf_token')
+            if cookie is not None:
+                headers['X-CSRF-Token'] = cookie.value
+                kwargs['headers'] = headers
+        return super().open(*args, **kwargs)
 
 
 def setup_and_login(client):
@@ -310,6 +323,7 @@ class TestCSRFProtection:
         # We send a POST to /api/engagements (any protected route) without CSRF.
         # Even if auth fails first, the CSRF check runs before auth on non-exempt paths.
         with app.test_client() as c:
+            c.auto_csrf = False
             # Manually inject an auth_token cookie so the CSRF check is reached.
             from models.auth import create_session_token
             token = create_session_token(999, role='admin', username='testuser')
@@ -355,26 +369,28 @@ class TestCSRFProtection:
             # Should not be blocked by CSRF (setup is explicitly exempt)
             assert resp.status_code in (201, 409)  # 409 if already set up
 
-    def test_login_exempt_from_csrf(self, client):
-        """Login POST should not require a CSRF token."""
-        # Attempt login without any CSRF token - it should not return 403 for CSRF.
+    def test_login_requires_csrf(self, client):
+        """Login needs the double-submit token too (login CSRF, L-8)."""
+        client.auto_csrf = False
         resp = client.post(
             '/api/auth/login',
             json={'email': 'nobody@test.com', 'password': 'WrongPass1!'},
             content_type='application/json'
         )
-        # Should be 401 (bad credentials) not 403 (CSRF failure)
+        assert resp.status_code == 403
+        client.auto_csrf = True
+        resp = client.post('/api/auth/login', json={'email': 'nobody@test.com', 'password': 'WrongPass1!'})
         assert resp.status_code == 401
 
-    def test_setup_exempt_from_csrf(self, client):
-        """Setup POST should not require a CSRF token."""
+    def test_setup_requires_csrf(self, client):
+        """Setup needs the double-submit token too (L-8)."""
+        client.auto_csrf = False
         resp = client.post(
             '/api/auth/setup',
             json={'email': 'exempt@test.com', 'password': 'ValidPass123!'},
             content_type='application/json'
         )
-        # Should be 201 (created) or 409 (already set up) - not 403 CSRF failure.
-        assert resp.status_code in (201, 409)
+        assert resp.status_code == 403
 
     def test_get_requests_bypass_csrf(self, client):
         """GET requests should never be blocked by CSRF."""
@@ -777,8 +793,9 @@ class TestAuthRouteSecurityBehaviours:
     def test_logout_clears_auth_cookie(self, client, app):
         """POST /api/auth/logout should delete the auth_token cookie."""
         with app.test_client() as c:
-            # Plant a dummy auth_token cookie and matching CSRF tokens
-            csrf_value = 'aa' * 32
+            # A dummy auth_token cookie and the CSRF token bound to it (L-8)
+            from utils.csrf import session_csrf_token
+            csrf_value = session_csrf_token('dummy_token_value')
             c.set_cookie('auth_token', 'dummy_token_value')
             c.set_cookie('csrf_token', csrf_value)
             resp = c.post(

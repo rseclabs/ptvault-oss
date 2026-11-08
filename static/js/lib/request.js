@@ -44,9 +44,13 @@ class APIRequest {
             credentials: 'same-origin'
         };
 
-        // Add CSRF token for mutating requests
-        if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-            const csrfToken = this._getCsrfToken();
+        // Add CSRF token for mutating requests (login and setup included; L-8)
+        const mutating = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
+        if (mutating) {
+            let csrfToken = this._getCsrfToken();
+            if (!csrfToken) {
+                csrfToken = await this.refreshCsrfToken().catch(() => null);
+            }
             if (csrfToken) {
                 config.headers['X-CSRF-Token'] = csrfToken;
             }
@@ -65,7 +69,19 @@ class APIRequest {
         }
 
         try {
-            const response = await fetch(url, config);
+            let response = await fetch(url, config);
+            // A token from before this session (e.g. issued before login) is refused:
+            // fetch the session's token once and retry.
+            if (mutating && response.status === 403) {
+                const body = await response.clone().json().catch(() => ({}));
+                if (/^CSRF token/.test(body.error || '')) {
+                    const fresh = await this.refreshCsrfToken().catch(() => null);
+                    if (fresh) {
+                        config.headers['X-CSRF-Token'] = fresh;
+                        response = await fetch(url, config);
+                    }
+                }
+            }
             const data = await this.handleResponse(response);
             return data;
         } catch (error) {

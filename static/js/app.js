@@ -21,10 +21,8 @@ const AppState = {
  * Initialize application
  */
 document.addEventListener('DOMContentLoaded', async () => {
-    // Ensure CSRF token exists (may be missing for sessions created before CSRF was added)
-    if (!document.cookie.match(/(?:^|;\s*)csrf_token=/)) {
-        try { await fetch('/api/auth/csrf-token', { credentials: 'same-origin' }); } catch (e) { /* ignore */ }
-    }
+    // Get this session's CSRF token (it is bound to the session; an older cookie is refused)
+    try { await fetch('/api/auth/csrf-token', { credentials: 'same-origin' }); } catch (e) { /* ignore */ }
 
     // Initialize theme
     ThemeManager.init();

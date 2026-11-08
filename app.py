@@ -35,6 +35,8 @@ from models.database import init_db, get_db_connection, run_migrations, setup_re
 from models.encryption import is_encryption_available, is_encryption_enabled, check_and_migrate_if_needed
 from features import register_blueprints
 from middleware.auth import require_auth, require_role
+from utils.csrf import csrf_protect
+from utils.rate_limits import configure_rate_limits
 from config import BASE_DIR
 
 app = Flask(__name__,
@@ -45,23 +47,12 @@ app.config.from_object(Config)
 # Set Flask's max content length to match our file size limit
 app.config['MAX_CONTENT_LENGTH'] = Config.MAX_FILE_SIZE
 
-# Rate limiting
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=["100 per minute"],
-    storage_uri="memory://",
-)
-
 # Register blueprints
 register_blueprints(app)
 
-# Apply specific rate limits to auth endpoints
-limiter.limit("5 per minute")(app.view_functions['auth.login'])
-limiter.limit("3 per minute")(app.view_functions['auth.setup'])
+# Rate limits: default, login, setup and password changes; storage and proxy
+# handling from the environment (utils/rate_limits.py, L-8)
+limiter = configure_rate_limits(app)
 
 # Encryption status check
 if is_encryption_available():
@@ -96,30 +87,8 @@ def close_db(error):
     if db is not None:
         db.close()
 
-@app.before_request
-def csrf_protect():
-    """Validate CSRF token on mutating requests (double-submit cookie pattern)."""
-    if request.method in ('GET', 'HEAD', 'OPTIONS'):
-        return  # Safe methods don't need CSRF
-
-    # Skip CSRF for setup and login (no session yet)
-    if request.path in ('/api/auth/setup', '/api/auth/login', '/api/auth/csrf-token'):
-        return
-
-    # Skip CSRF for non-API routes
-    if not request.path.startswith('/api/'):
-        return
-
-    cookie_token = request.cookies.get('csrf_token')
-    header_token = request.headers.get('X-CSRF-Token')
-
-    if not cookie_token or not header_token:
-        app.logger.warning('CSRF missing — path=%s cookie_present=%s header_present=%s',
-                           request.path, bool(cookie_token), bool(header_token))
-        return jsonify({"error": "CSRF token missing"}), 403
-
-    if cookie_token != header_token:
-        return jsonify({"error": "CSRF token mismatch"}), 403
+# CSRF on every mutating API request, login and setup included (utils/csrf.py, L-8)
+app.before_request(csrf_protect)
 
 
 @app.after_request
