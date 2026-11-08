@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nmaprun scanner="nmap" args="nmap -sV -O -p- --min-rate 1000 -oX scan.xml 10.0.5.0/24" start="1777899600" startstr="Mon May 04 13:00:00 2026" version="7.94" xmloutputversion="1.05">
+  <scaninfo type="syn" protocol="tcp" numservices="65535" services="1-65535"/>
+  <verbose level="0"/>
+  <debugging level="0"/>
+  <host starttime="1777899660" endtime="1777899690">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.10" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:0A" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="DC01.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="53">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="domain" method="probed" conf="10" product="Microsoft DNS" version="6.1.7601"/>
+      </port>
+      <port protocol="tcp" portid="88">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="kerberos-sec" method="probed" conf="10" product="Microsoft Windows Kerberos"/>
+      </port>
+      <port protocol="tcp" portid="135">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="msrpc" method="probed" conf="10" product="Microsoft Windows RPC"/>
+      </port>
+      <port protocol="tcp" portid="139">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="netbios-ssn" method="probed" conf="10" product="Microsoft Windows netbios-ssn"/>
+      </port>
+      <port protocol="tcp" portid="389">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ldap" method="probed" conf="10" product="Microsoft Windows Active Directory LDAP" extrainfo="Domain: acme.local"/>
+      </port>
+      <port protocol="tcp" portid="445">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="microsoft-ds" method="probed" conf="10" product="Microsoft Windows Server 2019 - 2022 SMB"/>
+      </port>
+      <port protocol="tcp" portid="464">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="kpasswd5" method="probed" conf="10"/>
+      </port>
+      <port protocol="tcp" portid="636">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="tcpwrapped" method="probed" conf="10"/>
+      </port>
+      <port protocol="tcp" portid="3268">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ldap" method="probed" conf="10" product="Microsoft Windows AD LDAP" extrainfo="Domain: acme.local"/>
+      </port>
+      <port protocol="tcp" portid="3389">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ms-wbt-server" method="probed" conf="10" product="Microsoft Terminal Services"/>
+      </port>
+      <port protocol="tcp" portid="5985">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="wsman" method="probed" conf="10" product="Microsoft HTTPAPI httpd 2.0" extrainfo="SSDP/UPnP"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="53"/>
+      <osmatch name="Microsoft Windows Server 2019 Standard 17763" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="Server" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777899695" endtime="1777899725">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.11" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:0B" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="DC02.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="53">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="domain" method="probed" conf="10" product="Microsoft DNS" version="6.1.7601"/>
+      </port>
+      <port protocol="tcp" portid="88">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="kerberos-sec" method="probed" conf="10" product="Microsoft Windows Kerberos"/>
+      </port>
+      <port protocol="tcp" portid="135">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="msrpc" method="probed" conf="10" product="Microsoft Windows RPC"/>
+      </port>
+      <port protocol="tcp" portid="139">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="netbios-ssn" method="probed" conf="10" product="Microsoft Windows netbios-ssn"/>
+      </port>
+      <port protocol="tcp" portid="389">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ldap" method="probed" conf="10" product="Microsoft Windows AD LDAP" extrainfo="Domain: acme.local"/>
+      </port>
+      <port protocol="tcp" portid="445">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="microsoft-ds" method="probed" conf="10" product="Microsoft Windows Server 2019 - 2022 SMB"/>
+      </port>
+      <port protocol="tcp" portid="3389">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ms-wbt-server" method="probed" conf="10" product="Microsoft Terminal Services"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="53"/>
+      <osmatch name="Microsoft Windows Server 2019 Standard 17763" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="Server" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777899730" endtime="1777899760">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.12" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:0C" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="EXCHANGE01.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="25">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="smtp" method="probed" conf="10" product="Microsoft Exchange smtpd" version="15.1"/>
+      </port>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" method="probed" conf="10" product="Microsoft IIS httpd" version="10.0"/>
+      </port>
+      <port protocol="tcp" portid="135">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="msrpc" method="probed" conf="10" product="Microsoft Windows RPC"/>
+      </port>
+      <port protocol="tcp" portid="143">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="imap" method="probed" conf="10" product="Microsoft Exchange imapd"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/http" method="probed" conf="10" product="Microsoft IIS httpd" version="10.0"/>
+      </port>
+      <port protocol="tcp" portid="445">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="microsoft-ds" method="probed" conf="10" product="Microsoft Windows Server 2016 SMB"/>
+      </port>
+      <port protocol="tcp" portid="587">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="smtp" method="probed" conf="10" product="Microsoft Exchange smtpd" version="15.1"/>
+      </port>
+      <port protocol="tcp" portid="993">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/imap" method="probed" conf="10" product="Microsoft Exchange imapd"/>
+      </port>
+      <port protocol="tcp" portid="995">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/pop3" method="probed" conf="10" product="Microsoft Exchange pop3d"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="25"/>
+      <osmatch name="Microsoft Windows Server 2016 Standard" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="Server" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777899765" endtime="1777899795">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.13" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:0D" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="SQL-PROD01.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="135">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="msrpc" method="probed" conf="10" product="Microsoft Windows RPC"/>
+      </port>
+      <port protocol="tcp" portid="139">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="netbios-ssn" method="probed" conf="10" product="Microsoft Windows netbios-ssn"/>
+      </port>
+      <port protocol="tcp" portid="445">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="microsoft-ds" method="probed" conf="10" product="Microsoft Windows SMB"/>
+      </port>
+      <port protocol="tcp" portid="1433">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ms-sql-s" method="probed" conf="10" product="Microsoft SQL Server" version="2019 15.00.2000"/>
+      </port>
+      <port protocol="tcp" portid="3389">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ms-wbt-server" method="probed" conf="10" product="Microsoft Terminal Services"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="135"/>
+      <osmatch name="Microsoft Windows Server 2019 Standard" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="Server" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777899800" endtime="1777899830">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.14" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:0E" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="SQL-PROD02.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="135">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="msrpc" method="probed" conf="10" product="Microsoft Windows RPC"/>
+      </port>
+      <port protocol="tcp" portid="445">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="microsoft-ds" method="probed" conf="10" product="Microsoft Windows SMB"/>
+      </port>
+      <port protocol="tcp" portid="1433">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ms-sql-s" method="probed" conf="10" product="Microsoft SQL Server" version="2019 15.00.2000"/>
+      </port>
+      <port protocol="tcp" portid="3389">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ms-wbt-server" method="probed" conf="10" product="Microsoft Terminal Services"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="135"/>
+      <osmatch name="Microsoft Windows Server 2019 Standard" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="Server" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777899835" endtime="1777899865">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.15" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:0F" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="FILE01.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="135">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="msrpc" method="probed" conf="10" product="Microsoft Windows RPC"/>
+      </port>
+      <port protocol="tcp" portid="139">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="netbios-ssn" method="probed" conf="10" product="Microsoft Windows netbios-ssn"/>
+      </port>
+      <port protocol="tcp" portid="445">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="microsoft-ds" method="probed" conf="10" product="Microsoft Windows SMB"/>
+      </port>
+      <port protocol="tcp" portid="3389">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ms-wbt-server" method="probed" conf="10" product="Microsoft Terminal Services"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="135"/>
+      <osmatch name="Microsoft Windows Server 2019 Standard" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="Server" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777899870" endtime="1777899900">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.17" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:11" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="JUMP01.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" method="probed" conf="10" product="OpenSSH" version="8.9p1 Ubuntu 3ubuntu0.1" extrainfo="Ubuntu Linux; protocol 2.0"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="22"/>
+      <osmatch name="Linux 5.15 (Ubuntu 22.04)" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777899905" endtime="1777899935">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.19" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:13" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="WEB-INT01.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" method="probed" conf="10" product="OpenSSH" version="8.2p1 Ubuntu 4ubuntu0.5" extrainfo="Ubuntu Linux; protocol 2.0"/>
+      </port>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" method="probed" conf="10" product="nginx" version="1.18.0" extrainfo="Ubuntu"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/http" method="probed" conf="10" product="nginx" version="1.18.0" extrainfo="Ubuntu"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="22"/>
+      <osmatch name="Linux 5.15 (Ubuntu 22.04)" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777899940" endtime="1777899970">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.22" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:16" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="DEV-BUILD.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" method="probed" conf="10" product="OpenSSH" version="8.2p1 Ubuntu 4ubuntu0.5"/>
+      </port>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" method="probed" conf="10" product="Apache httpd" version="2.4.41" extrainfo="(Ubuntu)"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/http" method="probed" conf="10" product="Apache httpd" version="2.4.41" extrainfo="(Ubuntu)"/>
+      </port>
+      <port protocol="tcp" portid="8080">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http-proxy" method="probed" conf="10" product="Jenkins" version="2.387.3"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="22"/>
+      <osmatch name="Linux 5.4 (Ubuntu 20.04)" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777899975" endtime="1777900005">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.26" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:1A" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="FTP-LEGACY.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="21">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ftp" method="probed" conf="10" product="vsftpd" version="2.3.4"/>
+      </port>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" method="probed" conf="10" product="OpenSSH" version="5.3" extrainfo="protocol 2.0"/>
+      </port>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" method="probed" conf="10" product="Apache httpd" version="2.2.15" extrainfo="(CentOS)"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="21"/>
+      <osmatch name="Linux 2.6.32 (CentOS 6)" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777900010" endtime="1777900040">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.28" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:1C" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="ERP-APP01.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" method="probed" conf="10" product="OpenSSH" version="8.0" extrainfo="protocol 2.0"/>
+      </port>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" method="probed" conf="10" product="Apache httpd" version="2.4.37" extrainfo="(Red Hat Enterprise Linux)"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/http" method="probed" conf="10" product="Apache httpd" version="2.4.37" extrainfo="(Red Hat Enterprise Linux)"/>
+      </port>
+      <port protocol="tcp" portid="8080">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http-proxy" method="probed" conf="10" product="Apache Tomcat" version="9.0.27"/>
+      </port>
+      <port protocol="tcp" portid="8443">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/http" method="probed" conf="10" product="Apache Tomcat" version="9.0.27"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="22"/>
+      <osmatch name="Linux 4.18 (RHEL 8.7)" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777900045" endtime="1777900075">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.29" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:1D" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="HR-DB.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" method="probed" conf="10" product="OpenSSH" version="8.9p1"/>
+      </port>
+      <port protocol="tcp" portid="5432">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="postgresql" method="probed" conf="10" product="PostgreSQL DB" version="14.5"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="22"/>
+      <osmatch name="Linux 5.15 (Ubuntu 22.04)" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777900080" endtime="1777900110">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.30" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:1E" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="FINANCE-APP.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" method="probed" conf="10" product="Microsoft IIS httpd" version="10.0"/>
+      </port>
+      <port protocol="tcp" portid="135">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="msrpc" method="probed" conf="10" product="Microsoft Windows RPC"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/http" method="probed" conf="10" product="Microsoft IIS httpd" version="10.0"/>
+      </port>
+      <port protocol="tcp" portid="445">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="microsoft-ds" method="probed" conf="10" product="Microsoft Windows SMB"/>
+      </port>
+      <port protocol="tcp" portid="3389">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ms-wbt-server" method="probed" conf="10" product="Microsoft Terminal Services"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="80"/>
+      <osmatch name="Microsoft Windows Server 2022 Datacenter" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="Server" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777900115" endtime="1777900145">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.1" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:01" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="CORE-RTR01.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" method="probed" conf="10" product="Cisco SSH" version="1.25"/>
+      </port>
+      <port protocol="tcp" portid="23">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="telnet" method="probed" conf="10" product="Cisco router telnetd"/>
+      </port>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" method="probed" conf="10" product="Cisco IOS http config"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/https" method="probed" conf="10" product="Cisco IOS http config"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="22"/>
+      <osmatch name="Cisco IOS 15.6" accuracy="97" line="10000">
+        <osclass type="router" vendor="Cisco" osfamily="IOS" osgen="15.X" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777900150" endtime="1777900180">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.18" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:12" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="VPN-GW.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/https" method="probed" conf="10" product="Pulse Secure VPN" version="9.1R12"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="443"/>
+      <osmatch name="Pulse Secure 9.1R12" accuracy="97" line="10000">
+        <osclass type="specialized" vendor="Pulse Secure" osfamily="Pulse Connect Secure" osgen="9.X" accuracy="95"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777900185" endtime="1777900215">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.27" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:1B" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="SHAREPOINT01.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" method="probed" conf="10" product="Microsoft IIS httpd" version="10.0"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/http" method="probed" conf="10" product="Microsoft IIS httpd" version="10.0"/>
+      </port>
+      <port protocol="tcp" portid="445">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="microsoft-ds" method="probed" conf="10" product="Microsoft Windows SMB"/>
+      </port>
+      <port protocol="tcp" portid="3389">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ms-wbt-server" method="probed" conf="10" product="Microsoft Terminal Services"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="80"/>
+      <osmatch name="Microsoft Windows Server 2019 Standard" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="Server" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777900220" endtime="1777900250">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.23" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:17" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="CITRIX01.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" method="probed" conf="10" product="Microsoft IIS httpd" version="10.0"/>
+      </port>
+      <port protocol="tcp" portid="135">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="msrpc" method="probed" conf="10" product="Microsoft Windows RPC"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/http" method="probed" conf="10" product="Microsoft IIS httpd" version="10.0"/>
+      </port>
+      <port protocol="tcp" portid="445">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="microsoft-ds" method="probed" conf="10" product="Microsoft Windows SMB"/>
+      </port>
+      <port protocol="tcp" portid="3389">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ms-wbt-server" method="probed" conf="10" product="Microsoft Terminal Services"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="80"/>
+      <osmatch name="Microsoft Windows Server 2019 Standard" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="Server" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777900255" endtime="1777900285">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.21" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:15" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="MAIL-RELAY.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" method="probed" conf="10" product="OpenSSH" version="8.4p1 Debian 5+deb11u1"/>
+      </port>
+      <port protocol="tcp" portid="25">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="smtp" method="probed" conf="10" product="Postfix smtpd"/>
+      </port>
+      <port protocol="tcp" portid="587">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="smtp" method="probed" conf="10" product="Postfix smtpd"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="22"/>
+      <osmatch name="Linux 5.10 (Debian 11)" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777900290" endtime="1777900320">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.31" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:1F" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="IDP01.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" method="probed" conf="10" product="OpenSSH" version="8.9p1"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssl/http" method="probed" conf="10" product="nginx" version="1.22.1"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="22"/>
+      <osmatch name="Linux 5.15 (Ubuntu 22.04)" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <host starttime="1777900325" endtime="1777900355">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="10.0.5.33" addrtype="ipv4"/>
+    <address addr="00:50:56:AA:BB:21" addrtype="mac" vendor="VMware, Inc."/>
+    <hostnames>
+      <hostname name="MONITORING.acme.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" method="probed" conf="10" product="OpenSSH" version="8.2p1"/>
+      </port>
+      <port protocol="tcp" portid="3000">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" method="probed" conf="10" product="Grafana" version="9.5.2"/>
+      </port>
+      <port protocol="tcp" portid="9090">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" method="probed" conf="10" product="Prometheus" version="2.45.0"/>
+      </port>
+    </ports>
+    <os>
+      <portused state="open" proto="tcp" portid="22"/>
+      <osmatch name="Linux 5.4 (Ubuntu 20.04)" accuracy="97" line="10000">
+        <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="97"/>
+      </osmatch>
+    </os>
+    <times srtt="200" rttvar="50" to="100000"/>
+  </host>
+  <runstats>
+    <finished time="1777900390" timestr="Mon May 04 13:13:10 2026" summary="Nmap done at Mon May 04 13:00:00 2026; 20 IP addresses (20 hosts up) scanned in 790.00 seconds" elapsed="790.00" exit="success"/>
+    <hosts up="20" down="0" total="20"/>
+  </runstats>
+</nmaprun>

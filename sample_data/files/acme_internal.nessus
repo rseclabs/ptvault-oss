@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NessusClientData_v2>
+  <Policy>
+    <policyName>Internal Network Scan — Authenticated</policyName>
+    <policyComments>Authenticated internal scan policy used during ACME engagement.</policyComments>
+    <Preferences>
+      <ServerPreferences>
+        <preference>
+          <name>max_hosts</name>
+          <value>30</value>
+        </preference>
+        <preference>
+          <name>max_checks</name>
+          <value>5</value>
+        </preference>
+        <preference>
+          <name>plugin_set</name>
+          <value>all</value>
+        </preference>
+        <preference>
+          <name>optimize_test</name>
+          <value>yes</value>
+        </preference>
+      </ServerPreferences>
+    </Preferences>
+  </Policy>
+  <Report xmlns:cm="http://www.nessus.org/cm" name="ACME Internal — Authenticated Scan">
+    <ReportHost name="10.0.5.10">
+      <HostProperties>
+        <tag name="HOST_END">Sun May  4 14:32:11 2026</tag>
+        <tag name="operating-system">Microsoft Windows Server 2019 Standard 17763</tag>
+        <tag name="system-type">general-purpose</tag>
+        <tag name="host-fqdn">DC01.acme.local</tag>
+        <tag name="host-ip">10.0.5.10</tag>
+        <tag name="mac-address">00:50:56:AA:BB:0A</tag>
+        <tag name="HOST_START">Sun May  4 13:11:00 2026</tag>
+      </HostProperties>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="4" pluginID="100485" pluginName="MS Netlogon: Elevation of Privilege Vulnerability (Zerologon)" pluginFamily="Windows">
+        <synopsis>An elevation of privilege vulnerability exists in the Netlogon protocol.</synopsis>
+        <description>An unauthenticated attacker with network access to the DC can establish a vulnerable Netlogon secure channel and impersonate the DC, leading to full domain compromise (CVE-2020-1472).</description>
+        <solution>Apply the August 2020 Microsoft security updates and enable enforcement mode (FullSecureChannelProtection=1).</solution>
+        <risk_factor>Critical</risk_factor>
+        <plugin_output>Nessus was able to perform a partial Zerologon authentication.</plugin_output>
+        <cvss_base_score>10.0</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/Au:N/C:C/I:C/A:C</cvss_vector>
+        <exploit_available>true</exploit_available>
+        <cve>CVE-2020-1472</cve>
+      </ReportItem>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="2" pluginID="57608" pluginName="SMB Signing not required" pluginFamily="Misc.">
+        <synopsis>Signing is not required on the remote SMB server.</synopsis>
+        <description>Signing is not required on the remote SMB server. An unauthenticated, remote attacker can exploit this to conduct man-in-the-middle attacks against the SMB server.</description>
+        <solution>Enforce message signing in the host's configuration. On Windows, this is found in the policy setting 'Microsoft network server: Digitally sign communications (always)'.</solution>
+        <risk_factor>Medium</risk_factor>
+        <cvss_base_score>5.0</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/Au:N/C:N/I:P/A:N</cvss_vector>
+        <exploit_available>false</exploit_available>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="10.0.5.11">
+      <HostProperties>
+        <tag name="HOST_END">Sun May  4 14:32:11 2026</tag>
+        <tag name="operating-system">Microsoft Windows Server 2019 Standard 17763</tag>
+        <tag name="system-type">general-purpose</tag>
+        <tag name="host-fqdn">DC02.acme.local</tag>
+        <tag name="host-ip">10.0.5.11</tag>
+        <tag name="mac-address">00:50:56:AA:BB:0B</tag>
+        <tag name="HOST_START">Sun May  4 13:11:00 2026</tag>
+      </HostProperties>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="2" pluginID="57608" pluginName="SMB Signing not required" pluginFamily="Misc.">
+        <synopsis>Signing is not required on the remote SMB server.</synopsis>
+        <description>Signing is not required on the remote SMB server. An unauthenticated, remote attacker can exploit this to conduct man-in-the-middle attacks.</description>
+        <solution>Enforce message signing in the host's configuration.</solution>
+        <risk_factor>Medium</risk_factor>
+        <cvss_base_score>5.0</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/Au:N/C:N/I:P/A:N</cvss_vector>
+        <exploit_available>false</exploit_available>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="10.0.5.12">
+      <HostProperties>
+        <tag name="HOST_END">Sun May  4 14:32:11 2026</tag>
+        <tag name="operating-system">Microsoft Windows Server 2016 Standard</tag>
+        <tag name="system-type">general-purpose</tag>
+        <tag name="host-fqdn">EXCHANGE01.acme.local</tag>
+        <tag name="host-ip">10.0.5.12</tag>
+        <tag name="mac-address">00:50:56:AA:BB:0C</tag>
+        <tag name="HOST_START">Sun May  4 13:11:00 2026</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="157404" pluginName="Microsoft Exchange Server CVE-2022-41040, CVE-2022-41082 (ProxyNotShell)" pluginFamily="Windows">
+        <synopsis>The remote Exchange server is missing security updates.</synopsis>
+        <description>The Microsoft Exchange Server installation is missing the September 2022 Security Update. It is therefore vulnerable to ProxyNotShell, a chain of an SSRF (CVE-2022-41040) and an RCE (CVE-2022-41082).</description>
+        <solution>Apply the September 2022 Microsoft Exchange Server security update.</solution>
+        <risk_factor>Critical</risk_factor>
+        <plugin_output>Build : 15.01.2375.024 (vulnerable, requires SU09-2022 or later).</plugin_output>
+        <cvss_base_score>8.8</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H</cvss_vector>
+        <exploit_available>true</exploit_available>
+        <cve>CVE-2022-41040</cve>
+        <cve>CVE-2022-41082</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="104743" pluginName="TLS Version 1.0 Protocol Detection" pluginFamily="Service detection">
+        <synopsis>The remote service encrypts traffic using a deprecated protocol.</synopsis>
+        <description>The remote service accepts connections encrypted using TLS 1.0. TLS 1.0 has known cryptographic flaws.</description>
+        <solution>Enable support for TLS 1.2 and/or 1.3, and disable support for TLS 1.0.</solution>
+        <risk_factor>Low</risk_factor>
+        <cvss_base_score>3.7</cvss_base_score>
+        <cvss_vector>AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N</cvss_vector>
+        <exploit_available>false</exploit_available>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="10.0.5.13">
+      <HostProperties>
+        <tag name="HOST_END">Sun May  4 14:32:11 2026</tag>
+        <tag name="operating-system">Microsoft Windows Server 2019 Standard</tag>
+        <tag name="system-type">general-purpose</tag>
+        <tag name="host-fqdn">SQL-PROD01.acme.local</tag>
+        <tag name="host-ip">10.0.5.13</tag>
+        <tag name="mac-address">00:50:56:AA:BB:0D</tag>
+        <tag name="HOST_START">Sun May  4 13:11:00 2026</tag>
+      </HostProperties>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="0" pluginID="10398" pluginName="Microsoft Windows SMB Service Detection" pluginFamily="Windows">
+        <synopsis>It was possible to obtain information about the remote operating system.</synopsis>
+        <description>Nessus was able to obtain the remote operating system through SMB.</description>
+        <solution>n/a</solution>
+        <risk_factor>None</risk_factor>
+        <exploit_available>false</exploit_available>
+      </ReportItem>
+      <ReportItem port="1433" svc_name="mssql" protocol="tcp" severity="3" pluginID="85582" pluginName="Microsoft SQL Server Unsupported Version Detection" pluginFamily="Databases">
+        <synopsis>The remote database server is no longer supported.</synopsis>
+        <description>According to its self-reported version, the Microsoft SQL Server instance is running an unsupported version. Lack of support implies no new security patches will be released.</description>
+        <solution>Upgrade to a version that is currently supported.</solution>
+        <risk_factor>High</risk_factor>
+        <plugin_output>Detected version: Microsoft SQL Server 2019 RTM (without CU).</plugin_output>
+        <cvss_base_score>7.5</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/Au:N/C:P/I:P/A:P</cvss_vector>
+        <exploit_available>false</exploit_available>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="10.0.5.15">
+      <HostProperties>
+        <tag name="HOST_END">Sun May  4 14:32:11 2026</tag>
+        <tag name="operating-system">Microsoft Windows Server 2019 Standard</tag>
+        <tag name="system-type">general-purpose</tag>
+        <tag name="host-fqdn">FILE01.acme.local</tag>
+        <tag name="host-ip">10.0.5.15</tag>
+        <tag name="mac-address">00:50:56:AA:BB:0F</tag>
+        <tag name="HOST_START">Sun May  4 13:11:00 2026</tag>
+      </HostProperties>
+      <ReportItem port="445" svc_name="cifs" protocol="tcp" severity="3" pluginID="26920" pluginName="Microsoft Windows SMB NULL Session Authentication" pluginFamily="Windows">
+        <synopsis>It is possible to log into the remote host with a NULL session.</synopsis>
+        <description>The remote host is running Microsoft Windows. It is possible to log into it using a NULL session (i.e., with no login or password). Depending on the configuration, an attacker may be able to enumerate users and shares.</description>
+        <solution>Apply the suggested fix in the referenced Microsoft KB articles.</solution>
+        <risk_factor>High</risk_factor>
+        <plugin_output>Anonymous bind permitted. Listed shares: Public, NETLOGON, SYSVOL, IPC$</plugin_output>
+        <cvss_base_score>5.0</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/Au:N/C:P/I:N/A:N</cvss_vector>
+        <exploit_available>false</exploit_available>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="10.0.5.22">
+      <HostProperties>
+        <tag name="HOST_END">Sun May  4 14:32:11 2026</tag>
+        <tag name="operating-system">Linux 5.4 (Ubuntu 20.04)</tag>
+        <tag name="system-type">general-purpose</tag>
+        <tag name="host-fqdn">DEV-BUILD.acme.local</tag>
+        <tag name="host-ip">10.0.5.22</tag>
+        <tag name="mac-address">00:50:56:AA:BB:16</tag>
+        <tag name="HOST_START">Sun May  4 13:11:00 2026</tag>
+      </HostProperties>
+      <ReportItem port="8080" svc_name="http-proxy" protocol="tcp" severity="3" pluginID="73334" pluginName="Jenkins Multiple Vulnerabilities" pluginFamily="CGI abuses">
+        <synopsis>The Jenkins server is affected by multiple vulnerabilities.</synopsis>
+        <description>The Jenkins instance is anonymously accessible. The build console logs contain references to AWS access keys committed to a build artifact, which an attacker could harvest.</description>
+        <solution>Disable anonymous read access in Jenkins global security settings. Rotate any credentials that may have been exposed in build logs.</solution>
+        <risk_factor>High</risk_factor>
+        <plugin_output>/jobs/staging-deploy/12/console contains 'AKIAEXAMPLEKEY1234XX'.</plugin_output>
+        <cvss_base_score>7.5</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/Au:N/C:P/I:P/A:P</cvss_vector>
+        <exploit_available>true</exploit_available>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="10.0.5.26">
+      <HostProperties>
+        <tag name="HOST_END">Sun May  4 14:32:11 2026</tag>
+        <tag name="operating-system">Linux 2.6.32 (CentOS 6)</tag>
+        <tag name="system-type">general-purpose</tag>
+        <tag name="host-fqdn">FTP-LEGACY.acme.local</tag>
+        <tag name="host-ip">10.0.5.26</tag>
+        <tag name="mac-address">00:50:56:AA:BB:1A</tag>
+        <tag name="HOST_START">Sun May  4 13:11:00 2026</tag>
+      </HostProperties>
+      <ReportItem port="21" svc_name="ftp" protocol="tcp" severity="4" pluginID="55523" pluginName="vsftpd Smiley Face Backdoor" pluginFamily="FTP">
+        <synopsis>The remote FTP server contains a backdoor.</synopsis>
+        <description>The version of vsftpd running on the remote host has been compiled with a backdoor. Attempting to log in with a username containing :) (a smiley face) triggers the backdoor, which results in a shell listening on TCP port 6200.</description>
+        <solution>Validate and recompile a clean version of the vsftpd 2.3.4 source code, or upgrade to the latest version.</solution>
+        <risk_factor>Critical</risk_factor>
+        <plugin_output>vsftpd 2.3.4 backdoor confirmed via 'USER user:)' on port 21.</plugin_output>
+        <cvss_base_score>10.0</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/Au:N/C:C/I:C/A:C</cvss_vector>
+        <exploit_available>true</exploit_available>
+        <cve>CVE-2011-2523</cve>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="4" pluginID="33850" pluginName="Unix Operating System Unsupported Version Detection" pluginFamily="General">
+        <synopsis>The remote host is running an unsupported version of a Unix-like operating system.</synopsis>
+        <description>The remote host is running CentOS 6, which reached end-of-life on 2020-11-30. As a result, it should not be used since it lacks security patches.</description>
+        <solution>Upgrade to a supported version.</solution>
+        <risk_factor>Critical</risk_factor>
+        <cvss_base_score>10.0</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/Au:N/C:C/I:C/A:C</cvss_vector>
+        <exploit_available>false</exploit_available>
+      </ReportItem>
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="1" pluginID="70658" pluginName="SSH Server CBC Mode Ciphers Enabled" pluginFamily="Misc.">
+        <synopsis>The SSH server is configured to use Cipher Block Chaining.</synopsis>
+        <description>The SSH server is configured to support CBC mode ciphers, which may allow an attacker to recover plaintext from ciphertext.</description>
+        <solution>Disable CBC mode cipher encryption, and enable CTR or GCM cipher mode.</solution>
+        <risk_factor>Low</risk_factor>
+        <cvss_base_score>2.6</cvss_base_score>
+        <cvss_vector>AV:N/AC:H/Au:N/C:P/I:N/A:N</cvss_vector>
+        <exploit_available>false</exploit_available>
+        <cve>CVE-2008-5161</cve>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="10.0.5.28">
+      <HostProperties>
+        <tag name="HOST_END">Sun May  4 14:32:11 2026</tag>
+        <tag name="operating-system">Linux 4.18 (RHEL 8.7)</tag>
+        <tag name="system-type">general-purpose</tag>
+        <tag name="host-fqdn">ERP-APP01.acme.local</tag>
+        <tag name="host-ip">10.0.5.28</tag>
+        <tag name="mac-address">00:50:56:AA:BB:1C</tag>
+        <tag name="HOST_START">Sun May  4 13:11:00 2026</tag>
+      </HostProperties>
+      <ReportItem port="8443" svc_name="https" protocol="tcp" severity="2" pluginID="34970" pluginName="Apache Tomcat Default Files" pluginFamily="CGI abuses">
+        <synopsis>The default error page, default index page, example JSPs and/or example servlets are installed on the remote Apache Tomcat server.</synopsis>
+        <description>These files should be removed as they may help an attacker uncover information about the remote Tomcat install or its host.</description>
+        <solution>Delete the default index page and remove the example JSP and servlets.</solution>
+        <risk_factor>Medium</risk_factor>
+        <cvss_base_score>5.0</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/Au:N/C:P/I:N/A:N</cvss_vector>
+        <exploit_available>false</exploit_available>
+      </ReportItem>
+      <ReportItem port="8443" svc_name="https" protocol="tcp" severity="4" pluginID="97134" pluginName="Apache Tomcat Default Credentials" pluginFamily="CGI abuses">
+        <synopsis>The remote Apache Tomcat server uses a default username and password.</synopsis>
+        <description>Nessus successfully authenticated to the Apache Tomcat Manager interface using the default credentials 'tomcat:tomcat'. An attacker with these credentials can deploy arbitrary WAR files, leading to remote code execution as the Tomcat user.</description>
+        <solution>Edit conf/tomcat-users.xml to remove or change the default account.</solution>
+        <risk_factor>Critical</risk_factor>
+        <plugin_output>Logged in as 'tomcat' on /manager/html.</plugin_output>
+        <cvss_base_score>9.8</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H</cvss_vector>
+        <exploit_available>true</exploit_available>
+      </ReportItem>
+      <ReportItem port="443" svc_name="https" protocol="tcp" severity="1" pluginID="84574" pluginName="Missing HSTS Header" pluginFamily="Web Servers">
+        <synopsis>The remote web server does not enforce HSTS.</synopsis>
+        <description>The remote HTTPS server does not transmit a Strict-Transport-Security header to enforce HTTPS-only connections.</description>
+        <solution>Configure the web server to send the Strict-Transport-Security header.</solution>
+        <risk_factor>Low</risk_factor>
+        <cvss_base_score>2.6</cvss_base_score>
+        <cvss_vector>AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N</cvss_vector>
+        <exploit_available>false</exploit_available>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="10.0.5.30">
+      <HostProperties>
+        <tag name="HOST_END">Sun May  4 14:32:11 2026</tag>
+        <tag name="operating-system">Microsoft Windows Server 2022 Datacenter</tag>
+        <tag name="system-type">general-purpose</tag>
+        <tag name="host-fqdn">FINANCE-APP.acme.local</tag>
+        <tag name="host-ip">10.0.5.30</tag>
+        <tag name="mac-address">00:50:56:AA:BB:1E</tag>
+        <tag name="HOST_START">Sun May  4 13:11:00 2026</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="1" pluginID="11213" pluginName="HTTP TRACE / TRACK Methods Allowed" pluginFamily="Web Servers">
+        <synopsis>Debugging functions are enabled on the remote web server.</synopsis>
+        <description>The remote web server supports the TRACE and/or TRACK methods, which are used to debug web server connections.</description>
+        <solution>Disable these HTTP methods.</solution>
+        <risk_factor>Low</risk_factor>
+        <cvss_base_score>5.0</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/Au:N/C:P/I:N/A:N</cvss_vector>
+        <exploit_available>false</exploit_available>
+        <cve>CVE-2003-1567</cve>
+        <cve>CVE-2004-2320</cve>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="0" pluginID="10107" pluginName="HTTP Server Type and Version" pluginFamily="Web Servers">
+        <synopsis>A web server is running on the remote host.</synopsis>
+        <description>This plugin attempts to determine the type and the version of the remote web server.</description>
+        <solution>n/a</solution>
+        <risk_factor>None</risk_factor>
+        <plugin_output>Microsoft-IIS/10.0</plugin_output>
+        <exploit_available>false</exploit_available>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="10.0.5.1">
+      <HostProperties>
+        <tag name="HOST_END">Sun May  4 14:32:11 2026</tag>
+        <tag name="operating-system">Cisco IOS 15.6</tag>
+        <tag name="system-type">general-purpose</tag>
+        <tag name="host-fqdn">CORE-RTR01.acme.local</tag>
+        <tag name="host-ip">10.0.5.1</tag>
+        <tag name="mac-address">00:50:56:AA:BB:01</tag>
+        <tag name="HOST_START">Sun May  4 13:11:00 2026</tag>
+      </HostProperties>
+      <ReportItem port="161" svc_name="snmp" protocol="udp" severity="2" pluginID="10264" pluginName="SNMP Agent Default Community Names" pluginFamily="SNMP">
+        <synopsis>The community names of the remote SNMP server can be guessed.</synopsis>
+        <description>It is possible to obtain the default community names of the remote SNMP server. An attacker may use this information to gain more knowledge about the remote host or change the configuration.</description>
+        <solution>Disable the SNMP service or filter incoming UDP packets to port 161.</solution>
+        <risk_factor>Medium</risk_factor>
+        <plugin_output>The community 'public' was found.</plugin_output>
+        <cvss_base_score>7.5</cvss_base_score>
+        <cvss_vector>AV:N/AC:L/Au:N/C:P/I:P/A:P</cvss_vector>
+        <exploit_available>false</exploit_available>
+        <cve>CVE-1999-0517</cve>
+        <cve>CVE-1999-0516</cve>
+      </ReportItem>
+      <ReportItem port="23" svc_name="telnet" protocol="tcp" severity="2" pluginID="42263" pluginName="Telnet Service Enabled" pluginFamily="Service detection">
+        <synopsis>The remote service supports cleartext authentication.</synopsis>
+        <description>The remote host is running a Telnet server. Using Telnet over an unencrypted channel is not recommended.</description>
+        <solution>Disable the Telnet service and use SSH instead.</solution>
+        <risk_factor>Medium</risk_factor>
+        <cvss_base_score>4.8</cvss_base_score>
+        <cvss_vector>AV:N/AC:H/Au:N/C:P/I:P/A:N</cvss_vector>
+        <exploit_available>false</exploit_available>
+      </ReportItem>
+    </ReportHost>
+  </Report>
+</NessusClientData_v2>

@@ -1,0 +1,131 @@
+{
+  "name": "ACME Corp sample engagement",
+  "versions": {
+    "attack": "16",
+    "navigator": "5.1.0",
+    "layer": "4.5"
+  },
+  "domain": "enterprise-attack",
+  "description": "Techniques used during the ACME Corp sample engagement (fictional).",
+  "techniques": [
+    {
+      "techniqueID": "T1046",
+      "score": 60,
+      "color": "",
+      "comment": "Nmap sweep of 10.0.5.0/24",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1190",
+      "score": 90,
+      "color": "",
+      "comment": "SQL injection on the intranet portal",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1078",
+      "score": 80,
+      "color": "",
+      "comment": "Reused portal_app password on HR-DB; Tomcat default creds",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1505.003",
+      "score": 70,
+      "color": "",
+      "comment": "WAR deployed through Tomcat Manager on ERP-APP01",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1558.003",
+      "score": 100,
+      "color": "",
+      "comment": "svc_sql TGS cracked offline",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1003.001",
+      "score": 100,
+      "color": "",
+      "comment": "LSASS dump on SQL-PROD01",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1003.006",
+      "score": 100,
+      "color": "",
+      "comment": "secretsdump against DC01",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1550.002",
+      "score": 90,
+      "color": "",
+      "comment": "adm_jsmith NTLM hash reused to DC01",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1021.002",
+      "score": 70,
+      "color": "",
+      "comment": "psexec to SQL-PROD01 and DC01",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1059.001",
+      "score": 50,
+      "color": "",
+      "comment": "Post-exploitation enumeration",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1087.002",
+      "score": 50,
+      "color": "",
+      "comment": "BloodHound collection",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1110.002",
+      "score": 60,
+      "color": "",
+      "comment": "hashcat against the TGS and NTLM hashes",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": false
+    }
+  ],
+  "gradient": {
+    "colors": [
+      "#ffffffff",
+      "#ff6666ff"
+    ],
+    "minValue": 0,
+    "maxValue": 100
+  },
+  "legendItems": [],
+  "showTacticRowBackground": false,
+  "selectTechniquesAcrossTactics": true
+}

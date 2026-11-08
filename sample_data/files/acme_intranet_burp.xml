@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<issues burpVersion="2026.4.1" exportTime="Wed May 06 15:42:10 UTC 2026">
+  <issue>
+    <serialNumber>582917400001</serialNumber>
+    <type>1049088</type>
+    <name>SQL injection</name>
+    <host ip="10.0.5.19">https://intranet.acme.local</host>
+    <path>/directory/search</path>
+    <location>/directory/search [q parameter]</location>
+    <severity>High</severity>
+    <confidence>Certain</confidence>
+    <issueDetail>The &lt;b&gt;q&lt;/b&gt; parameter appears to be vulnerable to SQL injection attacks. The payload &lt;b&gt;'||pg_sleep(10)--&lt;/b&gt; was submitted in the q parameter and the application took 10,214 milliseconds to respond, compared with 188 milliseconds for the original request. A UNION-based payload returned the database version (PostgreSQL 14.5) in the employee table.</issueDetail>
+    <remediationDetail>Use parameterised queries for every database call. The directory search builds its WHERE clause by string concatenation in &lt;b&gt;search.py&lt;/b&gt;.</remediationDetail>
+  </issue>
+  <issue>
+    <serialNumber>582917400002</serialNumber>
+    <type>2097920</type>
+    <name>Cross-site scripting (stored)</name>
+    <host ip="10.0.5.19">https://intranet.acme.local</host>
+    <path>/profile/edit</path>
+    <location>/profile/edit [about_me parameter]</location>
+    <severity>High</severity>
+    <confidence>Firm</confidence>
+    <issueDetail>The value of the &lt;b&gt;about_me&lt;/b&gt; parameter is stored and later rendered unencoded on &lt;b&gt;/directory/person/&amp;lt;id&amp;gt;&lt;/b&gt;. The payload &lt;b&gt;&amp;lt;img src=x onerror=alert(document.domain)&amp;gt;&lt;/b&gt; executed when another user viewed the profile.</issueDetail>
+    <remediationDetail>HTML-encode user input on output and add a Content-Security-Policy.</remediationDetail>
+  </issue>
+  <issue>
+    <serialNumber>582917400003</serialNumber>
+    <type>5244416</type>
+    <name>Cookie without HttpOnly flag set</name>
+    <host ip="10.0.5.19">https://intranet.acme.local</host>
+    <path>/login</path>
+    <location>/login</location>
+    <severity>Low</severity>
+    <confidence>Certain</confidence>
+    <issueDetail>The session cookie &lt;b&gt;PORTALSESSID&lt;/b&gt; is issued without the HttpOnly flag.</issueDetail>
+    <remediationDetail>Set HttpOnly (and Secure, SameSite=Lax) on the session cookie.</remediationDetail>
+  </issue>
+  <issue>
+    <serialNumber>582917400004</serialNumber>
+    <type>4194560</type>
+    <name>Password field with autocomplete enabled</name>
+    <host ip="10.0.5.19">https://intranet.acme.local</host>
+    <path>/login</path>
+    <location>/login</location>
+    <severity>Low</severity>
+    <confidence>Certain</confidence>
+    <issueDetail>The login form's password field does not set autocomplete=&quot;off&quot;.</issueDetail>
+    <remediationDetail>Rely on a password manager-friendly policy; low priority.</remediationDetail>
+  </issue>
+  <issue>
+    <serialNumber>582917400005</serialNumber>
+    <type>8389632</type>
+    <name>Strict transport security not enforced</name>
+    <host ip="10.0.5.19">https://intranet.acme.local</host>
+    <path>/</path>
+    <location>/</location>
+    <severity>Low</severity>
+    <confidence>Certain</confidence>
+    <issueDetail>The application does not send a Strict-Transport-Security header.</issueDetail>
+    <remediationDetail>Send Strict-Transport-Security: max-age=31536000; includeSubDomains.</remediationDetail>
+  </issue>
+  <issue>
+    <serialNumber>582917400006</serialNumber>
+    <type>5245344</type>
+    <name>Software version disclosed in Server header</name>
+    <host ip="10.0.5.19">https://intranet.acme.local</host>
+    <path>/</path>
+    <location>/</location>
+    <severity>Information</severity>
+    <confidence>Certain</confidence>
+    <issueDetail>Responses include &lt;b&gt;Server: nginx/1.18.0 (Ubuntu)&lt;/b&gt;.</issueDetail>
+    <remediationDetail>Set server_tokens off in the nginx configuration.</remediationDetail>
+  </issue>
+</issues>
