@@ -119,10 +119,10 @@ const CommandManager = {
             const isActive = this.selectedCategory === cat.name;
             html += `
                 <div class="category-item ${isActive ? 'active' : ''}"
-                     onclick="CommandManager.filterByCategory('${cat.name}')">
+                     data-action="filter-command-category" data-category="${escapeHtml(cat.name)}">
                     <span class="category-icon">${catInfo.icon}</span>
-                    <span class="category-name">${cat.name}</span>
-                    <span class="category-count">${cat.count}</span>
+                    <span class="category-name">${escapeHtml(cat.name)}</span>
+                    <span class="category-count">${escapeHtml(cat.count)}</span>
                 </div>
             `;
         }
@@ -521,3 +521,6 @@ const CommandManager = {
 
 // Make CommandManager available globally
 window.CommandManager = CommandManager;
+
+// Category names travel in a data-* attribute, never inside handler code (H-10).
+registerAction('filter-command-category', el => CommandManager.filterByCategory(el.dataset.category));

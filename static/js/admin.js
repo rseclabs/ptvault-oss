@@ -1021,7 +1021,7 @@ const AdminPanel = {
                                         Edit
                                     </button>
                                     <button class="btn btn-sm btn-danger"
-                                            onclick="AdminPanel.confirmDeleteEngagement(${eng.id}, '${escapeHtml(eng.name).replace(/'/g, "\\'")}')">
+                                            data-action="confirm-delete-engagement" data-engagement-id="${Number(eng.id)}" data-engagement-name="${escapeHtml(eng.name)}">
                                         Delete
                                     </button>
                                 </td>
@@ -1129,3 +1129,7 @@ const AdminPanel = {
 
 // Make AdminPanel available globally
 window.AdminPanel = AdminPanel;
+
+// The engagement name travels in a data-* attribute, never inside handler code (H-10).
+registerAction('confirm-delete-engagement', el =>
+    AdminPanel.confirmDeleteEngagement(Number(el.dataset.engagementId), el.dataset.engagementName));

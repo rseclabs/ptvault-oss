@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 from utils.markdown_export import generate_markdown_report
 from utils.audit_logger import audit_create, audit_update, audit_delete, audit_export, audit_view
-from utils.helpers import normalize_tags
+from utils.helpers import normalize_tags, parse_port_fields
 
 
 engagements_bp = Blueprint('engagements', __name__, url_prefix='/api/engagements')
@@ -1149,14 +1149,21 @@ def import_engagement_data(data):
         old_host_id = port.get('host_id')
         new_host_id = host_id_map.get(old_host_id)
         if new_host_id:
+            # Port, protocol and state are rendered into markup: skip rows that
+            # are not a real port (H-10).
+            try:
+                port_num, protocol, state = parse_port_fields(
+                    port.get('port'), port.get('protocol') or 'tcp', port.get('state') or 'open')
+            except ValueError:
+                continue
             cursor.execute('''
                 INSERT INTO host_ports (host_id, port, protocol, state, service, version)
                 VALUES (?, ?, ?, ?, ?, ?)
             ''', (
                 new_host_id,
-                port.get('port'),
-                port.get('protocol'),
-                port.get('state'),
+                port_num,
+                protocol,
+                state,
                 port.get('service'),
                 port.get('version')
             ))

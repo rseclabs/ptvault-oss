@@ -6,6 +6,8 @@ Extracts host information from parsed tool metadata and manages host-evidence re
 import json
 from urllib.parse import urlparse
 
+from utils.helpers import parse_port_fields
+
 
 def extract_hosts_from_metadata(metadata):
     """
@@ -274,9 +276,9 @@ def insert_ports_for_host(host_id, ports, evidence_id, conn):
 
     for port_data in ports:
         try:
-            port_num = port_data['port']
-            protocol = port_data.get('protocol', 'tcp')
-            state = port_data.get('state', 'open')
+            # Rendered into markup, so a crafted import cannot store anything but a real port (H-10)
+            port_num, protocol, state = parse_port_fields(
+                port_data['port'], port_data.get('protocol') or 'tcp', port_data.get('state') or 'open')
             service = port_data.get('service')
             version = port_data.get('version')
             source = port_data.get('source', 'auto')

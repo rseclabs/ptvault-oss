@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from config import Config
+from utils.helpers import PORT_PROTOCOLS, parse_port_choice, parse_port_fields, parse_port_number
 
 def get_db_connection():
     """
@@ -489,12 +490,15 @@ def migrate_ports_from_evidence(conn=None):
 
                 # Extract ports
                 for port_data in host.get('open_ports', []):
-                    port_num = port_data.get('port')
-                    if not port_num:
+                    if not port_data.get('port'):
                         continue
-
-                    protocol = port_data.get('protocol', 'tcp')
-                    state = port_data.get('state', 'open')
+                    # Rendered into markup: skip anything that is not a real port (H-10)
+                    try:
+                        port_num, protocol, state = parse_port_fields(
+                            port_data.get('port'), port_data.get('protocol') or 'tcp',
+                            port_data.get('state') or 'open')
+                    except ValueError:
+                        continue
                     service = port_data.get('service')
                     product = port_data.get('product', '')
                     version = port_data.get('version', '')
@@ -541,7 +545,11 @@ def migrate_ports_from_evidence(conn=None):
                     except (ValueError, TypeError):
                         continue
 
-                    protocol = vuln.get('protocol', 'tcp')
+                    try:
+                        protocol = parse_port_choice(vuln.get('protocol') or 'tcp', PORT_PROTOCOLS, 'protocol')
+                        port_num = parse_port_number(port_num)
+                    except ValueError:
+                        continue
                     port_key = (port_num, protocol)
                     if port_key in seen_ports:
                         continue

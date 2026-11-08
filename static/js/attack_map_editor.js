@@ -857,7 +857,7 @@ const AttackMapEditor = {
                     <div class="prop-field">
                         <label>Reference</label>
                         <div style="color:var(--color-muted);font-size:12px;padding:4px 0;">
-                            ${node.ref_type ? `${node.ref_type} #${node.ref_id}` : 'No reference linked'}
+                            ${node.ref_type ? `${this._esc(node.ref_type)} #${this._esc(node.ref_id)}` : 'No reference linked'}
                         </div>
                     </div>
                 `;
@@ -884,7 +884,7 @@ const AttackMapEditor = {
                     <div class="prop-field">
                         <label>Reference</label>
                         <div style="color:var(--color-muted);font-size:12px;padding:4px 0;">
-                            ${node.ref_type ? `${node.ref_type} #${node.ref_id}` : 'No reference linked'}
+                            ${node.ref_type ? `${this._esc(node.ref_type)} #${this._esc(node.ref_id)}` : 'No reference linked'}
                         </div>
                     </div>
                 `;

@@ -270,7 +270,7 @@ const ReportingManager = {
      */
     renderWriteupCard(writeup) {
         const isNarrative = writeup.writeup_type === 'narrative';
-        const criticalityClass = isNarrative ? 'type-narrative' : `criticality-${writeup.criticality || 'medium'}`;
+        const criticalityClass = isNarrative ? 'type-narrative' : `criticality-${this._criticality(writeup.criticality)}`;
 
         // Type badge
         const typeBadge = isNarrative
@@ -279,7 +279,7 @@ const ReportingManager = {
 
         // Criticality badge (only for findings)
         const criticalityBadge = !isNarrative && writeup.criticality
-            ? `<span class="criticality-badge criticality-${writeup.criticality}">${escapeHtml(writeup.criticality)}</span>`
+            ? `<span class="criticality-badge criticality-${this._criticality(writeup.criticality)}">${escapeHtml(writeup.criticality)}</span>`
             : '';
 
         return `
@@ -604,13 +604,13 @@ const ReportingManager = {
                 if (isTable) {
                     itemInfo = `<span class="table-info">${tableInfo}</span>`;
                 } else if (toolId === 'sectionheader' && item.toolData) {
-                    itemInfo = `<span class="tool-info">H${item.toolData.level}</span>`;
+                    itemInfo = `<span class="tool-info">H${Math.trunc(this._number(item.toolData.level, 2, 1, 6))}</span>`;
                 } else if (toolId === 'alertbox' && item.toolData) {
-                    itemInfo = `<span class="tool-info alert-type-${item.toolData.type}">${item.toolData.type}</span>`;
+                    itemInfo = `<span class="tool-info alert-type-${escapeHtml(item.toolData.type)}">${escapeHtml(item.toolData.type)}</span>`;
                 } else if (toolId === 'cvsscard' && item.toolData) {
-                    itemInfo = `<span class="tool-info cvss-score">${item.toolData.score}</span>`;
+                    itemInfo = `<span class="tool-info cvss-score">${escapeHtml(item.toolData.score)}</span>`;
                 } else if (toolId === 'riskmatrix' && item.toolData) {
-                    itemInfo = `<span class="tool-info">${item.toolData.size}×${item.toolData.size}</span>`;
+                    itemInfo = `<span class="tool-info">${escapeHtml(item.toolData.size)}×${escapeHtml(item.toolData.size)}</span>`;
                 } else if ((toolId === 'bulletlist' || toolId === 'numberedlist') && item.toolData) {
                     itemInfo = `<span class="tool-info">${item.toolData.items.length} items</span>`;
                 } else if (toolId === 'checklist' && item.toolData) {
@@ -618,7 +618,7 @@ const ReportingManager = {
                 } else if (toolId === 'timeline' && item.toolData) {
                     itemInfo = `<span class="tool-info">${item.toolData.steps.length} steps</span>`;
                 } else if (toolId === 'attackmap' && item.toolData) {
-                    itemInfo = `<span class="tool-info">${item.toolData.mapName || 'No map'}</span>`;
+                    itemInfo = `<span class="tool-info">${escapeHtml(item.toolData.mapName || 'No map')}</span>`;
                 } else if (toolId === 'coloredtable' && item.toolData) {
                     itemInfo = `<span class="table-info">${item.toolData.headers.length} cols, ${item.toolData.rows.length} rows</span>`;
                 }
@@ -627,14 +627,14 @@ const ReportingManager = {
                     <div class="workspace-item format-tool-item"
                          draggable="true"
                          data-position="${index}"
-                         data-uuid="${item.id}"
+                         data-uuid="${escapeHtml(item.id)}"
                          ondragstart="ReportingManager.handleWorkspaceDragStart(event, ${index})"
                          ondragend="ReportingManager.handleDragEnd(event)"
                          ondragover="ReportingManager.handleItemDragOver(event, ${index})"
                          ondrop="ReportingManager.handleItemDrop(event, ${index})">
                         <span class="drag-handle">⋮⋮</span>
                         <div class="workspace-item-content">
-                            <span class="format-tool-badge">${item.icon || '?'}</span>
+                            <span class="format-tool-badge">${escapeHtml(item.icon || '?')}</span>
                             <span class="item-title">${escapeHtml(item.title || 'Format Tool')}</span>
                             ${itemInfo}
                         </div>
@@ -654,14 +654,14 @@ const ReportingManager = {
 
             const cust = item.customizations || {};
             const showTitle = cust.show_title !== false;
-            const headingLevel = cust.heading_level || 'h3';
+            const headingLevel = this._headingTag(cust.heading_level);
             const isExpanded = this._expandedWriteupId === item.id;
 
             return `
-                <div class="workspace-item ${isNarrative ? 'narrative' : `criticality-${item.criticality || 'medium'}`}"
+                <div class="workspace-item ${isNarrative ? 'narrative' : `criticality-${this._criticality(item.criticality)}`}"
                      draggable="true"
                      data-position="${index}"
-                     data-uuid="${item.id}"
+                     data-uuid="${escapeHtml(item.id)}"
                      ondragstart="ReportingManager.handleWorkspaceDragStart(event, ${index})"
                      ondragend="ReportingManager.handleDragEnd(event)"
                      ondragover="ReportingManager.handleItemDragOver(event, ${index})"
@@ -670,7 +670,7 @@ const ReportingManager = {
                     <div class="workspace-item-content">
                         ${isNarrative
                             ? '<span class="type-badge narrative">Narrative</span>'
-                            : `<span class="criticality-badge criticality-${item.criticality || 'medium'}">${item.criticality || 'medium'}</span>`
+                            : `<span class="criticality-badge criticality-${this._criticality(item.criticality)}">${this._criticality(item.criticality)}</span>`
                         }
                         <span class="item-title">${escapeHtml(item.title || 'Untitled')}</span>
                         <span class="item-source">${item.type === 'engagement_finding' ? 'Finding' : 'Writeup'}</span>
@@ -686,7 +686,7 @@ const ReportingManager = {
                     </div>
                 </div>
                 ${isExpanded ? `
-                <div class="workspace-item-editor" data-editor-for="${item.id}">
+                <div class="workspace-item-editor" data-editor-for="${escapeHtml(item.id)}">
                     <div class="editor-row">
                         <label class="toggle-label">
                             <input type="checkbox" ${showTitle ? 'checked' : ''}
@@ -737,7 +737,7 @@ const ReportingManager = {
                 } else if (toolId === 'pagebreak') {
                     html += `<div class="preview-pagebreak"><span>— Page Break —</span></div>`;
                 } else if (toolId === 'sectionheader') {
-                    const level = toolData.level || 2;
+                    const level = Math.trunc(this._number(toolData.level, 2, 1, 6));
                     const text = toolData.text || 'Section Title';
                     const number = toolData.numbered && toolData.number ? `${toolData.number} ` : '';
                     html += `<h${level} class="preview-sectionheader">${escapeHtml(number)}${escapeHtml(text)}</h${level}>`;
@@ -848,7 +848,7 @@ const ReportingManager = {
                     `;
                 } else if (toolId === 'imageplaceholder') {
                     const caption = toolData.caption || 'Figure 1: Description';
-                    const width = toolData.width || '100%';
+                    const width = ['100%', '75%', '50%', '25%'].includes(toolData.width) ? toolData.width : '100%';
                     html += `
                         <div class="preview-imageplaceholder" style="width: ${escapeHtml(width)}">
                             <div class="placeholder-box">
@@ -952,7 +952,7 @@ const ReportingManager = {
                         </div>
                     `;
                 } else if (toolId === 'riskmatrix') {
-                    const size = toolData.size || 3;
+                    const size = Number(toolData.size) === 5 ? 5 : 3;
                     const highlighted = toolData.highlighted || { row: 1, col: 2 };
                     const labels = size === 3
                         ? { rows: ['High', 'Medium', 'Low'], cols: ['Low', 'Medium', 'High'] }
@@ -984,7 +984,7 @@ const ReportingManager = {
                         </div>
                     `;
                 } else if (toolId === 'cvsscard') {
-                    const score = toolData.score || 7.5;
+                    const score = this._number(toolData.score, 7.5, 0, 10);
                     const vector = toolData.vector || 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N';
                     const severity = this.getCvssSeverity(score);
                     html += `
@@ -1004,7 +1004,7 @@ const ReportingManager = {
                     const mapName = toolData.mapName || 'Attack Map';
                     if (mapId) {
                         html += `
-                            <div class="preview-attackmap" data-map-id="${mapId}">
+                            <div class="preview-attackmap" data-map-id="${Number(mapId)}">
                                 <div style="text-align:center;padding:20px;background:#1e1e2e;border-radius:8px;border:1px solid #374151;">
                                     <div class="preview-attackmap-icon"><i data-lucide="map"></i></div>
                                     <div style="color:#e2e8f0;font-weight:600;">${escapeHtml(mapName)}</div>
@@ -1025,7 +1025,7 @@ const ReportingManager = {
             } else if (isNarrative) {
                 const customizations = item.customizations || {};
                 const showTitle = customizations.show_title !== false;
-                const headingLevel = customizations.heading_level || 'h3';
+                const headingLevel = this._headingTag(customizations.heading_level);
                 const titleHtml = showTitle ? `<${headingLevel}>${escapeHtml(item.title || 'Untitled')}</${headingLevel}>` : '';
                 html += `
                     <div class="preview-narrative">
@@ -1036,14 +1036,14 @@ const ReportingManager = {
             } else {
                 const customizations = item.customizations || {};
                 const showTitle = customizations.show_title !== false;
-                const headingLevel = customizations.heading_level || 'h3';
+                const headingLevel = this._headingTag(customizations.heading_level);
                 const titleHtml = showTitle ? `<${headingLevel}>${escapeHtml(item.title || 'Untitled')}</${headingLevel}>` : '';
                 html += `
-                    <div class="preview-finding criticality-${item.criticality || 'medium'}">
+                    <div class="preview-finding criticality-${this._criticality(item.criticality)}">
                         ${titleHtml}
                         <div class="preview-meta">
-                            <span class="criticality-badge criticality-${item.criticality || 'medium'}">${item.criticality || 'medium'}</span>
-                            ${item.cvss_score ? `<span class="cvss">CVSS: ${item.cvss_score}</span>` : ''}
+                            <span class="criticality-badge criticality-${this._criticality(item.criticality)}">${this._criticality(item.criticality)}</span>
+                            ${item.cvss_score ? `<span class="cvss">CVSS: ${escapeHtml(item.cvss_score)}</span>` : ''}
                         </div>
                         <div class="preview-body">${this.renderMarkdown(item.finding_content || item.description || '')}</div>
                         ${item.remediation_content || item.remediation ? `
@@ -2077,6 +2077,7 @@ const ReportingManager = {
             // Build workspace items from hydrated items
             this.workspaceItems = (report.hydrated_items || []).map((item, idx) => ({
                 ...item,
+                id: /^[A-Za-z0-9_-]{1,64}$/.test(String(item.id)) ? String(item.id) : this.generateUUID(),
                 position: idx
             }));
 
@@ -3647,6 +3648,25 @@ const ReportingManager = {
         }).filter(Boolean).join('');
 
         return `<div class="cvss-breakdown">${breakdown}</div>`;
+    },
+
+    /**
+     * Structural report values become tag names, class names and numbers in
+     * markup, where escaping is not enough: accept only known values (H-10).
+     */
+    _headingTag(value, fallback = 'h3') {
+        const tag = String(value || '').trim().toLowerCase();
+        return ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag) ? tag : fallback;
+    },
+
+    _criticality(value) {
+        const level = String(value || '').trim().toLowerCase();
+        return ['critical', 'high', 'medium', 'low', 'info', 'informational'].includes(level) ? level : 'medium';
+    },
+
+    _number(value, fallback, low, high) {
+        const n = Number(value);
+        return Number.isFinite(n) && n >= low && n <= high && String(value).trim() !== '' ? n : fallback;
     },
 
     /**

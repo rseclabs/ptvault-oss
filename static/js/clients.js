@@ -44,7 +44,7 @@ const ClientManager = {
                             <td><strong>${escapeHtml(client.name)}</strong></td>
                             <td>${this.renderContactCell(client.admin_contact_name, client.admin_contact_email)}</td>
                             <td>${this.renderContactCell(client.technical_contact_name, client.technical_contact_email)}</td>
-                            <td>${client.website ? `<a href="${escapeHtml(client.website)}" target="_blank" rel="noopener noreferrer">${escapeHtml(client.website)}</a>` : '<span class="text-muted">—</span>'}</td>
+                            <td>${client.website ? `<a href="${escapeHtml(safeUrl(client.website))}" target="_blank" rel="noopener noreferrer">${escapeHtml(client.website)}</a>` : '<span class="text-muted">—</span>'}</td>
                             <td>
                                 <div class="action-buttons">
                                     <button class="btn btn-icon btn-sm" onclick="ClientManager.editClient(${client.id})" title="Edit">

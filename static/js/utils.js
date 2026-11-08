@@ -96,18 +96,58 @@ function getSeverityColor(severity) {
     return colors[severity?.toLowerCase()] || '';
 }
 
+const _HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' };
+
 /**
- * Escape HTML to prevent XSS
- * @param {string} text - Text to escape
+ * Escape text for HTML element content and quoted attribute values.
+ *
+ * Quotes are encoded too, so the result is safe inside title="..." or
+ * value='...'. It is NOT safe inside an inline event handler (onclick="..."):
+ * the browser decodes the entities before running the handler. Pass data to
+ * handlers with data-* attributes and registerAction() instead (H-10).
+ * @param {*} text - Text to escape
  * @returns {string} Escaped text
  */
 function escapeHtml(text) {
-    if (!text) return '';
-
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    if (!text && text !== 0) return '';
+    return String(text).replace(/[&<>"'`]/g, c => _HTML_ESCAPES[c]);
 }
+
+/**
+ * Return url if it is relative or uses http(s)/mailto, else '#'.
+ * Use for any stored URL placed in href or src.
+ * @param {string} url
+ * @returns {string}
+ */
+function safeUrl(url) {
+    if (!url) return '#';
+    // Browsers ignore whitespace and control characters inside a scheme.
+    const compact = String(url).replace(/[\u0000- \u007f]/g, '');
+    const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(compact);
+    return !scheme || ['http', 'https', 'mailto'].includes(scheme[1].toLowerCase()) ? String(url) : '#';
+}
+
+/**
+ * Delegated click actions (H-10).
+ *
+ * Markup carries the data, escaped, in attributes:
+ *   <button data-action="copy-oneliner" data-command="${escapeHtml(cmd)}">
+ * and the handler reads it back from the element:
+ *   registerAction('copy-oneliner', (el, event) => copy(el.dataset.command));
+ * The value is never parsed as code, unlike a string argument in onclick="...".
+ */
+const _clickActions = Object.create(null);
+
+function registerAction(name, handler) {
+    _clickActions[name] = handler;
+}
+
+document.addEventListener('click', (e) => {
+    const el = e.target.closest ? e.target.closest('[data-action]') : null;
+    if (!el) return;
+    const handler = _clickActions[el.dataset.action];
+    if (handler) handler(el, e);
+});
 
 /**
  * Show toast notification
@@ -375,6 +415,8 @@ window.timeSince = timeSince;
 window.getSeverityIcon = getSeverityIcon;
 window.getSeverityColor = getSeverityColor;
 window.escapeHtml = escapeHtml;
+window.safeUrl = safeUrl;
+window.registerAction = registerAction;
 window.showToast = showToast;
 window.ThemeManager = ThemeManager;
 window.openModal = openModal;

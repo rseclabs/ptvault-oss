@@ -1720,9 +1720,9 @@ const ShellOneLinersManager = {
         subcats.forEach(sub => {
             buttons.push(`
                 <button class="shell-subcategory-btn ${this.state.activeSubcategory === sub.name ? 'active' : ''}"
-                        data-subcategory="${sub.name}"
-                        onclick="ShellOneLinersManager.filterBySubcategory('${sub.name}')">
-                    ${sub.name} (${sub.count})
+                        data-subcategory="${escapeHtml(sub.name)}"
+                        data-action="filter-oneliner-subcategory">
+                    ${escapeHtml(sub.name)} (${escapeHtml(sub.count)})
                 </button>
             `);
         });
@@ -1787,7 +1787,6 @@ const ShellOneLinersManager = {
         const hasVariables = item.command.includes('{{');
         // Truncate and flatten command for display
         const displayCommand = substitutedCommand.replace(/\\n/g, ' ').replace(/\s+/g, ' ').trim();
-        const escapedCmd = escapeHtml(item.command.replace(/`/g, '\\`'));
 
         return `
             <div class="shell-oneliner-card" title="${escapeHtml(item.description || item.name)}">
@@ -1797,7 +1796,7 @@ const ShellOneLinersManager = {
                 <pre class="shell-oneliner-command">${escapeHtml(displayCommand)}</pre>
                 ${hasVariables ? '<span class="shell-var-indicator">vars</span>' : ''}
                 <div class="shell-oneliner-actions">
-                    <button class="btn btn-icon btn-sm" onclick="ShellOneLinersManager.copyCommand(\`${escapedCmd}\`, this)" title="Copy to clipboard">
+                    <button class="btn btn-icon btn-sm" data-action="copy-oneliner" data-command="${escapeHtml(item.command)}" title="Copy to clipboard">
                         <i data-lucide="copy" class="icon-sm"></i>
                     </button>
                 </div>
@@ -1825,6 +1824,10 @@ const ShellOneLinersManager = {
 
 // Make ShellOneLinersManager available globally
 window.ShellOneLinersManager = ShellOneLinersManager;
+
+// One-liner commands and subcategories travel in data-* attributes, never inside handler code (H-10).
+registerAction('copy-oneliner', el => ShellOneLinersManager.copyCommand(el.dataset.command, el));
+registerAction('filter-oneliner-subcategory', el => ShellOneLinersManager.filterBySubcategory(el.dataset.subcategory));
 
 /**
  * Subnet Calculator - CIDR/IP network calculations

@@ -2257,10 +2257,10 @@ const TestPlansManager = {
                                 <label style="margin-bottom: 8px; display: block;">Original Command:</label>
                                 <pre id="originalCommandDisplay" style="background: var(--bg-tertiary); padding: 12px; border-radius: 6px; font-size: 0.85em; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; margin: 0 0 8px 0;">${escapeHtml(originalCommand)}</pre>
                                 <div style="display: flex; gap: 8px;">
-                                    <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText(${JSON.stringify(originalCommand).replace(/"/g, '&quot;')}).then(() => showToast('Copied to clipboard', 'success')).catch(() => showToast('Failed to copy', 'error'))">
+                                    <button class="btn btn-sm btn-secondary" data-action="copy-original-command" data-command="${escapeHtml(originalCommand)}">
                                         Copy to Clipboard
                                     </button>
-                                    <button class="btn btn-sm btn-secondary" onclick="document.getElementById('editItemCommand').value = ${JSON.stringify(originalCommand).replace(/"/g, '&quot;')}">
+                                    <button class="btn btn-sm btn-secondary" data-action="use-original-command" data-command="${escapeHtml(originalCommand)}">
                                         Use as Custom Command
                                     </button>
                                 </div>
@@ -4034,3 +4034,14 @@ function debounce(func, wait) {
 
 // Make globally accessible
 window.TestPlansManager = TestPlansManager;
+
+// Commands travel in data-* attributes, never inside handler code (H-10).
+registerAction('copy-original-command', el => {
+    navigator.clipboard.writeText(el.dataset.command)
+        .then(() => showToast('Copied to clipboard', 'success'))
+        .catch(() => showToast('Failed to copy', 'error'));
+});
+registerAction('use-original-command', el => {
+    const field = document.getElementById('editItemCommand');
+    if (field) field.value = el.dataset.command;
+});

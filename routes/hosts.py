@@ -7,6 +7,7 @@ from middleware.auth import require_auth, require_engagement_access
 from models.database import run_migrations
 from utils.audit_logger import audit_view
 from utils.error_handler import handle_errors
+from utils.helpers import HOST_COLORS, PORT_STATES, parse_port_choice, parse_port_fields
 from utils.host_extractor import (
     get_hosts_for_engagement,
     get_evidence_without_hosts,
@@ -335,6 +336,13 @@ def update_host(host_id):
     # Build dynamic update
     update_fields = []
     update_values = []
+
+    # The colour is rendered into markup, so only palette values are stored (H-10)
+    if 'color_category' in data:
+        if data['color_category'] in (None, ''):
+            data['color_category'] = None
+        elif data['color_category'] not in HOST_COLORS:
+            return jsonify({"error": f"color_category must be one of: {', '.join(sorted(HOST_COLORS))}"}), 400
 
     # Text fields
     for field in ['hostname', 'os', 'notes', 'color_category']:
@@ -734,9 +742,11 @@ def create_port(host_id):
     if not cursor.fetchone():
         return jsonify({"error": "Host not found"}), 404
 
-    port_num = data['port']
-    protocol = data.get('protocol', 'tcp')
-    state = data.get('state', 'open')
+    try:
+        port_num, protocol, state = parse_port_fields(
+            data['port'], data.get('protocol', 'tcp'), data.get('state', 'open'))
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     service = data.get('service')
     version = data.get('version')
 
@@ -798,6 +808,12 @@ def update_port(host_id, port_id):
     # Build dynamic update
     update_fields = []
     update_values = []
+
+    if 'state' in data:
+        try:
+            data['state'] = parse_port_choice(data['state'], PORT_STATES, 'state')
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
 
     for field in ['state', 'service', 'version']:
         if field in data:

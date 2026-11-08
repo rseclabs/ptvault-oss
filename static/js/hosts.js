@@ -109,7 +109,7 @@ const HostManager = {
             <div class="host-item ${this.selectedHostId === host.id ? 'active' : ''}"
                  data-host-id="${host.id}"
                  onclick="HostManager.selectHost(${host.id})">
-                ${host.color_category ? `<div class="host-color-badge" data-color="${host.color_category}"></div>` : ''}
+                ${host.color_category ? `<div class="host-color-badge" data-color="${escapeHtml(host.color_category)}"></div>` : ''}
                 <span class="host-icon">${this.getHostIcon(host)}</span>
                 <div class="host-info">
                     <span class="host-name measured">${escapeHtml(host.ip)}</span>
@@ -1147,12 +1147,12 @@ const HostManager = {
 
         container.innerHTML = this.currentPorts.map(port => `
             <tr data-id="${port.id}">
-                <td>${port.port}</td>
-                <td>${port.protocol}</td>
+                <td>${escapeHtml(port.port)}</td>
+                <td>${escapeHtml(port.protocol)}</td>
                 <td>${escapeHtml(port.service || '-')}</td>
                 <td>${escapeHtml(port.version || '-')}</td>
-                <td><span class="state-badge state-${port.state}">${port.state}</span></td>
-                <td><span class="source-badge source-${port.source}">${port.source}</span></td>
+                <td><span class="state-badge state-${escapeHtml(port.state)}">${escapeHtml(port.state)}</span></td>
+                <td><span class="source-badge source-${escapeHtml(port.source)}">${escapeHtml(port.source)}</span></td>
                 <td>
                     <button class="btn btn-sm btn-icon" onclick="HostManager.editPort(${port.id})" title="Edit"><i data-lucide="pencil"></i></button>
                     <button class="btn btn-sm btn-icon" onclick="HostManager.deletePort(${port.id})" title="Delete"><i data-lucide="trash-2"></i></button>
@@ -1954,7 +1954,7 @@ const HostManager = {
         html += '<thead><tr><th class="host-column">Host</th>';
         for (const port of ports) {
             const serviceName = port.service ? `<br><span class="port-service">${escapeHtml(port.service)}</span>` : '';
-            html += `<th class="port-column">${port.port}/${port.protocol}${serviceName}</th>`;
+            html += `<th class="port-column">${escapeHtml(port.port)}/${escapeHtml(port.protocol)}${serviceName}</th>`;
         }
         html += '</tr></thead>';
 
@@ -2038,7 +2038,7 @@ const HostManager = {
         // Filter status indicator
         if (this.portGridFilter) {
             html += `<div class="port-filter-status">
-                Showing ${filteredHosts.length} host${filteredHosts.length !== 1 ? 's' : ''} with port ${this.portGridFilter.port}/${this.portGridFilter.protocol} open
+                Showing ${filteredHosts.length} host${filteredHosts.length !== 1 ? 's' : ''} with port ${escapeHtml(this.portGridFilter.port)}/${escapeHtml(this.portGridFilter.protocol)} open
                 <button class="btn-text-sm" onclick="HostManager.clearPortFilter()">Clear filter</button>
             </div>`;
         }
@@ -2053,7 +2053,8 @@ const HostManager = {
                 this.portGridFilter.protocol === port.protocol;
             const activeClass = isActive ? ' port-filter-active' : '';
             const serviceName = port.service ? `<br><span class="port-service">${escapeHtml(port.service)}</span>` : '';
-            html += `<th class="port-column port-filter${activeClass}" onclick="HostManager.togglePortFilter(${port.port}, '${port.protocol}')" title="Click to filter by port ${port.port}/${port.protocol}">${port.port}/${port.protocol}${serviceName}</th>`;
+            const portLabel = `${escapeHtml(port.port)}/${escapeHtml(port.protocol)}`;
+            html += `<th class="port-column port-filter${activeClass}" data-action="toggle-port-filter" data-port="${escapeHtml(port.port)}" data-protocol="${escapeHtml(port.protocol)}" title="Click to filter by port ${portLabel}">${portLabel}${serviceName}</th>`;
         }
         html += '</tr></thead>';
 
@@ -3510,7 +3511,7 @@ const HostManager = {
 
         container.innerHTML = '<option value="">Select a saved search...</option>' +
             this.savedFilters.map(filter =>
-                `<option value="${filter.id}">${filter.name}</option>`
+                `<option value="${Number(filter.id)}">${escapeHtml(filter.name)}</option>`
             ).join('');
     },
 
@@ -3799,3 +3800,7 @@ const HostManager = {
 
 // Make HostManager available globally
 window.HostManager = HostManager;
+
+// Port values travel in data-* attributes, never inside handler code (H-10).
+registerAction('toggle-port-filter', el =>
+    HostManager.togglePortFilter(Number(el.dataset.port), el.dataset.protocol));

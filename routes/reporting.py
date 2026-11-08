@@ -3,6 +3,8 @@
 import json
 import html
 import logging
+import re
+import uuid
 from html.parser import HTMLParser
 from flask import Blueprint, request, jsonify, g, Response
 from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role, can_edit_shared
@@ -708,7 +710,7 @@ def hydrate_report_item(cursor, item, engagement_id):
         hydrated['toolData'] = item.get('toolData', {})
         hydrated['tableData'] = item.get('tableData')
         hydrated['title'] = item.get('title', '')
-        return hydrated
+        return _normalise_hydrated(hydrated)
 
     if item['type'] == 'engagement_finding':
         cursor.execute("SELECT * FROM engagement_findings WHERE id = ? AND engagement_id = ?",
@@ -759,6 +761,31 @@ def hydrate_report_item(cursor, item, engagement_id):
         hydrated['show_title'] = customizations.get('show_title', True)
         hydrated['heading_level'] = customizations.get('heading_level', 'h3')
 
+    return _normalise_hydrated(hydrated)
+
+
+# Report items come back from a saved structure any engagement editor can
+# write. The id, tool id, criticality and heading level are used in handlers,
+# class names and tag names, so only known values are returned (H-10).
+_ITEM_ID = re.compile(r'[A-Za-z0-9_-]{1,64}')
+_FORMAT_TOOL_IDS = frozenset([
+    'spacer', 'divider', 'pagebreak', 'sectionheader', 'textblock', 'quote', 'bulletlist', 'numberedlist',
+    'checklist', 'codeblock', 'commandoutput', 'alertbox', 'keyfinding', 'evidence', 'imageplaceholder',
+    'table', 'twocolumn', 'timeline', 'riskmatrix', 'cvsscard', 'attackmap', 'coloredtable',
+])
+
+
+def _normalise_hydrated(hydrated):
+    item_id = hydrated.get('id')
+    if not (isinstance(item_id, str) and _ITEM_ID.fullmatch(item_id)):
+        hydrated['id'] = str(item_id) if isinstance(item_id, int) and not isinstance(item_id, bool) \
+            else str(uuid.uuid4())
+    if 'format_tool_id' in hydrated and hydrated['format_tool_id'] not in _FORMAT_TOOL_IDS:
+        hydrated['format_tool_id'] = None
+    if hydrated.get('criticality') is not None:
+        hydrated['criticality'] = _criticality_class(hydrated['criticality'])
+    if 'heading_level' in hydrated:
+        hydrated['heading_level'] = _heading_tag(hydrated['heading_level'])
     return hydrated
 
 
@@ -770,6 +797,15 @@ _ALLOWED_TAGS = frozenset([
     'a', 'hr', 'span', 'div',
 ])
 _ALLOWED_ATTRS = frozenset(['href', 'title', 'class'])
+_SAFE_URL_SCHEMES = frozenset(['http', 'https', 'mailto'])
+
+
+def _safe_href(value):
+    """True if a link is relative or uses an allowed scheme (no javascript:, data:, ...)."""
+    # Browsers ignore ASCII whitespace and control characters inside a scheme.
+    compact = re.sub(r'[\x00-\x20\x7f]', '', value)
+    scheme = re.match(r'([A-Za-z][A-Za-z0-9+.-]*):', compact)
+    return scheme is None or scheme.group(1).lower() in _SAFE_URL_SCHEMES
 
 
 class _HTMLSanitizer(HTMLParser):
@@ -784,7 +820,7 @@ class _HTMLSanitizer(HTMLParser):
             safe_attrs = ' '.join(
                 f'{k}="{html.escape(v)}"'
                 for k, v in attrs
-                if k in _ALLOWED_ATTRS and v is not None
+                if k in _ALLOWED_ATTRS and v is not None and (k != 'href' or _safe_href(v))
             )
             self.result.append(f'<{tag}{" " + safe_attrs if safe_attrs else ""}>')
 
