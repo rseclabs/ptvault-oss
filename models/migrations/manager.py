@@ -137,8 +137,17 @@ class MigrationManager:
         Returns:
             True if successful, False otherwise
         """
+        restore_foreign_keys = None
         try:
             logger.info(f"Applying migration {version:03d}: {name}")
+
+            # A migration that rebuilds tables runs with foreign keys off: with them
+            # on, dropping a parent table deletes its children (L-32). The pragma
+            # has no effect inside a transaction, so it is set before BEGIN.
+            if getattr(module, 'FOREIGN_KEYS_OFF', False):
+                self.db.commit()
+                restore_foreign_keys = self.db.execute('PRAGMA foreign_keys').fetchone()[0]
+                self.db.execute('PRAGMA foreign_keys = OFF')
 
             # Begin transaction
             self.db.execute('BEGIN TRANSACTION')
@@ -171,6 +180,9 @@ class MigrationManager:
         except Exception as e:
             logger.error(f"Failed to apply migration {version}: {e}")
             return False
+        finally:
+            if restore_foreign_keys:
+                self.db.execute('PRAGMA foreign_keys = ON')
 
     def apply_all_pending(self) -> Tuple[int, int]:
         """

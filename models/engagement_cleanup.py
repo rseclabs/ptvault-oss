@@ -41,16 +41,29 @@ def delete_evidence_rows(cursor, evidence_ids):
                    evidence_ids * 2)
     cursor.execute(f'UPDATE host_ports SET evidence_id = NULL WHERE evidence_id IN ({marks})', evidence_ids)
     cursor.execute(f'UPDATE test_executions SET evidence_id = NULL WHERE evidence_id IN ({marks})', evidence_ids)
+    _unlink_map_nodes(cursor, 'evidence', evidence_ids)
     cursor.execute(f'DELETE FROM evidence WHERE id IN ({marks})', evidence_ids)
+
+
+def _unlink_map_nodes(cursor, ref_type, ids):
+    """Attack-map nodes keep their label but lose a reference to a deleted record."""
+    cursor.execute(f'UPDATE attack_map_nodes SET ref_id = NULL, ref_type = NULL '
+                   f'WHERE ref_type = ? AND ref_id IN ({_in(ids)})', [ref_type, *ids])
 
 
 def _delete_hosts(cursor, host_ids):
     if not host_ids:
         return
     marks = _in(host_ids)
-    for table in ('host_notes', 'host_ports', 'host_credentials', 'evidence_hosts'):
+    for table in ('host_notes', 'host_ports', 'host_credentials', 'evidence_hosts', 'test_executions'):
         cursor.execute(f'DELETE FROM {table} WHERE host_id IN ({marks})', host_ids)
+    _unlink_map_nodes(cursor, 'host', host_ids)
     cursor.execute(f'DELETE FROM hosts WHERE id IN ({marks})', host_ids)
+
+
+def delete_host(cursor, host_id):
+    """Delete a host and everything that hangs off it (not committed; M-16)."""
+    _delete_hosts(cursor, [host_id])
 
 
 def _delete_reports(cursor, report_ids):
@@ -134,6 +147,15 @@ def purge_orphans(cursor):
         'UNION SELECT map_id FROM attack_map_edges WHERE map_id NOT IN (SELECT id FROM attack_maps)'))
     _delete_plans(cursor, _ids(cursor,
         'SELECT test_plan_id FROM test_plan_items WHERE test_plan_id NOT IN (SELECT id FROM test_plans)'))
+    # Typed links to records that are gone (L-36): relationships and map references
+    for node_type, table in (('evidence', 'evidence'), ('finding', 'engagement_findings')):
+        cursor.execute(f"DELETE FROM node_relationships WHERE (source_node_type = ? AND source_node_id NOT IN "
+                       f"(SELECT id FROM {table})) OR (target_node_type = ? AND target_node_id NOT IN "
+                       f"(SELECT id FROM {table}))", (node_type, node_type))
+    for ref_type, table in (('evidence', 'evidence'), ('host', 'hosts'), ('finding', 'engagement_findings')):
+        cursor.execute(f"UPDATE attack_map_nodes SET ref_id = NULL, ref_type = NULL WHERE ref_type = ? "
+                       f"AND ref_id IS NOT NULL AND ref_id NOT IN (SELECT id FROM {table})", (ref_type,))
+    cursor.execute('DELETE FROM test_executions WHERE host_id IS NOT NULL AND host_id NOT IN (SELECT id FROM hosts)')
     removed = cursor.connection.total_changes - before
     if gone or removed:
         logger.info('Removed %d row(s) left by deleted engagements %s', removed, gone)

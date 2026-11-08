@@ -6,6 +6,7 @@ from flask import Blueprint, request, jsonify, g, session
 from middleware.auth import require_auth, require_engagement_access
 from models.dao.note_tree_dao import NoteTreeDAO, optional_int
 from models.database import run_migrations
+from models.engagement_cleanup import delete_host as delete_host_rows
 from utils.audit_logger import audit_view
 from utils.error_handler import handle_errors, internal_error
 from utils.helpers import HOST_COLORS, PASSWORD_TYPES, PORT_STATES, parse_port_choice, parse_port_fields
@@ -229,9 +230,9 @@ def get_host(host_id):
             eh.source
         FROM evidence e
         JOIN evidence_hosts eh ON e.id = eh.evidence_id
-        WHERE eh.host_id = ?
+        WHERE eh.host_id = ? AND e.engagement_id = ?
         ORDER BY e.created_at DESC
-    ''', (host_id,))
+    ''', (host_id, engagement_id))
 
     evidence = []
     for ev_row in cursor.fetchall():
@@ -417,8 +418,10 @@ def delete_host(host_id):
     if not cursor.fetchone():
         return jsonify({"error": "Host not found"}), 404
 
-    # Delete host (cascade will remove evidence_hosts links)
-    cursor.execute('DELETE FROM hosts WHERE id = ?', (host_id,))
+    # Delete the host and everything that hangs off it: foreign keys are not
+    # enforced, so nothing cascades, and a leftover would pass to the next host
+    # given this ID (M-16)
+    delete_host_rows(cursor, host_id)
     g.db.commit()
 
     return '', 204
