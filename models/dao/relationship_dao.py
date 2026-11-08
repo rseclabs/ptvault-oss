@@ -343,7 +343,7 @@ class RelationshipDAO(BaseDAO):
             SELECT
                 'credential' as node_type,
                 hc.id,
-                hc.username || ' / ' || SUBSTR(hc.password, 1, 20) as title,
+                COALESCE(hc.username, 'credential') as title,  -- never the secret (M-9)
                 'credential' as type,
                 '' as tags,
                 hc.created_at,
@@ -365,7 +365,7 @@ class RelationshipDAO(BaseDAO):
             SELECT
                 'credential' as node_type,
                 id,
-                username || ' / ' || SUBSTR(password_or_hash, 1, 20) as title,
+                COALESCE(username, 'credential') as title,  -- never the secret (M-9)
                 'credential' as type,
                 '' as tags,
                 created_at

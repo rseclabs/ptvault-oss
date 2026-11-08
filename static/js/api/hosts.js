@@ -242,6 +242,16 @@ export const HostsAPI = {
     },
 
     /**
+     * Reveal one credential's password or hash (editor role; audited)
+     * @param {number} hostId - Host ID
+     * @param {number} credId - Credential ID
+     * @returns {Promise<{secret: string}>}
+     */
+    async getCredentialSecret(hostId, credId) {
+        return apiRequest.get(`/hosts/${hostId}/credentials/${credId}/secret`);
+    },
+
+    /**
      * Delete a credential entry
      * @param {number} hostId - Host ID
      * @param {number} credId - Credential ID

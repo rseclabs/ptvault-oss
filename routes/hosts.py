@@ -5,6 +5,7 @@ import logging
 from flask import Blueprint, request, jsonify, g, session
 from middleware.auth import require_auth, require_engagement_access
 from models.database import run_migrations
+from utils.audit_logger import audit_view
 from utils.error_handler import handle_errors
 from utils.host_extractor import (
     get_hosts_for_engagement,
@@ -976,7 +977,8 @@ def list_credentials(host_id):
             "id": row[0],
             "host_id": row[1],
             "username": row[2],
-            "password": row[3],
+            "password": None,  # masked; reveal via .../secret (M-9)
+            "has_secret": bool(row[3]),
             "password_type": row[4],
             "hash_type": row[5],
             "service": row[6],
@@ -986,6 +988,24 @@ def list_credentials(host_id):
         })
 
     return jsonify({"credentials": credentials}), 200
+
+
+@hosts_bp.route('/<int:host_id>/credentials/<int:cred_id>/secret', methods=['GET'])
+@require_auth
+@require_engagement_access('editor')
+@handle_errors
+def reveal_credential(host_id, cred_id):
+    """Return one host credential's password or hash. Editors and above; every reveal is audited."""
+    row = g.db.execute(
+        '''SELECT hc.password FROM host_credentials hc
+           JOIN hosts h ON hc.host_id = h.id
+           WHERE hc.id = ? AND hc.host_id = ? AND h.engagement_id = ?''',
+        (cred_id, host_id, g.active_engagement_id)
+    ).fetchone()
+    if not row:
+        return jsonify({"error": "credential not found"}), 404
+    audit_view('host_credential', cred_id, engagement_id=g.active_engagement_id, field='password')
+    return jsonify({"secret": row[0]}), 200
 
 
 @hosts_bp.route('/<int:host_id>/credentials', methods=['POST'])
@@ -1029,7 +1049,8 @@ def create_credential(host_id):
         "id": cred_id,
         "host_id": host_id,
         "username": username,
-        "password": password,
+        "password": None,  # masked; reveal via .../secret (M-9)
+        "has_secret": bool(password),
         "password_type": password_type,
         "hash_type": hash_type,
         "service": service,
@@ -1097,7 +1118,8 @@ def update_credential(host_id, cred_id):
         "id": row[0],
         "host_id": row[1],
         "username": row[2],
-        "password": row[3],
+        "password": None,  # masked; reveal via .../secret (M-9)
+        "has_secret": bool(row[3]),
         "password_type": row[4],
         "hash_type": row[5],
         "service": row[6],

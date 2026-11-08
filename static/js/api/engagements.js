@@ -203,6 +203,16 @@ export const EngagementsAPI = {
     },
 
     /**
+     * Reveal one credential's password or hash (editor role; audited)
+     * @param {number} engagementId - Engagement ID
+     * @param {number} credId - Credential ID
+     * @returns {Promise<{secret: string}>}
+     */
+    async getCredentialSecret(engagementId, credId) {
+        return apiRequest.get(`/engagements/${engagementId}/credentials/${credId}/secret`);
+    },
+
+    /**
      * Delete an engagement credential
      * @param {number} engagementId - Engagement ID
      * @param {number} credId - Credential ID

@@ -8,7 +8,7 @@ import re
 import json
 from datetime import datetime
 from utils.markdown_export import generate_markdown_report
-from utils.audit_logger import audit_create, audit_update, audit_delete, audit_export
+from utils.audit_logger import audit_create, audit_update, audit_delete, audit_export, audit_view
 from utils.helpers import normalize_tags
 
 
@@ -107,8 +107,11 @@ def _resolve_team_assignment(raw_team_id):
     return team_id, None
 
 
-def get_engagement_export_data(engagement_id):
+def get_engagement_export_data(engagement_id, include_secrets=False):
     """
+    Credential passwords and hashes are included only when include_secrets
+    is True (the caller is an editor or owner); otherwise they are None.
+
     Helper function to gather complete engagement data for export.
     Returns dictionary with engagement, evidence, hosts, and all related data.
     Raises exception if engagement not found or database error occurs.
@@ -272,7 +275,8 @@ def get_engagement_export_data(engagement_id):
                 'id': row[0],
                 'host_id': row[1],
                 'username': row[2],
-                'password': row[3],
+                'password': row[3] if include_secrets else None,
+                'has_secret': bool(row[3]),
                 'password_type': row[4],
                 'hash_type': row[5],
                 'service': row[6],
@@ -326,7 +330,8 @@ def get_engagement_export_data(engagement_id):
             'id': row[0],
             'engagement_id': row[1],
             'username': row[2],
-            'password_or_hash': row[3],
+            'password_or_hash': row[3] if include_secrets else None,
+            'has_secret': bool(row[3]),
             'credential_type': row[4],
             'description': row[5],
             'created_at': row[6],
@@ -964,7 +969,8 @@ def export_engagement_json(engagement_id):
     """
     try:
         # Get complete engagement data
-        export_data = get_engagement_export_data(engagement_id)
+        export_data = get_engagement_export_data(
+            engagement_id, include_secrets=g.engagement_role in ('editor', 'owner'))
     except ValueError as e:
         return jsonify({'error': str(e)}), 404
 
@@ -1321,7 +1327,8 @@ def get_engagement_credentials(engagement_id):
             "id": row[0],
             "engagement_id": row[1],
             "username": row[2],
-            "password_or_hash": row[3],
+            "password_or_hash": None,  # masked; reveal via .../secret (M-9)
+            "has_secret": bool(row[3]),
             "credential_type": row[4],
             "description": row[5],
             "created_at": row[6],
@@ -1329,6 +1336,22 @@ def get_engagement_credentials(engagement_id):
         })
 
     return jsonify(credentials), 200
+
+
+@engagements_bp.route('/<int:engagement_id>/credentials/<int:cred_id>/secret', methods=['GET'])
+@require_auth
+@require_engagement_role('editor')
+@handle_errors
+def reveal_engagement_credential(engagement_id, cred_id):
+    """Return one credential's password or hash. Editors and above; every reveal is audited."""
+    row = g.db.execute(
+        'SELECT password_or_hash FROM engagement_credentials WHERE id = ? AND engagement_id = ?',
+        (cred_id, engagement_id)
+    ).fetchone()
+    if not row:
+        return jsonify({"error": "credential not found"}), 404
+    audit_view('engagement_credential', cred_id, engagement_id=engagement_id, field='password_or_hash')
+    return jsonify({"secret": row[0]}), 200
 
 
 @engagements_bp.route('/<int:engagement_id>/credentials', methods=['POST'])
@@ -1378,7 +1401,8 @@ def create_engagement_credential(engagement_id):
         "id": row[0],
         "engagement_id": row[1],
         "username": row[2],
-        "password_or_hash": row[3],
+        "password_or_hash": None,  # masked; reveal via .../secret (M-9)
+        "has_secret": bool(row[3]),
         "credential_type": row[4],
         "description": row[5],
         "created_at": row[6],
@@ -1445,7 +1469,8 @@ def update_engagement_credential(engagement_id, cred_id):
         "id": row[0],
         "engagement_id": row[1],
         "username": row[2],
-        "password_or_hash": row[3],
+        "password_or_hash": None,  # masked; reveal via .../secret (M-9)
+        "has_secret": bool(row[3]),
         "credential_type": row[4],
         "description": row[5],
         "created_at": row[6],

@@ -1291,9 +1291,13 @@ const HostManager = {
         }
 
         container.innerHTML = this.currentCredentials.map(cred => {
+            // Secrets are not in the list (M-9); clicking the mask fetches one (audited).
+            const masked = cred.has_secret
+                ? `<span class="password-hidden" data-visible="false" data-cred-id="${Number(cred.id)}" onclick="HostManager.togglePassword(this)">${'•'.repeat(8)}</span>`
+                : '-';
             const passwordDisplay = cred.password_type === 'hash'
-                ? `<span class="password-hash">${escapeHtml(cred.password || '')}</span> <span class="hash-badge">${escapeHtml(cred.hash_type || 'hash')}</span>`
-                : `<span class="password-hidden" data-visible="false" onclick="HostManager.togglePassword(this, '${escapeHtml(cred.password || '')}')">${'•'.repeat(8)}</span>`;
+                ? `${masked} <span class="hash-badge">${escapeHtml(cred.hash_type || 'hash')}</span>`
+                : masked;
 
             return `
                 <tr data-id="${cred.id}">
@@ -1314,9 +1318,16 @@ const HostManager = {
     /**
      * Toggle password visibility
      */
-    togglePassword(el, password) {
+    async togglePassword(el) {
         if (el.dataset.visible === 'false') {
-            el.textContent = password;
+            let secret;
+            try {
+                secret = (await API.hosts.getCredentialSecret(this.selectedHostId, Number(el.dataset.credId))).secret;
+            } catch (error) {
+                showToast('Cannot reveal credential: ' + error.message, 'error');
+                return;
+            }
+            el.textContent = secret || '';
             el.dataset.visible = 'true';
             el.classList.remove('password-hidden');
             el.classList.add('password-visible');
@@ -1383,7 +1394,10 @@ const HostManager = {
 
         document.getElementById('editCredId').value = cred.id;
         document.getElementById('editCredUsername').value = cred.username || '';
-        document.getElementById('editCredPassword').value = cred.password || '';
+        // The secret is not loaded; leaving the field empty keeps it.
+        const editPassword = document.getElementById('editCredPassword');
+        editPassword.value = '';
+        editPassword.placeholder = cred.has_secret ? 'Leave blank to keep the current value' : '';
         document.getElementById('editCredPasswordType').value = cred.password_type;
         document.getElementById('editCredHashType').value = cred.hash_type || '';
         document.getElementById('editCredService').value = cred.service || '';
@@ -1402,12 +1416,13 @@ const HostManager = {
         const credId = parseInt(document.getElementById('editCredId').value);
         const updates = {
             username: document.getElementById('editCredUsername').value.trim() || null,
-            password: document.getElementById('editCredPassword').value || null,
             password_type: document.getElementById('editCredPasswordType').value,
             hash_type: document.getElementById('editCredHashType').value.trim() || null,
             service: document.getElementById('editCredService').value.trim() || null,
             notes: document.getElementById('editCredNotes').value.trim() || null
         };
+        const newPassword = document.getElementById('editCredPassword').value;
+        if (newPassword) updates.password = newPassword;
 
         try {
             await API.hosts.updateCredential(this.selectedHostId, credId, updates);
@@ -2318,7 +2333,9 @@ const HostManager = {
             return `
                 <tr data-id="${cred.id}">
                     <td>${escapeHtml(cred.username || '-')}</td>
-                    <td><span class="password-hidden" data-visible="false" onclick="HostManager.toggleEngagementCredPassword(this, '${escapeHtml(cred.password_or_hash || '')}')">${'•'.repeat(8)}</span></td>
+                    <td>${cred.has_secret
+                        ? `<span class="password-hidden" data-visible="false" data-cred-id="${Number(cred.id)}" onclick="HostManager.toggleEngagementCredPassword(this)">${'•'.repeat(8)}</span>`
+                        : '-'}</td>
                     <td><span class="credential-type-badge type-${typeClass}">${typeLabel}</span></td>
                     <td>${escapeHtml(truncate(cred.description || '', 80))}</td>
                     <td>
@@ -2333,9 +2350,18 @@ const HostManager = {
     /**
      * Toggle engagement credential password visibility
      */
-    toggleEngagementCredPassword(el, password) {
+    async toggleEngagementCredPassword(el) {
         if (el.dataset.visible === 'false') {
-            el.textContent = password;
+            if (!AppState.activeEngagement) return;
+            let secret;
+            try {
+                secret = (await API.engagements.getCredentialSecret(
+                    AppState.activeEngagement.id, Number(el.dataset.credId))).secret;
+            } catch (error) {
+                showToast('Cannot reveal credential: ' + error.message, 'error');
+                return;
+            }
+            el.textContent = secret || '';
             el.dataset.visible = 'true';
             el.classList.remove('password-hidden');
             el.classList.add('password-visible');
@@ -2393,7 +2419,10 @@ const HostManager = {
 
         document.getElementById('editEngCredId').value = cred.id;
         document.getElementById('editEngCredUsername').value = cred.username || '';
-        document.getElementById('editEngCredPasswordOrHash').value = cred.password_or_hash || '';
+        // The secret is not loaded; leaving the field empty keeps it.
+        const editSecret = document.getElementById('editEngCredPasswordOrHash');
+        editSecret.value = '';
+        editSecret.placeholder = cred.has_secret ? 'Leave blank to keep the current value' : '';
         document.getElementById('editEngCredType').value = cred.credential_type || 'clear_text';
         document.getElementById('editEngCredDescription').value = cred.description || '';
 
@@ -2409,10 +2438,11 @@ const HostManager = {
         const credId = parseInt(document.getElementById('editEngCredId').value);
         const updates = {
             username: document.getElementById('editEngCredUsername').value.trim() || null,
-            password_or_hash: document.getElementById('editEngCredPasswordOrHash').value || null,
             credential_type: document.getElementById('editEngCredType').value,
             description: document.getElementById('editEngCredDescription').value.trim() || null
         };
+        const newSecret = document.getElementById('editEngCredPasswordOrHash').value;
+        if (newSecret) updates.password_or_hash = newSecret;
 
         if (!AppState.activeEngagement) {
             showToast('No active engagement', 'error');
