@@ -438,3 +438,24 @@ def test_import_fed_fields_render_as_text(ui):
             + ReportingManager.renderSourceWriteups() + ReportingManager.renderWriteupsList();
     }""", P)
     _assert_clean(ui.page)
+
+
+def test_oneliner_list_escapes_the_subcategory_heading(ui):
+    """L-20: the group heading is the stored subcategory; it renders as text, any name groups."""
+    headings = ui.page.evaluate("""p => {
+        if (!document.getElementById('shellOnelinersList')) {
+            const div = document.createElement('div');
+            div.id = 'shellOnelinersList';
+            document.body.appendChild(div);
+        }
+        ShellOneLinersManager.state.loading = false;
+        ShellOneLinersManager.renderOnelinersList([
+            { name: 'a', command: 'id', subcategory: p },
+            { name: 'b', command: 'id', subcategory: '__proto__' },
+            { name: 'c', command: 'id', subcategory: 'constructor' },
+            { name: 'd', command: 'id' },
+        ]);
+        return [...document.querySelectorAll('#shellOnelinersList .shell-group-title')].map(h => h.textContent);
+    }""", P)
+    assert headings == [P, '__proto__', 'constructor', 'other']
+    _assert_clean(ui.page)

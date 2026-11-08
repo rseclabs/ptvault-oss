@@ -1755,19 +1755,20 @@ const ShellOneLinersManager = {
             return;
         }
 
-        // Group by subcategory
-        const grouped = {};
+        // Group by subcategory. It is stored free text: a Map accepts any name
+        // (even "__proto__") and the heading is escaped (L-20).
+        const grouped = new Map();
         oneliners.forEach(item => {
             const key = item.subcategory || 'other';
-            if (!grouped[key]) grouped[key] = [];
-            grouped[key].push(item);
+            if (!grouped.has(key)) grouped.set(key, []);
+            grouped.get(key).push(item);
         });
 
         let html = '';
-        Object.entries(grouped).forEach(([subcategory, items]) => {
+        grouped.forEach((items, subcategory) => {
             html += `
                 <div class="shell-group">
-                    <h5 class="shell-group-title">${subcategory}</h5>
+                    <h5 class="shell-group-title">${escapeHtml(subcategory)}</h5>
                     ${items.map(item => this.renderOnelinerCard(item)).join('')}
                 </div>
             `;
