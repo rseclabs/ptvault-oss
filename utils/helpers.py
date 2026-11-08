@@ -48,6 +48,18 @@ def validate_status(status):
     return status in ENGAGEMENT_STATUSES
 
 
+def bounded_int(value, default, low, high):
+    """value as an int clamped to low..high; default when missing or not a number (L-19).
+
+    SQLite treats a negative LIMIT as "no limit", so every limit is clamped.
+    """
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return default
+    return max(low, min(number, high))
+
+
 def parse_cvss_score(value):
     """Return value as a CVSS score (0.0-10.0) or None if empty, or raise ValueError."""
     if value is None or value == '':

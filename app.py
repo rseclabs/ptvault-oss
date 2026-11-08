@@ -120,6 +120,10 @@ def close_db(error):
     if db is not None:
         db.close()
 
+# Bodies other than file uploads get a smaller limit (utils/request_limits.py, L-19)
+from utils.request_limits import limit_request_body
+app.before_request(limit_request_body)
+
 # CSRF on every mutating API request, login and setup included (utils/csrf.py, L-8)
 app.before_request(csrf_protect)
 

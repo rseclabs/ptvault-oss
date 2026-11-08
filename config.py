@@ -97,6 +97,9 @@ class Config:
     UPLOAD_FOLDER = default_upload_folder(DATABASE_PATH)
     LEGACY_UPLOAD_FOLDER = os.path.join(RUNTIME_DIR, 'data', 'uploads')
     MAX_FILE_SIZE = 250 * 1024 * 1024  # 250 MB limit
+    # Request bodies other than file uploads (JSON, forms): far below the upload
+    # limit, which used to be the only one (L-19)
+    MAX_JSON_SIZE = 16 * 1024 * 1024
     ALLOWED_EXTENSIONS = {'.txt', '.xml', '.json', '.png', '.jpg', '.jpeg', '.pdf', '.html', '.log', '.pcap', '.nessus'}
 
 

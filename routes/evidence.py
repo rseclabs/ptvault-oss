@@ -24,7 +24,7 @@ from utils.error_handler import (
     validate_enum
 )
 from utils.audit_logger import audit_create, audit_delete
-from utils.helpers import EVIDENCE_TYPES, normalize_tags
+from utils.helpers import EVIDENCE_TYPES, bounded_int, normalize_tags
 from config import Config
 from models import encryption, upload_store
 from models.engagement_cleanup import delete_evidence_rows
@@ -78,20 +78,17 @@ def detect_tool_type(file_data):
     Returns:
         str: Tool type ('nmap', 'burp', 'nessus') or None if unknown
     """
+    # Only the root element's opening tag is read: the parser that follows builds
+    # the one full tree, instead of the file being parsed twice (L-19).
     try:
-        tree = safe_ET.parse(io.BytesIO(file_data))
-        root = tree.getroot()
-
-        if root.tag == 'nmaprun':
-            return 'nmap'
-        elif root.tag == 'issues':
-            return 'burp'
-        elif root.tag == 'NessusClientData_v2':
-            return 'nessus'
-        else:
-            return None
+        for _event, element in safe_ET.iterparse(io.BytesIO(file_data), events=('start',)):
+            return _ROOT_TAGS.get(element.tag)
     except Exception:
         return None
+    return None
+
+
+_ROOT_TAGS = {'nmaprun': 'nmap', 'issues': 'burp', 'NessusClientData_v2': 'nessus'}
 
 
 def parse_tool_output(file_data, tool_type):
@@ -817,7 +814,7 @@ def search_evidence():
     """
     engagement_id = g.active_engagement_id
     query = request.args.get('q', '').strip()
-    limit = min(int(request.args.get('limit', 50)), 500)
+    limit = bounded_int(request.args.get('limit'), 50, 1, 500)          # L-19
 
     if not query:
         return jsonify({'error': 'Query parameter q required'}), 400
@@ -885,8 +882,8 @@ def filter_evidence():
     tags_or = request.args.get('tags_any', '').split(',') if request.args.get('tags_any') else []
     tool = request.args.get('tool')
     severity = request.args.get('severity')
-    limit = min(int(request.args.get('limit', 50)), 500)
-    offset = int(request.args.get('offset', 0))
+    limit = bounded_int(request.args.get('limit'), 50, 1, 500)          # L-19
+    offset = bounded_int(request.args.get('offset'), 0, 0, 10**9)
 
     # Validate evidence type
     if evidence_type and not validate_evidence_type(evidence_type):

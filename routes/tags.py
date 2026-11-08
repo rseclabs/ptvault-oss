@@ -5,6 +5,7 @@ from collections import Counter
 from flask import Blueprint, request, jsonify, g
 from middleware.auth import require_auth
 from utils.error_handler import handle_errors
+from utils.helpers import bounded_int
 
 tags_bp = Blueprint('tags', __name__, url_prefix='/api/tags')
 
@@ -19,7 +20,7 @@ def autocomplete_tags():
     Returns tags sorted by usage count (most used first).
     """
     prefix = request.args.get('q', '').strip().lower()
-    limit = min(int(request.args.get('limit', 10)), 50)
+    limit = bounded_int(request.args.get('limit'), 10, 1, 50)          # L-19
 
     # Suggest only tags used in the active engagement, counted from the
     # comma-separated evidence.tags column that every write path maintains.
