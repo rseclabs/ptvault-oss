@@ -74,8 +74,31 @@ def is_encryption_available():
 
 
 def is_encryption_enabled():
-    """Check if encryption is available and in use (an encrypted database, or a key file)."""
-    return _SQLCIPHER_AVAILABLE and (os.path.exists(Config.ENCRYPTION_KEY_FILE) or _encrypted_db_present())
+    """Check if encryption is available and in use: the database is encrypted, or a
+    key file is in use (PTVAULT_STORE_KEY_FILE). A key file on its own no longer
+    counts (L-15): without the opt-in it is never read, so treating it as "enabled"
+    made every connection ask for a key that could not be found."""
+    return _SQLCIPHER_AVAILABLE and (_key_file_in_use() or _encrypted_db_present())
+
+
+def retire_stray_key_file():
+    """Set aside a key file that has no encrypted database to go with it (L-15).
+
+    Called at startup. A key file is kept when PTVAULT_STORE_KEY_FILE is set, or
+    when the database is encrypted (unlock() removes it once the passphrase is
+    proven, M-8). Otherwise it is left over from an older version, for example
+    after the database was deleted to start over: it is renamed, not deleted, in
+    case it is still wanted. Returns the new path, or None.
+    """
+    path = Config.ENCRYPTION_KEY_FILE
+    if not os.path.exists(path) or _key_file_in_use() or _encrypted_db_present():
+        return None
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    moved = f'{path}.unused-{stamp}'
+    os.replace(path, moved)
+    logger.warning("Set aside %s: there is no encrypted database for it, so it was left by an older "
+                   "version. It is now %s and can be deleted.", path, moved)
+    return moved
 
 
 def _key_file_in_use():

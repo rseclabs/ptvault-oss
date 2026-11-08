@@ -164,10 +164,17 @@ class TestEncryptionState:
         assert not encryption.is_encryption_enabled()
 
     def test_enabled_when_key_exists(self, tmp_data_dir, monkeypatch):
-        """When pysqlcipher3 is available and key file exists, should be enabled."""
+        """With the PTVAULT_STORE_KEY_FILE opt-in, a key file means encryption is enabled."""
         monkeypatch.setattr(encryption, '_SQLCIPHER_AVAILABLE', True)
+        monkeypatch.setattr(Config, 'STORE_KEY_FILE', True)
         encryption._write_key_file('d' * 64)
         assert encryption.is_encryption_enabled()
+
+    def test_a_key_file_alone_is_not_enabled(self, tmp_data_dir, monkeypatch):
+        """Without the opt-in a key file is never read, so it does not count (L-15)."""
+        monkeypatch.setattr(encryption, '_SQLCIPHER_AVAILABLE', True)
+        encryption._write_key_file('d' * 64)
+        assert not encryption.is_encryption_enabled()
 
     def test_plain_connection(self, tmp_data_dir, monkeypatch):
         """Without encryption, get_connection should return a plain sqlite3 connection."""

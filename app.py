@@ -33,7 +33,8 @@ except InsecureSecretError as e:
 
 from models.database import init_db, get_db_connection, run_migrations, setup_required
 from models.encryption import (auto_unlock_from_env, check_and_migrate_if_needed, is_encryption_available,
-                               is_encryption_enabled, is_locked, plaintext_database_refusal)
+                               is_encryption_enabled, is_locked, plaintext_database_refusal,
+                               retire_stray_key_file)
 from features import register_blueprints
 from middleware.auth import require_auth, require_role
 from utils.csrf import csrf_protect
@@ -59,6 +60,7 @@ limiter = configure_rate_limits(app)
 # database stays locked until /unlock is given the database passphrase, unless
 # PTVAULT_DB_PASSPHRASE (or the PTVAULT_STORE_KEY_FILE opt-in) provides it.
 if is_encryption_available():
+    retire_stray_key_file()      # a key file from an older version with no encrypted database (L-15)
     auto_unlock_from_env()
     if is_locked():
         logger.warning("Database is encrypted and locked: open /unlock and enter the database passphrase")
