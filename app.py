@@ -12,6 +12,7 @@ else:
 
 from flask import Flask, jsonify, g, render_template, redirect, url_for, request
 from config import Config
+from utils.security_headers import apply_security_headers
 
 # Configure logging
 logging.basicConfig(
@@ -122,47 +123,8 @@ def csrf_protect():
 
 @app.after_request
 def set_security_headers(response):
-    """Add security headers to all responses."""
-    # Disable caching for JS/CSS in dev so changes take effect on normal reload
-    if Config.ENVIRONMENT != 'production' and request.path.startswith('/static/'):
-        response.headers['Cache-Control'] = 'no-store'
-
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-
-    # CyberChef requires relaxed CSP (blob: workers, data: URIs, eval for recipes)
-    if request.path.startswith('/api/admin/cyberchef'):
-        csp = (
-            "default-src 'self' blob: data:; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data:; "
-            "style-src 'self' 'unsafe-inline' blob: data:; "
-            "worker-src 'self' blob:; "
-            "img-src 'self' data: blob:; "
-            "connect-src 'self' blob: data:; "
-            "font-src 'self' data: blob:; "
-            "frame-src 'none'"
-        )
-    else:
-        # Content Security Policy - every library and font is vendored under
-        # static/vendor, so nothing loads from a third-party host.
-        csp = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-            "style-src 'self' 'unsafe-inline'; "
-            "font-src 'self'; "
-            "img-src 'self' data: blob:; "
-            "connect-src 'self'; "
-            "frame-src 'self' https://gchq.github.io"
-        )
-    response.headers['Content-Security-Policy'] = csp
-
-    # HSTS only in production
-    if Config.ENVIRONMENT == 'production':
-        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-
-    return response
+    """Add security headers to all responses (utils/security_headers.py)."""
+    return apply_security_headers(response)
 
 # ============================================
 # WEB UI ROUTES

@@ -2295,10 +2295,7 @@ const ReportingManager = {
                     showToast('PDF downloaded successfully', 'success');
                 } else {
                     // HTML fallback - open print dialog
-                    const printWindow = window.open('', '_blank');
-                    printWindow.document.write(result);
-                    printWindow.document.close();
-                    setTimeout(() => printWindow.print(), 500);
+                    this._printHtml(result);
                     showToast('Opening print dialog...', 'info');
                 }
             } else {
@@ -2310,6 +2307,33 @@ const ReportingManager = {
         } catch (error) {
             showToast(error.message || 'Export failed', 'error');
         }
+    },
+
+    /**
+     * Print report HTML from the server's fallback (no WeasyPrint).
+     *
+     * The HTML holds teammate and scanner content, so it is never written into a
+     * same-origin window. It renders in a sandboxed iframe: allow-same-origin
+     * lets this page call print() on it, and without allow-scripts nothing in
+     * the report can run (M-4).
+     */
+    _printHtml(html) {
+        document.querySelectorAll('iframe[data-print-frame]').forEach(f => f.remove());
+        const frame = document.createElement('iframe');
+        frame.setAttribute('data-print-frame', '');
+        frame.setAttribute('sandbox', 'allow-same-origin allow-modals');
+        frame.setAttribute('aria-hidden', 'true');
+        frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+        frame.addEventListener('load', () => {
+            try {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+            } catch (e) {
+                showToast('Could not open the print dialog', 'error');
+            }
+        }, { once: true });
+        frame.srcdoc = html;
+        document.body.appendChild(frame);
     },
 
     /**

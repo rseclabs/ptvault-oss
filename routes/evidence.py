@@ -6,6 +6,12 @@ from flask import Blueprint, request, jsonify, g, send_file
 from middleware.auth import require_auth, require_engagement_access
 from routes.engagements import require_active_engagement
 from utils.file_helpers import sanitize_filename, allowed_file, create_safe_filepath, resolve_evidence_file
+from utils.security_headers import untrusted_response_headers
+
+# Only raster images are served inline (for <img> in notes). Anything else an
+# engagement member uploads (.html, .txt, .pdf, ...) would render on the app
+# origin, so it is always an attachment (M-4).
+INLINE_IMAGE_TYPES = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg'}
 from utils.parsers import nmap_parser, burp_parser, nessus_parser
 from utils.host_extractor import extract_and_link_hosts_for_evidence, extract_hosts_only
 from utils.error_handler import (
@@ -632,12 +638,12 @@ def download_evidence(evidence_id):
     if not os.path.exists(full_path):
         return jsonify({"error": "file not found on disk"}), 404
 
-    # Send file with original filename
-    return send_file(
+    # Send file with original filename; sandboxed in case a browser renders it (M-4)
+    return untrusted_response_headers(send_file(
         full_path,
         as_attachment=True,
         download_name=file_name or "evidence_file"
-    )
+    ))
 
 
 @evidence_bp.route('/<int:evidence_id>/file', methods=['GET'])
@@ -671,7 +677,13 @@ def view_evidence_file(evidence_id):
     if not os.path.exists(full_path):
         return jsonify({"error": "file not found on disk"}), 404
 
-    return send_file(full_path, as_attachment=False, conditional=True)
+    image_type = INLINE_IMAGE_TYPES.get(os.path.splitext(full_path)[1].lower())
+    if image_type:
+        response = send_file(full_path, mimetype=image_type, as_attachment=False, conditional=True)
+    else:
+        response = send_file(full_path, mimetype='application/octet-stream', as_attachment=True,
+                             download_name=file_name or os.path.basename(full_path), conditional=True)
+    return untrusted_response_headers(response)
 
 
 @evidence_bp.route('/<int:evidence_id>/parse', methods=['POST'])

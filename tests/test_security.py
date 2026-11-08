@@ -151,28 +151,9 @@ def app():
         if cookie_token != header_token:
             return jsonify({'error': 'CSRF token mismatch'}), 403
 
-    # Mirror the security-header after_request from app.py
-    @flask_app.after_request
-    def set_security_headers(response):
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['X-Frame-Options'] = 'DENY'
-        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-        response.headers['X-XSS-Protection'] = '1; mode=block'
-        csp = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-            "style-src 'self' 'unsafe-inline'; "
-            "font-src 'self'; "
-            "img-src 'self' data: blob:; "
-            "connect-src 'self'; "
-            "frame-src 'self' https://gchq.github.io"
-        )
-        response.headers['Content-Security-Policy'] = csp
-        if Config.ENVIRONMENT == 'production':
-            response.headers['Strict-Transport-Security'] = (
-                'max-age=31536000; includeSubDomains'
-            )
-        return response
+    # The real security-header hook app.py registers (utils/security_headers.py)
+    from utils.security_headers import apply_security_headers
+    flask_app.after_request(apply_security_headers)
 
     yield flask_app
 

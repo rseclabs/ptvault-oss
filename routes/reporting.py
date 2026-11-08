@@ -10,6 +10,7 @@ from flask import Blueprint, request, jsonify, g, Response
 from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role, can_edit_shared
 from utils.error_handler import handle_errors
 from utils.pdf_generator import generate_pdf_from_html, generate_pdf_with_cover, HAS_WEASYPRINT
+from utils.security_headers import untrusted_response_headers
 
 logger = logging.getLogger(__name__)
 
@@ -629,8 +630,10 @@ def export_report(report_id):
 
     if export_format == 'html':
         html = generate_html_export(report, hydrated_items)
-        return Response(html, mimetype='text/html',
-                      headers={'Content-Disposition': f'attachment; filename="{report["name"]}.html"'})
+        # Report HTML holds user and scanner content: sandboxed if a browser renders it (M-4)
+        return untrusted_response_headers(Response(
+            html, mimetype='text/html',
+            headers={'Content-Disposition': f'attachment; filename="{report["name"]}.html"'}))
 
     elif export_format == 'markdown':
         markdown = generate_markdown_export(report, hydrated_items)
@@ -641,7 +644,7 @@ def export_report(report_id):
         if not HAS_WEASYPRINT:
             # Fallback: Return HTML for client-side PDF generation via print
             html_content = generate_html_export(report, hydrated_items, for_print=True)
-            return Response(html_content, mimetype='text/html')
+            return untrusted_response_headers(Response(html_content, mimetype='text/html'))
 
         try:
             # Get engagement data for cover page
