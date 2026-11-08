@@ -21,6 +21,31 @@ from models.migrations import apply_migrations  # noqa: E402
 
 
 SCHEMA_PATH = os.path.join(os.path.dirname(__file__), '..', 'models', 'schema.sql')
+REAL_DATA_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+
+
+def _data_dir_snapshot():
+    snapshot = {}
+    for dirpath, _, filenames in os.walk(REAL_DATA_DIR):
+        for name in filenames:
+            path = os.path.join(dirpath, name)
+            try:
+                st = os.stat(path)
+            except OSError:
+                continue
+            snapshot[os.path.relpath(path, REAL_DATA_DIR)] = (st.st_size, st.st_mtime_ns)
+    return snapshot
+
+
+@pytest.fixture(scope='session', autouse=True)
+def real_data_dir_untouched():
+    """Fail the run if any test creates, changes or deletes a file in the real data/
+    folder (database, keys, uploads). Tests must point every path at tmp_path."""
+    before = _data_dir_snapshot()
+    yield
+    after = _data_dir_snapshot()
+    changed = sorted(set(before) ^ set(after) | {k for k in before.keys() & after.keys() if before[k] != after[k]})
+    assert not changed, f'tests modified the real data/ folder: {changed}'
 
 
 def _split_schema_statements(schema_sql: str):
