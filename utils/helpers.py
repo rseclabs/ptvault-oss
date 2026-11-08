@@ -1,5 +1,8 @@
 """Shared utility helpers for PTVault."""
 
+import re
+from datetime import datetime
+
 # Values the UI renders into markup (H-10): anything else is rejected at the API
 # or skipped on import, so a stored field cannot carry markup or script.
 PORT_PROTOCOLS = frozenset(['tcp', 'udp', 'sctp', 'ip', 'icmp'])
@@ -8,6 +11,56 @@ PORT_STATES = frozenset(['open', 'closed', 'filtered', 'unfiltered', 'open|filte
 # Host credential secret types (H-14); the UI renders the value
 PASSWORD_TYPES = frozenset(['cleartext', 'hash'])
 HOST_COLORS = frozenset(['white', 'yellow', 'green', 'blue', 'red', 'purple', 'orange', 'teal', 'cyan', 'brown'])
+# Allow-lists shared by the create routes and engagement import (H-17); tuples
+# keep the order used in error messages.
+ENGAGEMENT_STATUSES = ('active', 'completed', 'archived')
+EVIDENCE_TYPES = ('note', 'command_output', 'screenshot', 'tool_output', 'other')
+ENGAGEMENT_CREDENTIAL_TYPES = ('clear_text', 'ntlm', 'ntlmv2', 'krbtgt', 'md5', 'sha')
+FINDING_CRITICALITIES = ('critical', 'high', 'medium', 'low')
+
+_EMAIL = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+
+
+def validate_email(email):
+    """True for an empty value or a plausible email address."""
+    if not email:
+        return True
+    return isinstance(email, str) and _EMAIL.match(email) is not None
+
+
+def validate_date(date_str):
+    """True for an empty value or an ISO 8601 date (YYYY-MM-DD)."""
+    if not date_str:
+        return True
+    if not isinstance(date_str, str):
+        return False
+    try:
+        datetime.strptime(date_str, '%Y-%m-%d')
+        return True
+    except ValueError:
+        return False
+
+
+def validate_status(status):
+    """True for an empty value or a known engagement status."""
+    if not status:
+        return True
+    return status in ENGAGEMENT_STATUSES
+
+
+def parse_cvss_score(value):
+    """Return value as a CVSS score (0.0-10.0) or None if empty, or raise ValueError."""
+    if value is None or value == '':
+        return None
+    if isinstance(value, bool):
+        raise ValueError('cvss_score must be a number')
+    try:
+        score = float(value)
+    except (TypeError, ValueError):
+        raise ValueError('cvss_score must be a number')
+    if not 0 <= score <= 10:          # also false for NaN
+        raise ValueError('cvss_score must be between 0 and 10')
+    return score
 
 
 def parse_port_number(value):

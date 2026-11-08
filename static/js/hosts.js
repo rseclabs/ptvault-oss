@@ -2345,8 +2345,10 @@ const HostManager = {
         };
 
         container.innerHTML = this.engagementCredentials.map(cred => {
-            const typeLabel = typeLabels[cred.credential_type] || cred.credential_type;
-            const typeClass = cred.credential_type || 'clear_text';
+            // Known types only in the class; an unknown stored type is shown escaped (H-17).
+            const known = Object.hasOwn(typeLabels, cred.credential_type);
+            const typeLabel = known ? typeLabels[cred.credential_type] : escapeHtml(cred.credential_type || '');
+            const typeClass = known ? cred.credential_type : 'clear_text';
 
             return `
                 <tr data-id="${cred.id}">
@@ -2780,8 +2782,10 @@ const HostManager = {
         };
 
         container.innerHTML = this.engagementFindings.map(finding => {
-            const crit = criticalityLabels[finding.criticality] || criticalityLabels['medium'];
-            const cvssDisplay = finding.cvss_score !== null ? finding.cvss_score.toFixed(1) : '-';
+            const crit = Object.hasOwn(criticalityLabels, finding.criticality)
+                ? criticalityLabels[finding.criticality] : criticalityLabels['medium'];
+            const cvss = Number.parseFloat(finding.cvss_score);
+            const cvssDisplay = Number.isFinite(cvss) && cvss >= 0 && cvss <= 10 ? cvss.toFixed(1) : '-';
             const findingHtml = finding.finding_content ? renderMarkdown(finding.finding_content) : '<em>No description</em>';
             const remediationHtml = finding.remediation_content ? renderMarkdown(finding.remediation_content) : '<em>No remediation notes</em>';
 

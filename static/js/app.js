@@ -330,8 +330,9 @@ async function renderEngagementsGrid(engagements) {
             <span>Engagement</span><span>Client and dates</span><span>Vulnerabilities</span>
         </div>`;
     container.innerHTML = ledgerHead + engagements.map((eng, index) => {
-        const statusClass = eng.status || 'active';
-        const statusLabel = eng.status ? eng.status.charAt(0).toUpperCase() + eng.status.slice(1) : 'Active';
+        // Stored values: the class takes only a known status, the label is escaped (H-17).
+        const statusClass = ['active', 'completed', 'archived'].includes(eng.status) ? eng.status : 'active';
+        const statusLabel = eng.status ? escapeHtml(eng.status.charAt(0).toUpperCase() + eng.status.slice(1)) : 'Active';
         const stats = allStats[index];
         const totalVulns = stats.critical + stats.high + stats.medium + stats.low;
 
@@ -365,7 +366,7 @@ async function renderEngagementsGrid(engagements) {
                     ${eng.start_date || eng.end_date ? `
                     <div class="engagement-dates">
                         <span class="label">Dates:</span>
-                        <span class="value measured">${eng.start_date || '?'} to ${eng.end_date || '?'}</span>
+                        <span class="value measured">${escapeHtml(eng.start_date || '?')} to ${escapeHtml(eng.end_date || '?')}</span>
                     </div>
                     ` : ''}
                 </div>

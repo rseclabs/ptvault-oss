@@ -24,7 +24,7 @@ from utils.error_handler import (
     validate_enum
 )
 from utils.audit_logger import audit_create, audit_delete
-from utils.helpers import normalize_tags
+from utils.helpers import EVIDENCE_TYPES, normalize_tags
 from config import Config
 import os
 import json
@@ -36,7 +36,7 @@ evidence_bp = Blueprint('evidence', __name__, url_prefix='/api/evidence')
 
 
 # Valid evidence types
-VALID_EVIDENCE_TYPES = ['note', 'command_output', 'screenshot', 'tool_output', 'other']
+VALID_EVIDENCE_TYPES = list(EVIDENCE_TYPES)
 
 
 def validate_evidence_type(evidence_type):

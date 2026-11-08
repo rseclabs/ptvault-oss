@@ -360,7 +360,8 @@ function getEvidenceTypeDisplay(type) {
         'other': 'Other'
     };
 
-    return types[type] || type;
+    // Callers insert this into markup: an unknown stored type is escaped (H-17).
+    return Object.hasOwn(types, type) ? types[type] : escapeHtml(type);
 }
 
 /**

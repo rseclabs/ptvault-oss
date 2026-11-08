@@ -4,12 +4,15 @@ from flask import Blueprint, request, jsonify, g, session, Response
 from middleware.auth import engagement_role, require_auth, require_engagement_role, require_role
 from functools import wraps
 from utils.error_handler import handle_errors
-import re
 import json
 from datetime import datetime
 from utils.markdown_export import generate_markdown_report
 from utils.audit_logger import audit_create, audit_update, audit_delete, audit_export, audit_view
-from utils.helpers import normalize_tags, parse_port_fields
+from utils.helpers import (
+    ENGAGEMENT_CREDENTIAL_TYPES, FINDING_CRITICALITIES, normalize_tags, parse_port_fields,
+    validate_date, validate_email, validate_status,
+)
+from utils.engagement_import import ImportValidationError, validate_import
 from models.dao.note_tree_dao import NoteTreeDAO, optional_int
 
 
@@ -36,32 +39,6 @@ def _import_shape_error(data):
 
 
 engagements_bp = Blueprint('engagements', __name__, url_prefix='/api/engagements')
-
-
-def validate_email(email):
-    """Basic email validation."""
-    if not email:
-        return True
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(pattern, email) is not None
-
-
-def validate_date(date_str):
-    """Validate ISO 8601 date format (YYYY-MM-DD)."""
-    if not date_str:
-        return True
-    try:
-        datetime.strptime(date_str, '%Y-%m-%d')
-        return True
-    except ValueError:
-        return False
-
-
-def validate_status(status):
-    """Validate status value."""
-    if not status:
-        return True
-    return status in ['active', 'completed', 'archived']
 
 
 def serialize_engagement(row):
@@ -1117,10 +1094,7 @@ def import_engagement_data(data):
     for ev in evidence_items:
         old_evidence_id = ev.get('id')
 
-        # Convert metadata to JSON string if it's a dict
-        metadata = ev.get('metadata')
-        if metadata and isinstance(metadata, dict):
-            metadata = json.dumps(metadata)
+        metadata = ev.get('metadata')          # a JSON object string or None (validate_import)
 
         # Convert tags list to comma-separated string for legacy column
         tags = ev.get('tags', [])
@@ -1325,6 +1299,12 @@ def import_engagement():
     if 'export_metadata' not in data:
         return jsonify({'error': 'Invalid export format: missing export_metadata'}), 400
 
+    # The same checks the create routes apply; nothing is written if one fails (H-17).
+    try:
+        validate_import(data, IMPORT_COLLECTIONS)
+    except ImportValidationError as e:
+        return jsonify({'error': f'Invalid export file: {e}'}), 400
+
     # Import the engagement data
     new_engagement_id = import_engagement_data(data)
     g.db.commit()
@@ -1417,7 +1397,7 @@ def create_engagement_credential(engagement_id):
     description = data.get('description')
 
     # Validate credential_type
-    valid_types = ['clear_text', 'ntlm', 'ntlmv2', 'krbtgt', 'md5', 'sha']
+    valid_types = ENGAGEMENT_CREDENTIAL_TYPES
     if credential_type not in valid_types:
         return jsonify({"error": f"credential_type must be one of: {', '.join(valid_types)}"}), 400
 
@@ -1471,7 +1451,7 @@ def update_engagement_credential(engagement_id, cred_id):
 
     # Validate credential_type if provided
     credential_type = data.get('credential_type')
-    valid_types = ['clear_text', 'ntlm', 'ntlmv2', 'krbtgt', 'md5', 'sha']
+    valid_types = ENGAGEMENT_CREDENTIAL_TYPES
     if credential_type and credential_type not in valid_types:
         return jsonify({"error": f"credential_type must be one of: {', '.join(valid_types)}"}), 400
 
@@ -1834,7 +1814,7 @@ def create_engagement_finding(engagement_id):
         return jsonify({"error": "title is required"}), 400
 
     # Validate criticality
-    valid_criticalities = ['critical', 'high', 'medium', 'low']
+    valid_criticalities = FINDING_CRITICALITIES
     if criticality not in valid_criticalities:
         return jsonify({"error": f"criticality must be one of: {', '.join(valid_criticalities)}"}), 400
 
@@ -1902,7 +1882,7 @@ def update_engagement_finding(engagement_id, finding_id):
 
     # Validate criticality if provided
     criticality = data.get('criticality')
-    valid_criticalities = ['critical', 'high', 'medium', 'low']
+    valid_criticalities = FINDING_CRITICALITIES
     if criticality and criticality not in valid_criticalities:
         return jsonify({"error": f"criticality must be one of: {', '.join(valid_criticalities)}"}), 400
 

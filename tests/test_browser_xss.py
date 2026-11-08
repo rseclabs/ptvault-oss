@@ -407,3 +407,34 @@ def test_cvss_card_breakdown_escapes_vector_values(ui):
     }""", [vectors, P])
     _assert_clean(ui.page)
     assert 'Attack Complexity' in rendered[0] and 'Network' in rendered[2]
+
+
+def test_import_fed_fields_render_as_text(ui):
+    """H-17: values an old import could store (status, dates, types, criticality, CVSS) render as text."""
+    ui.page.evaluate("""async p => {
+        for (const id of ['engagementsGrid', 'evidenceList', 'engagementFindingsList']) {
+            if (!document.getElementById(id)) {
+                const div = document.createElement('div');
+                div.id = id;
+                document.body.appendChild(div);
+            }
+        }
+        if (!document.getElementById('engagementCredentialsTableBody')) {
+            const table = document.createElement('table');
+            table.innerHTML = '<tbody id="engagementCredentialsTableBody"></tbody>';
+            document.body.appendChild(table);
+        }
+        await renderEngagementsGrid([{ id: 1, name: 'n', status: p, start_date: p, end_date: p }]);
+        const ev = { id: 1, title: 't', content: 'c', evidence_type: p, tags: '' };
+        renderEvidenceList([ev]);
+        HostManager.renderEvidenceDetails([ev]);
+        HostManager.engagementCredentials = [{ id: 1, username: 'u', credential_type: p }];
+        HostManager.renderEngagementCredentials();
+        HostManager.engagementFindings = [{ id: 1, title: 't', criticality: p, cvss_score: p }];
+        HostManager.renderEngagementFindings();
+        ReportingManager.engagementFindings = [{ id: 1, title: 't', criticality: p }];
+        ReportingManager.writeups = [{ id: 1, name: 'w', writeup_type: 'finding', criticality: p, cvss_score: p }];
+        document.getElementById('xssScratch').innerHTML = ReportingManager.renderSourceFindings()
+            + ReportingManager.renderSourceWriteups() + ReportingManager.renderWriteupsList();
+    }""", P)
+    _assert_clean(ui.page)

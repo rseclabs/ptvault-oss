@@ -296,7 +296,7 @@ const ReportingManager = {
 
                 <div class="writeup-meta">
                     ${writeup.category ? `<span class="writeup-category">${escapeHtml(writeup.category)}</span>` : ''}
-                    ${!isNarrative && writeup.cvss_score !== null ? `<span class="writeup-cvss">CVSS: ${writeup.cvss_score}</span>` : ''}
+                    ${!isNarrative && writeup.cvss_score !== null ? `<span class="writeup-cvss">CVSS: ${escapeHtml(writeup.cvss_score)}</span>` : ''}
                     ${writeup.tags ? `<span class="writeup-tags">${escapeHtml(writeup.tags)}</span>` : ''}
                 </div>
 
@@ -421,7 +421,7 @@ const ReportingManager = {
     renderSourceFindings() {
         const isCollapsed = this.sourceCollapsed.findings;
         const findingsHtml = this.engagementFindings.map(finding => `
-            <div class="source-item criticality-${finding.criticality}"
+            <div class="source-item criticality-${this._criticality(finding.criticality)}"
                  draggable="true"
                  data-type="engagement_finding"
                  data-id="${finding.id}"
@@ -429,7 +429,7 @@ const ReportingManager = {
                  ondragend="ReportingManager.handleDragEnd(event)">
                 <span class="drag-handle">⋮⋮</span>
                 <div class="source-item-content">
-                    <span class="criticality-badge criticality-${finding.criticality}">${finding.criticality}</span>
+                    <span class="criticality-badge criticality-${this._criticality(finding.criticality)}">${this._criticality(finding.criticality)}</span>
                     <span class="item-title">${escapeHtml(finding.title)}</span>
                 </div>
             </div>
@@ -457,7 +457,7 @@ const ReportingManager = {
         const narratives = this.writeups.filter(w => w.writeup_type === 'narrative');
 
         const renderWriteupItem = (writeup) => `
-            <div class="source-item ${writeup.writeup_type === 'narrative' ? 'narrative' : 'criticality-' + writeup.criticality}"
+            <div class="source-item ${writeup.writeup_type === 'narrative' ? 'narrative' : 'criticality-' + this._criticality(writeup.criticality)}"
                  draggable="true"
                  data-type="writeup"
                  data-id="${writeup.id}"
@@ -467,7 +467,7 @@ const ReportingManager = {
                 <div class="source-item-content">
                     ${writeup.writeup_type === 'narrative'
                         ? '<span class="type-badge narrative">N</span>'
-                        : `<span class="criticality-badge criticality-${writeup.criticality}">${writeup.criticality}</span>`
+                        : `<span class="criticality-badge criticality-${this._criticality(writeup.criticality)}">${this._criticality(writeup.criticality)}</span>`
                     }
                     <span class="item-title">${escapeHtml(writeup.name)}</span>
                 </div>
