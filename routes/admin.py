@@ -5,14 +5,20 @@ from middleware.auth import require_auth, require_role
 from models.auth import revoke_all_sessions
 from utils.audit_logger import AuditLogger
 from utils.error_handler import handle_errors
+from utils.security_headers import CYBERCHEF_CSP
+import logging
 import os
 import json
 import zipfile
 import requests
 import shutil
+import hashlib
+import tempfile
+import threading
 from datetime import datetime, timezone
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/api/admin')
+logger = logging.getLogger(__name__)
 
 # Simple cache for idle timeout setting (shared with middleware)
 # Keys: 'value' (int minutes), 'expires' (timestamp)
@@ -45,7 +51,25 @@ STATIC_DIR = os.path.join(BASE_DIR, 'static')
 TOOLS_DIR = os.path.join(RUNTIME_DIR, 'static', 'tools')
 CYBERCHEF_DIR = os.path.join(TOOLS_DIR, 'cyberchef')
 CYBERCHEF_VERSION_FILE = os.path.join(CYBERCHEF_DIR, 'version.json')
-CYBERCHEF_GITHUB_API = 'https://api.github.com/repos/gchq/CyberChef/releases/latest'
+# One pinned release (M-5): never "latest". To update, pick a release that has
+# been public for at least two weeks, check GitHub's published sha256 digest for
+# the asset, download it, confirm the hash locally, and change all three values.
+CYBERCHEF_VERSION = 'v11.5.0'
+CYBERCHEF_URL = ('https://github.com/gchq/CyberChef/releases/download/v11.5.0/'
+                 'CyberChef_8cd426dd4f40f1423912d5fad91b578a86a65112.zip')
+CYBERCHEF_SHA256 = 'f6478925d3eaa16ec08626a85f5b85eed10d531a5e18700615fed7ecb024cccf'
+CYBERCHEF_MAX_BYTES = 150 * 1024 * 1024
+_cyberchef_install_lock = threading.Lock()
+
+# CyberChef needs unsafe-eval, so its pages run sandboxed: an opaque origin that
+# cannot read PTVault's cookies or call the API with the user's session. Its
+# files are the public release files, so they are served without a login (the
+# sandboxed page's own requests carry no session); the page itself needs one.
+CYBERCHEF_PAGE_CSP = CYBERCHEF_CSP + "; sandbox allow-scripts allow-popups allow-downloads allow-modals allow-forms"
+
+
+class CyberChefInstallError(Exception):
+    """The pinned download could not be fetched, verified or unpacked."""
 
 
 def get_cyberchef_version():
@@ -107,115 +131,106 @@ def cyberchef_status():
 
 @admin_bp.route('/cyberchef/check-update', methods=['GET'])
 @require_auth
+@require_role('admin')
 @handle_errors
 def check_cyberchef_update():
-    """Check GitHub for CyberChef updates."""
+    """Report the installed CyberChef version against the pinned one (no network call)."""
+    current_version = get_cyberchef_version()
+    return jsonify({
+        'current_version': current_version,
+        'latest_version': CYBERCHEF_VERSION,
+        'update_available': current_version != CYBERCHEF_VERSION,
+        'download_url': CYBERCHEF_URL,
+    }), 200
+
+
+def _download_pinned_cyberchef(zip_path):
+    """Download the pinned asset to zip_path, enforcing the size cap and SHA-256."""
+    digest = hashlib.sha256()
+    size = 0
+    response = requests.get(CYBERCHEF_URL, stream=True, timeout=(10, 120))
+    response.raise_for_status()
+    with open(zip_path, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=65536):
+            size += len(chunk)
+            if size > CYBERCHEF_MAX_BYTES:
+                raise CyberChefInstallError('download is larger than expected')
+            digest.update(chunk)
+            f.write(chunk)
+    if digest.hexdigest() != CYBERCHEF_SHA256:
+        raise CyberChefInstallError('download does not match the pinned SHA-256')
+
+
+def _extract_cyberchef(zip_path, dest):
+    """Extract into dest, refusing absolute paths, '..' and symlinks."""
+    dest_root = os.path.realpath(dest)
+    with zipfile.ZipFile(zip_path) as archive:
+        for info in archive.infolist():
+            name = info.filename
+            target = os.path.realpath(os.path.join(dest_root, name))
+            is_symlink = (info.external_attr >> 16) & 0o170000 == 0o120000
+            if (os.path.isabs(name) or name.startswith(('/', '\\')) or is_symlink
+                    or not (target == dest_root or target.startswith(dest_root + os.sep))):
+                raise CyberChefInstallError(f'unsafe path in archive: {name!r}')
+        archive.extractall(dest_root)
+    if not any(f.startswith('CyberChef') and f.endswith('.html') for f in os.listdir(dest_root)):
+        raise CyberChefInstallError('archive does not contain CyberChef')
+
+
+def _install_pinned_cyberchef():
+    """Download, verify and unpack the pinned release, then swap it into place."""
+    os.makedirs(TOOLS_DIR, exist_ok=True)
+    work = tempfile.mkdtemp(prefix='cyberchef-', dir=TOOLS_DIR)
     try:
-        response = requests.get(CYBERCHEF_GITHUB_API, timeout=10)
-        response.raise_for_status()
-        release_data = response.json()
-
-        latest_version = release_data.get('tag_name', '')
-        current_version = get_cyberchef_version()
-
-        # Find the zip asset
-        download_url = None
-        for asset in release_data.get('assets', []):
-            if asset['name'].endswith('.zip') and 'CyberChef' in asset['name']:
-                download_url = asset['browser_download_url']
-                break
-
-        update_available = current_version != latest_version if current_version else True
-
-        return jsonify({
-            'current_version': current_version,
-            'latest_version': latest_version,
-            'update_available': update_available,
-            'download_url': download_url
-        }), 200
-
-    except requests.RequestException as e:
-        return jsonify({'error': f'Failed to check for updates: {str(e)}'}), 500
+        zip_path = os.path.join(work, 'cyberchef.zip')
+        staged = os.path.join(work, 'cyberchef')
+        os.makedirs(staged)
+        _download_pinned_cyberchef(zip_path)
+        _extract_cyberchef(zip_path, staged)
+        # Nothing on disk changed until here; swap the verified copy in.
+        old = os.path.join(work, 'previous')
+        if os.path.exists(CYBERCHEF_DIR):
+            os.rename(CYBERCHEF_DIR, old)
+        os.rename(staged, CYBERCHEF_DIR)
+        save_cyberchef_version(CYBERCHEF_VERSION)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
 
 
 @admin_bp.route('/cyberchef/install', methods=['POST'])
 @require_auth
+@require_role('admin')
 @handle_errors
 def install_cyberchef():
-    """Download and install CyberChef."""
+    """Install the pinned CyberChef release (admin only)."""
+    if not _cyberchef_install_lock.acquire(blocking=False):
+        return jsonify({'error': 'A CyberChef install is already running'}), 409
     try:
-        # Get latest release info
-        response = requests.get(CYBERCHEF_GITHUB_API, timeout=10)
-        response.raise_for_status()
-        release_data = response.json()
-
-        version = release_data.get('tag_name', 'unknown')
-
-        # Find download URL
-        download_url = None
-        for asset in release_data.get('assets', []):
-            if asset['name'].endswith('.zip') and 'CyberChef' in asset['name']:
-                download_url = asset['browser_download_url']
-                break
-
-        if not download_url:
-            return jsonify({'error': 'Could not find CyberChef download URL'}), 500
-
-        # Create directories
-        os.makedirs(TOOLS_DIR, exist_ok=True)
-
-        # Download zip file
-        zip_path = os.path.join(TOOLS_DIR, 'cyberchef_temp.zip')
-
-        download_response = requests.get(download_url, stream=True, timeout=300)
-        download_response.raise_for_status()
-
-        with open(zip_path, 'wb') as f:
-            for chunk in download_response.iter_content(chunk_size=8192):
-                f.write(chunk)
-
-        # Remove existing installation
-        if os.path.exists(CYBERCHEF_DIR):
-            shutil.rmtree(CYBERCHEF_DIR)
-
-        # Extract zip
-        os.makedirs(CYBERCHEF_DIR, exist_ok=True)
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(CYBERCHEF_DIR)
-
-        # Clean up zip file
-        os.remove(zip_path)
-
-        # Save version info
-        save_cyberchef_version(version)
-
-        return jsonify({
-            'success': True,
-            'version': version
-        }), 200
-
-    except requests.RequestException as e:
-        return jsonify({'error': f'Download failed: {str(e)}'}), 500
+        _install_pinned_cyberchef()
+    except (requests.RequestException, CyberChefInstallError, zipfile.BadZipFile) as e:
+        logger.warning('CyberChef install failed: %s', e)
+        return jsonify({'error': f'CyberChef install failed: {e}'}), 502
+    finally:
+        _cyberchef_install_lock.release()
+    AuditLogger.log_action(action='cyberchef_install', resource_type='tool',
+                           details={'version': CYBERCHEF_VERSION, 'sha256': CYBERCHEF_SHA256})
+    return jsonify({'success': True, 'version': CYBERCHEF_VERSION}), 200
 
 
 @admin_bp.route('/cyberchef/update', methods=['POST'])
 @require_auth
+@require_role('admin')
 @handle_errors
 def update_cyberchef():
-    """Update CyberChef to latest version."""
+    """Reinstall CyberChef at the pinned version (admin only)."""
     old_version = get_cyberchef_version()
-
-    # Reuse install logic
     result, status_code = install_cyberchef()
-
     if status_code == 200:
-        response_data = result.get_json()
         return jsonify({
             'success': True,
             'old_version': old_version,
-            'new_version': response_data.get('version')
+            'new_version': CYBERCHEF_VERSION,
         }), 200
-
     return result, status_code
 
 
@@ -237,30 +252,40 @@ def serve_cyberchef_redirect():
     return redirect('/api/admin/cyberchef/', code=301)
 
 
+def _send_cyberchef_file(filename):
+    if not filename or not os.path.isdir(CYBERCHEF_DIR):
+        return jsonify({'error': 'CyberChef not installed'}), 404
+    root = os.path.realpath(CYBERCHEF_DIR)
+    target = os.path.realpath(os.path.join(root, filename))
+    if not target.startswith(root + os.sep) or not os.path.isfile(target):
+        return jsonify({'error': 'File not found'}), 404
+    response = send_from_directory(root, os.path.relpath(target, root))
+    response.headers['Content-Security-Policy'] = CYBERCHEF_PAGE_CSP
+    response.headers['Access-Control-Allow-Origin'] = '*'   # fonts requested from the opaque origin
+    return response
+
+
 @admin_bp.route('/cyberchef/', methods=['GET'])
-@admin_bp.route('/cyberchef/<path:filename>', methods=['GET'])
 @require_auth
 @handle_errors
-def serve_cyberchef(filename=None):
-    """Serve CyberChef files."""
-    if not os.path.exists(CYBERCHEF_DIR):
-        return jsonify({'error': 'CyberChef not installed'}), 404
+def serve_cyberchef():
+    """Serve the CyberChef page (sandboxed, M-5)."""
+    return _send_cyberchef_file(find_cyberchef_html())
 
-    # If no filename specified, find the main HTML file
-    if not filename:
-        filename = find_cyberchef_html()
-        if not filename:
-            return jsonify({'error': 'CyberChef HTML not found'}), 404
 
-    # Handle case where filename is empty
-    if not filename:
-        filename = 'CyberChef.html'
+@admin_bp.route('/cyberchef/<path:filename>', methods=['GET'])
+@handle_errors
+def serve_cyberchef_file(filename):
+    """Serve CyberChef's own release files; the HTML page still needs a login."""
+    if filename.lower().endswith(('.html', '.htm')):
+        return serve_cyberchef_page_file(filename)
+    return _send_cyberchef_file(filename)
 
-    file_path = os.path.join(CYBERCHEF_DIR, filename)
-    if not os.path.exists(file_path):
-        return jsonify({'error': 'File not found'}), 404
 
-    return send_from_directory(CYBERCHEF_DIR, filename)
+@require_auth
+def serve_cyberchef_page_file(filename):
+    """A CyberChef HTML page by name; same login requirement as /cyberchef/."""
+    return _send_cyberchef_file(filename)
 
 
 @admin_bp.route('/settings', methods=['GET'])

@@ -1239,11 +1239,13 @@ const ToolsManager = {
                 <div class="install-icon"><i data-lucide="chef-hat"></i></div>
                 <h3>CyberChef Not Installed</h3>
                 <p>CyberChef is a powerful web app for encoding, decoding, and analyzing data.</p>
-                <p class="install-size">Download size: ~43 MB</p>
+                ${AppState.currentUser?.role === 'admin' ? `
+                <p class="install-size">Download size: ~83 MB (pinned release, checksum verified)</p>
                 <button class="btn btn-primary btn-lg" onclick="ToolsManager.installCyberChef()" id="installCyberChefBtn">
                     <span class="btn-text">Install CyberChef</span>
                     <span class="btn-loading" style="display:none;">Installing...</span>
-                </button>
+                </button>` : `
+                <p class="text-muted">Ask an administrator to install it.</p>`}
             </div>
         `;
     },
