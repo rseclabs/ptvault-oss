@@ -711,3 +711,44 @@ def test_encrypt_database_form_applies_the_passphrase_policy(ui):
     }""")
     assert got['sent'] == ['Enable-Passphrase-123', 'Élan-passphrase-1']
     assert got['toasts'] == ['error'] * 5 + ['success'] * 2
+
+
+# ------------------------------------------------------------------ declared handlers (L-21)
+
+def test_declared_handlers_call_the_named_method_with_their_arguments(ui):
+    got = ui.page.evaluate("""p => {
+        const calls = [];
+        window.__T = {
+            name: 'T',
+            m(...args) { calls.push([this.name, ...args.map(a => a instanceof Element ? a.id : a)]); },
+            stop(event) { calls.push(['stop']); event.stopPropagation(); },
+            outer() { calls.push(['outer']); },
+        };
+        const s = document.getElementById('xssScratch');
+        s.innerHTML = `
+            <div id="outer" ${on('click', '__T.outer')}>
+              <button id="b1" ${on('click', '__T.m', 7, p, ARG.el, null, true)}>x</button>
+              <button id="b2" ${on('click', '__T.stop', ARG.event)}>y</button>
+            </div>
+            <input id="i1" value="typed" ${on('change', '__T.m', ARG.value)}>
+            <input id="c1" type="checkbox" checked ${on('change', '__T.m', ARG.checked)}>
+            <button id="bad1" ${on('click', '__T.toString')}>z</button>
+            <button id="bad2" ${on('click', '__T.name')}>z</button>
+            <button id="bad3" data-on-click='["alert(1)"]'>z</button>
+            <button id="bad4" data-on-click='not json'>z</button>`;
+        const errors = console.error;
+        console.error = () => {};
+        try {
+            for (const id of ['b1', 'b2', 'bad1', 'bad2', 'bad3', 'bad4']) document.getElementById(id).click();
+            for (const id of ['i1', 'c1']) document.getElementById(id).dispatchEvent(new Event('change', { bubbles: true }));
+        } finally {
+            console.error = errors;
+        }
+        return calls;
+    }""", P)
+    assert got == [
+        ['T', 7, P, 'b1', None, True], ['outer'],          # bubbles to the outer handler, payload passed as data
+        ['stop'],                                          # stopPropagation stops the walk
+        ['T', 'typed'], ['T', True],                       # bad1-bad4: refused paths call nothing
+    ]
+    _assert_clean(ui.page)

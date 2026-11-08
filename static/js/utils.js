@@ -150,6 +150,84 @@ document.addEventListener('click', (e) => {
 });
 
 /**
+ * Event handlers without inline script (L-21).
+ *
+ * The Content-Security-Policy allows no inline script, so markup never carries
+ * onclick="..." code. An element names the method to call and its arguments as
+ * JSON in one attribute per event:
+ *
+ *     <button data-on-click='["HostManager.selectHost", 12]'>
+ *
+ * Templates build it with on():  `<button ${on('click', 'HostManager.selectHost', host.id)}>`
+ * The method is looked up on window, one own property at a time (no code is
+ * evaluated), and called on its owner, so `this` is the manager as before.
+ * ARG.el / ARG.event / ARG.value / ARG.checked / ARG.file stand for what an
+ * inline handler wrote as this, event, this.value, this.checked, this.files[0].
+ * Handlers run from the innermost element outwards, as inline handlers did,
+ * until one calls event.stopPropagation().
+ */
+const ARG = Object.freeze({
+    el: Object.freeze({ $: 'el' }),
+    event: Object.freeze({ $: 'event' }),
+    value: Object.freeze({ $: 'value' }),
+    checked: Object.freeze({ $: 'checked' }),
+    file: Object.freeze({ $: 'file' }),
+});
+
+const DELEGATED_EVENTS = ['click', 'change', 'input', 'submit', 'keydown', 'keyup',
+                          'dragstart', 'dragend', 'dragover', 'dragleave', 'drop'];
+
+function on(eventName, path, ...args) {
+    if (!DELEGATED_EVENTS.includes(eventName)) throw new Error(`on(): unsupported event ${eventName}`);
+    return `data-on-${eventName}="${escapeHtml(JSON.stringify([path, ...args]))}"`;
+}
+
+function _resolveHandler(path) {
+    if (typeof path !== 'string' || !/^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(path)) return null;
+    let owner = null;
+    let value = window;
+    for (const part of path.split('.')) {
+        if (value == null || !Object.prototype.hasOwnProperty.call(value, part)) return null;
+        owner = value;
+        value = value[part];
+    }
+    return typeof value === 'function' ? { owner, fn: value } : null;
+}
+
+function _handlerArg(arg, el, event) {
+    if (!arg || typeof arg !== 'object' || Array.isArray(arg) || Object.keys(arg).length !== 1 || !('$' in arg)) {
+        return arg;
+    }
+    switch (arg.$) {
+        case 'el': return el;
+        case 'event': return event;
+        case 'value': return el.value;
+        case 'checked': return el.checked;
+        case 'file': return el.files ? el.files[0] : undefined;
+        default: return arg;
+    }
+}
+
+function _dispatchDeclared(event) {
+    const attr = `data-on-${event.type}`;
+    let el = event.target instanceof Element ? event.target.closest(`[${attr}]`) : null;
+    while (el) {
+        let spec = null;
+        try { spec = JSON.parse(el.getAttribute(attr)); } catch (e) { spec = null; }
+        const handler = Array.isArray(spec) ? _resolveHandler(spec[0]) : null;
+        if (handler) {
+            handler.fn.apply(handler.owner, spec.slice(1).map(a => _handlerArg(a, el, event)));
+        } else {
+            console.error(`No handler for ${attr}`, el);
+        }
+        if (event.cancelBubble) break;
+        el = el.parentElement ? el.parentElement.closest(`[${attr}]`) : null;
+    }
+}
+
+DELEGATED_EVENTS.forEach(type => document.addEventListener(type, _dispatchDeclared));
+
+/**
  * Show toast notification
  * @param {string} message - Message to display
  * @param {string} type - Toast type (success, error, warning, info)
@@ -418,6 +496,8 @@ window.getSeverityColor = getSeverityColor;
 window.escapeHtml = escapeHtml;
 window.safeUrl = safeUrl;
 window.registerAction = registerAction;
+window.on = on;
+window.ARG = ARG;
 window.showToast = showToast;
 window.ThemeManager = ThemeManager;
 window.openModal = openModal;
