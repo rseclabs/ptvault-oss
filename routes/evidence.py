@@ -5,7 +5,7 @@ import logging
 from flask import Blueprint, request, jsonify, g, send_file
 from middleware.auth import require_auth, require_engagement_access
 from routes.engagements import require_active_engagement
-from utils.file_helpers import sanitize_filename, allowed_file, create_safe_filepath
+from utils.file_helpers import sanitize_filename, allowed_file, create_safe_filepath, resolve_evidence_file
 from utils.parsers import nmap_parser, burp_parser, nessus_parser
 from utils.host_extractor import extract_and_link_hosts_for_evidence, extract_hosts_only
 from utils.error_handler import (
@@ -576,9 +576,9 @@ def delete_evidence(evidence_id):
     if engagement_id != g.active_engagement_id:
         return jsonify({"error": "forbidden - evidence belongs to different engagement"}), 403
 
-    # Delete file from disk if it exists
-    if file_path:
-        full_path = os.path.join(Config.UPLOAD_FOLDER, file_path)
+    # Delete the file only if it lies inside this engagement's upload folder
+    full_path = resolve_evidence_file(file_path, engagement_id, Config.UPLOAD_FOLDER)
+    if full_path:
         if os.path.exists(full_path):
             try:
                 os.remove(full_path)
@@ -625,9 +625,8 @@ def download_evidence(evidence_id):
     if not file_path:
         return jsonify({"error": "no file attached to this evidence"}), 400
 
-    upload_root = os.path.realpath(Config.UPLOAD_FOLDER)
-    full_path = os.path.realpath(os.path.join(Config.UPLOAD_FOLDER, file_path))
-    if not full_path.startswith(upload_root + os.sep):
+    full_path = resolve_evidence_file(file_path, engagement_id, Config.UPLOAD_FOLDER)
+    if not full_path:
         return jsonify({"error": "forbidden"}), 403
 
     if not os.path.exists(full_path):
@@ -665,9 +664,8 @@ def view_evidence_file(evidence_id):
     if not file_path:
         return jsonify({"error": "no file attached to this evidence"}), 400
 
-    upload_root = os.path.realpath(Config.UPLOAD_FOLDER)
-    full_path = os.path.realpath(os.path.join(Config.UPLOAD_FOLDER, file_path))
-    if not full_path.startswith(upload_root + os.sep):
+    full_path = resolve_evidence_file(file_path, engagement_id, Config.UPLOAD_FOLDER)
+    if not full_path:
         return jsonify({"error": "forbidden"}), 403
 
     if not os.path.exists(full_path):
@@ -708,7 +706,9 @@ def parse_evidence(evidence_id):
     if not file_path:
         return jsonify({"error": "no file attached to this evidence"}), 400
 
-    full_path = os.path.join(Config.UPLOAD_FOLDER, file_path)
+    full_path = resolve_evidence_file(file_path, engagement_id, Config.UPLOAD_FOLDER)
+    if not full_path:
+        return jsonify({"error": "forbidden"}), 403
 
     if not os.path.exists(full_path):
         return jsonify({"error": "file not found on disk"}), 404
@@ -1054,9 +1054,9 @@ def bulk_evidence_operation():
                 # Delete evidence record
                 cursor.execute("DELETE FROM evidence WHERE id = ?", (evidence_id,))
 
-                # Delete file from disk if it exists
-                if file_path:
-                    full_path = os.path.join(Config.UPLOAD_FOLDER, file_path)
+                # Delete the file only if it lies inside this engagement's upload folder
+                full_path = resolve_evidence_file(file_path, g.active_engagement_id, Config.UPLOAD_FOLDER)
+                if full_path:
                     if os.path.exists(full_path):
                         try:
                             os.remove(full_path)

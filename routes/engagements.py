@@ -1103,9 +1103,11 @@ def import_engagement_data(data):
             ev.get('title'),
             ev.get('content'),
             tags_str,
-            ev.get('file_path'),
-            ev.get('file_name'),
-            ev.get('file_size'),
+            # An export carries no file contents, and a stored path would point at
+            # another engagement's (or any) file; restored evidence has no attachment.
+            None,
+            None,
+            None,
             metadata
         ))
         new_evidence_id = cursor.lastrowid

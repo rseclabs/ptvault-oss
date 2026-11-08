@@ -3,6 +3,24 @@
 import os
 import re
 from datetime import datetime
+from typing import Optional
+
+
+def resolve_evidence_file(file_path: Optional[str], engagement_id: int, upload_folder: str) -> Optional[str]:
+    """Return the real path of an engagement's evidence file, or None.
+
+    Stored paths are relative ("<engagement_id>/<file>"). The path is
+    resolved (following any symlink) and accepted only if it lies inside that
+    engagement's own upload folder, so an absolute path, a '..' path or a
+    path into another engagement's folder is never read, served or deleted.
+    """
+    if not file_path or engagement_id is None:
+        return None
+    engagement_root = os.path.realpath(os.path.join(upload_folder, str(int(engagement_id))))
+    full_path = os.path.realpath(os.path.join(upload_folder, file_path))
+    if not full_path.startswith(engagement_root + os.sep):
+        return None
+    return full_path
 
 
 def sanitize_filename(filename: str) -> str:
