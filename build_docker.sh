@@ -64,7 +64,7 @@ case $ACTION in
         # Run container
         docker run -d \
             --name ptvault \
-            -p 5000:5000 \
+            -p 127.0.0.1:5000:5000 \
             -v $(pwd)/data:/app/data \
             -v $(pwd)/.env:/app/.env:ro \
             --restart unless-stopped \

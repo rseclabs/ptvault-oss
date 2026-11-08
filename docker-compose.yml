@@ -3,9 +3,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Run as the owner of ./data (L-5): PTVAULT_UID=$(id -u) PTVAULT_GID=$(id -g) docker compose build
+        PTVAULT_UID: ${PTVAULT_UID:-1000}
+        PTVAULT_GID: ${PTVAULT_GID:-1000}
     container_name: ptvault
     ports:
-      - "5000:5000"
+      # This machine only (L-5). Secure cookies need HTTPS anyway, so reach it from
+      # other machines through a TLS reverse proxy rather than publishing 0.0.0.0.
+      - "127.0.0.1:5000:5000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     volumes:
       # Persist database and uploads
       - ./data:/app/data

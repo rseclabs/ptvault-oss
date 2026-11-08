@@ -206,7 +206,10 @@ sudo usermod -aG docker $USER
 
 > **Notes**
 > - The container runs with `ENVIRONMENT=production`, so session cookies are marked Secure and the Flask debugger is off. Browsers accept Secure cookies on `http://localhost`; to use PTVault from other machines, put it behind HTTPS (see [Behind Nginx Reverse Proxy](#behind-nginx-reverse-proxy)).
-> - On macOS, port 5000 is often taken by AirPlay Receiver. Change the mapping in `docker-compose.yml` (for example `"5050:5000"`) if the container fails to bind.
+> - On macOS, port 5000 is often taken by AirPlay Receiver. Change the mapping in `docker-compose.yml` (for example `"127.0.0.1:5050:5000"`) if the container fails to bind.
+> - The port is published on `127.0.0.1` only. To reach PTVault from other machines, put a TLS reverse proxy in front of it rather than publishing it on all interfaces.
+> - The app runs as an unprivileged `ptvault` user (UID/GID 1000 by default), not root. `./data` must be writable by that user: build with `PTVAULT_UID=$(id -u) PTVAULT_GID=$(id -g) docker compose build`, or after upgrading from an image that ran as root, `sudo chown -R 1000:1000 ./data`.
+> - Dependencies install from `requirements.lock` with `--require-hashes`, and the base image is pinned by digest.
 
 #### Option 2: Using build script
 
@@ -243,7 +246,7 @@ sudo usermod -aG docker $USER
 
    docker run -d \
      --name ptvault \
-     -p 5000:5000 \
+     -p 127.0.0.1:5000:5000 \
      -v $(pwd)/data:/app/data \
      -v $(pwd)/.env:/app/.env:ro \
      --restart unless-stopped \

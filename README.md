@@ -137,6 +137,8 @@ python app.py
 
 PTVault is now running at http://localhost:5001. It only listens on localhost; use `python app.py -i 0.0.0.0 -p 5001` to allow other machines, ideally behind HTTPS (see [DEPLOYMENT.md](DEPLOYMENT.md)).
 
+For the exact, tested dependency versions with every download checked against a hash, install from the lock file instead: `pip install --require-hashes -r requirements.lock`. The Docker image and CI use it.
+
 ### Option 2: Docker
 
 ```bash
@@ -148,7 +150,7 @@ docker compose up -d
 
 PTVault is now running at http://localhost:5000, with the database and uploads stored in `./data`. On macOS, port 5000 may be taken by AirPlay Receiver; change the port mapping in `docker-compose.yml` (for example `"5050:5000"`) if so.
 
-The container runs with `ENVIRONMENT=production`, so login cookies are marked Secure. Browsers accept them on `http://localhost`, but to reach the container from another machine put it behind HTTPS.
+The container runs with `ENVIRONMENT=production`, so login cookies are marked Secure. Browsers accept them on `http://localhost`, but to reach the container from another machine put it behind HTTPS. The port is published on `127.0.0.1` only, and the app runs as an unprivileged user: if `./data` was created by an older image that ran as root, run `sudo chown -R 1000:1000 ./data` (or build with `PTVAULT_UID=$(id -u) PTVAULT_GID=$(id -g) docker compose build`).
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for PyInstaller builds, systemd and reverse-proxy setups.
 
