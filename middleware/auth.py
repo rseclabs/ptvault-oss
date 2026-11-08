@@ -8,6 +8,38 @@ from models.database import get_db_connection
 
 logger = logging.getLogger(__name__)
 
+ENGAGEMENT_ROLE_RANK = {'viewer': 1, 'editor': 2, 'owner': 3}
+
+
+def engagement_role(db, user_id, global_role, engagement_id):
+    """Return the user's role on an engagement: 'owner', 'editor', 'viewer' or None.
+
+    None means no access, including when the engagement does not exist.
+    Admins are owners of every engagement. Direct membership wins over team
+    membership; a team lead is an editor and a team member a viewer.
+    """
+    engagement = db.execute('SELECT team_id FROM engagements WHERE id = ?', (engagement_id,)).fetchone()
+    if engagement is None:
+        return None
+    if global_role == 'admin':
+        return 'owner'
+
+    member = db.execute(
+        'SELECT role FROM engagement_members WHERE engagement_id = ? AND user_id = ?',
+        (engagement_id, user_id)
+    ).fetchone()
+    if member is not None:
+        return member[0] if member[0] in ENGAGEMENT_ROLE_RANK else 'viewer'
+
+    team_id = engagement[0]
+    if team_id is not None:
+        team = db.execute(
+            'SELECT role FROM team_members WHERE team_id = ? AND user_id = ?', (team_id, user_id)
+        ).fetchone()
+        if team is not None:
+            return 'editor' if team[0] == 'lead' else 'viewer'
+    return None
+
 # NOTE: Inline migrations have been moved to models/migrations/versions/019_consolidate_middleware_tables.py
 
 
@@ -30,10 +62,9 @@ def require_auth(f):
         if not payload:
             return jsonify({"error": "unauthorized"}), 401
 
-        # Store user info in g context
+        # The token identifies the user; role and account state are read from
+        # the database below, so the token's own claims are not trusted.
         g.current_user = payload.get('user_id')
-        g.current_user_role = payload.get('role', 'tester')
-        g.current_username = payload.get('username')
 
         # Establish database connection
         try:
@@ -46,6 +77,9 @@ def require_auth(f):
         try:
             from routes.admin import get_idle_timeout_minutes
             status = check_session(g.db, token, get_idle_timeout_minutes(g.db))
+            user = g.db.execute(
+                'SELECT role, is_active, username FROM users WHERE id = ?', (g.current_user,)
+            ).fetchone()
         except Exception:
             logger.exception("Session validation failed; refusing request")
             return jsonify({"error": "session validation failed"}), 500
@@ -56,9 +90,25 @@ def require_auth(f):
         if status != SESSION_OK:
             session.clear()
             return jsonify({"error": "session revoked"}), 401
+        if user is None or not user[1]:
+            session.clear()
+            return jsonify({"error": "account disabled"}), 401
 
-        # Set active engagement ID from session
-        g.active_engagement_id = session.get('active_engagement_id')
+        g.current_user_role = user[0]
+        g.current_username = user[2]
+
+        # The active engagement lives in the session cookie; honour it only
+        # while the user still has access to that engagement.
+        active_id = session.get('active_engagement_id')
+        if active_id is not None:
+            try:
+                if engagement_role(g.db, g.current_user, g.current_user_role, active_id) is None:
+                    session.pop('active_engagement_id', None)
+                    active_id = None
+            except Exception:
+                logger.exception("Engagement access check failed; refusing request")
+                return jsonify({"error": "session validation failed"}), 500
+        g.active_engagement_id = active_id
 
         return f(*args, **kwargs)
 
@@ -117,53 +167,17 @@ def require_engagement_access(required_role='viewer'):
         def update_evidence(evidence_id):
             pass
     """
-    role_hierarchy = {'owner': 3, 'editor': 2, 'viewer': 1}
-
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if not hasattr(g, 'active_engagement_id'):
+            if not getattr(g, 'active_engagement_id', None):
                 return jsonify({"error": "no active engagement"}), 400
 
-            if not g.active_engagement_id:
-                return jsonify({"error": "no active engagement"}), 400
-
-            # Admins have access to all engagements
-            if g.current_user_role == 'admin':
-                g.engagement_role = 'owner'
-                return f(*args, **kwargs)
-
-            # Check direct engagement membership first
-            cursor = g.db.cursor()
-            cursor.execute('''
-                SELECT role FROM engagement_members
-                WHERE engagement_id = ? AND user_id = ?
-            ''', (g.active_engagement_id, g.current_user))
-
-            row = cursor.fetchone()
-            user_role = None
-
-            if row:
-                # Direct membership takes priority
-                user_role = row[0]
-            else:
-                # Fallback: check team membership
-                cursor.execute('''
-                    SELECT tm.role FROM team_members tm
-                    JOIN engagements e ON e.team_id = tm.team_id
-                    WHERE e.id = ? AND tm.user_id = ?
-                ''', (g.active_engagement_id, g.current_user))
-                team_row = cursor.fetchone()
-                if team_row:
-                    # Map team roles to engagement roles: lead→editor, member→viewer
-                    team_role = team_row[0]
-                    user_role = 'editor' if team_role == 'lead' else 'viewer'
-
+            user_role = engagement_role(g.db, g.current_user, g.current_user_role, g.active_engagement_id)
             if not user_role:
                 return jsonify({"error": "not a member of this engagement"}), 403
 
-            # Check role hierarchy
-            if role_hierarchy.get(user_role, 0) < role_hierarchy.get(required_role, 0):
+            if ENGAGEMENT_ROLE_RANK[user_role] < ENGAGEMENT_ROLE_RANK.get(required_role, 0):
                 return jsonify({"error": "insufficient permissions"}), 403
 
             g.engagement_role = user_role
