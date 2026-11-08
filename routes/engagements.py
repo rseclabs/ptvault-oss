@@ -1071,6 +1071,13 @@ def import_engagement_data(data):
     ))
     new_engagement_id = cursor.lastrowid
 
+    # The importer owns the restored engagement, as on create (L-14); scoping is
+    # fail-closed, so without this row a tester could not open what they imported.
+    cursor.execute('''
+        INSERT INTO engagement_members (engagement_id, user_id, role, added_by)
+        VALUES (?, ?, 'owner', ?)
+    ''', (new_engagement_id, g.current_user, g.current_user))
+
     # ID mapping dictionaries (old_id -> new_id)
     host_id_map = {}
     evidence_id_map = {}
