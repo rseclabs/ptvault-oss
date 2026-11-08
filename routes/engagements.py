@@ -80,6 +80,33 @@ def require_active_engagement(f):
     return decorated_function
 
 
+def _resolve_team_assignment(raw_team_id):
+    """Validate a requested team_id; returns (team_id, error_response).
+
+    Assigning a team grants its members access, so only an admin or a member
+    of that team may assign it. None or '' clears the team.
+    """
+    if raw_team_id in (None, ''):
+        return None, None
+    try:
+        team_id = int(raw_team_id)
+    except (TypeError, ValueError):
+        return None, (jsonify({"error": "team_id must be an integer"}), 400)
+    if isinstance(raw_team_id, bool):
+        return None, (jsonify({"error": "team_id must be an integer"}), 400)
+
+    cursor = g.db.cursor()
+    cursor.execute('SELECT id FROM teams WHERE id = ?', (team_id,))
+    if not cursor.fetchone():
+        return None, (jsonify({"error": "team not found"}), 400)
+    if g.current_user_role != 'admin':
+        cursor.execute('SELECT 1 FROM team_members WHERE team_id = ? AND user_id = ?',
+                       (team_id, g.current_user))
+        if not cursor.fetchone():
+            return None, (jsonify({"error": "you can only assign a team you belong to"}), 403)
+    return team_id, None
+
+
 def get_engagement_export_data(engagement_id):
     """
     Helper function to gather complete engagement data for export.
@@ -462,7 +489,9 @@ def create_engagement():
     contact_name = data.get('contact_name')
     contact_email = data.get('contact_email')
     contact_phone = data.get('contact_phone')
-    team_id = data.get('team_id')
+    team_id, team_error = _resolve_team_assignment(data.get('team_id'))
+    if team_error:
+        return team_error
 
     # Validate status
     if not validate_status(status):
@@ -616,6 +645,14 @@ def update_engagement(engagement_id):
     tags = data.get('tags')
     if tags is not None:
         tags = normalize_tags(tags)
+
+    if 'team_id' in data:
+        current = g.db.execute('SELECT team_id FROM engagements WHERE id = ?', (engagement_id,)).fetchone()
+        unchanged = current is not None and data['team_id'] not in (None, '') and str(current[0]) == str(data['team_id'])
+        if not unchanged:  # keeping the current team grants nothing new
+            data['team_id'], team_error = _resolve_team_assignment(data['team_id'])
+            if team_error:
+                return team_error
 
     cursor = g.db.cursor()
 
