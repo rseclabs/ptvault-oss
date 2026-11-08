@@ -70,6 +70,15 @@ def _file_key(relative_path):
                              person=_PERSON, digest_size=nacl.secret.SecretBox.KEY_SIZE, encoder=RawEncoder)
 
 
+def _chmod(path, mode):
+    """chmod that logs instead of raising: a file owned by another user (an older
+    Docker image ran as root) must not stop the app or an upload (retest 2 L-34)."""
+    try:
+        os.chmod(path, mode)
+    except OSError as e:
+        logger.warning('Could not set mode %o on %s: %s', mode, path, e)
+
+
 def ensure_dir(path):
     """Create a directory 0700, and any missing parents 0700 too.
 
@@ -87,8 +96,8 @@ def ensure_dir(path):
         current = parent
     for directory in reversed(missing):
         os.makedirs(directory, mode=DIR_MODE, exist_ok=True)
-        os.chmod(directory, DIR_MODE)
-    os.chmod(path, DIR_MODE)
+        _chmod(directory, DIR_MODE)
+    _chmod(path, DIR_MODE)
 
 
 def _atomic_write(full_path, data):
@@ -172,9 +181,9 @@ def harden_permissions(upload_folder=None):
         return
     for root, dirs, _ in os.walk(upload_folder):
         dirs[:] = [d for d in dirs if not os.path.islink(os.path.join(root, d))]
-        os.chmod(root, DIR_MODE)
+        _chmod(root, DIR_MODE)
     for full_path, _ in _evidence_files(upload_folder):
-        os.chmod(full_path, FILE_MODE)
+        _chmod(full_path, FILE_MODE)
 
 
 def encrypt_existing(upload_folder=None):

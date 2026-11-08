@@ -263,3 +263,20 @@ def test_content_that_looks_sealed_is_still_stored_and_read_as_plaintext(tmp_pat
     assert upload_store.decrypt_existing(str(tmp_path)) == 1
     state['key'] = None                                                   # disabled again
     assert upload_store.read_file(str(path), '1/x.txt') == spoof
+
+
+def test_files_owned_by_someone_else_do_not_stop_the_app(tmp_path, unlocked, monkeypatch, caplog):
+    """Retest 2 L-34: chmod on a root-owned file (an older Docker image) raised at start and on upload."""
+    (tmp_path / '1').mkdir()
+    (tmp_path / '1' / 'theirs.txt').write_bytes(b'x')
+    real_chmod = os.chmod
+
+    def chmod(path, mode, *a, **k):
+        if 'theirs' in str(path) or str(path).endswith('/1'):
+            raise PermissionError(1, 'Operation not permitted', str(path))
+        return real_chmod(path, mode, *a, **k)
+    monkeypatch.setattr(os, 'chmod', chmod)
+    upload_store.harden_permissions(str(tmp_path))                     # does not raise
+    upload_store.write_file(str(tmp_path / '1' / 'new.txt'), '1/new.txt', SECRET)
+    assert upload_store.read_file(str(tmp_path / '1' / 'new.txt'), '1/new.txt') == SECRET
+    assert 'theirs.txt' in caplog.text
