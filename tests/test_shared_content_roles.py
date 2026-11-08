@@ -67,9 +67,12 @@ def test_tester_can_change_shared_content(live_app):
     assert client.put(f"/api/commands/{ids['command']}", json={'name': 'n2'}).status_code == 200
 
 
-def test_viewer_can_still_record_command_usage(live_app):
+def test_viewer_cannot_record_command_usage(live_app):
+    # Usage orders the shared command list for everyone, so a read-only account may
+    # not change it (retest 2 L-28; it was allowed after M-1). The client records
+    # usage best-effort, so copying still works for viewers.
     ids = _seed(live_app)
-    assert live_app.client_for('viewer').post(f"/api/commands/{ids['command']}/usage").status_code == 200
+    assert live_app.client_for('viewer').post(f"/api/commands/{ids['command']}/usage").status_code == 403
 
 
 @pytest.mark.parametrize('user,expected', [('admin', 200), ('outsider', 200), ('viewer', 403)])
