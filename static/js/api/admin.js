@@ -40,7 +40,8 @@ export const AdminAPI = {
 
     /**
      * Get encryption status
-     * @returns {Promise<Object>} { available, enabled, key_file_exists, salt_file_exists, encryption_required }
+     * @returns {Promise<Object>} { available, enabled, locked, key_storage, key_file_exists, salt_file_exists,
+     *                             encryption_required }
      */
     async getEncryptionStatus() {
         return apiRequest.get('/admin/encryption/status');
@@ -49,7 +50,7 @@ export const AdminAPI = {
     /**
      * Enable database encryption
      * @param {string} password - Database passphrase; the key is derived from it and held in memory
-     * @returns {Promise<Object>} { success, message, salt_file }
+     * @returns {Promise<Object>} { success, message, key_storage ('memory' | 'file'), salt_file, key_file (file only) }
      */
     async enableEncryption(password) {
         return apiRequest.post('/admin/encryption/enable', { password });
@@ -61,15 +62,6 @@ export const AdminAPI = {
      */
     async disableEncryption() {
         return apiRequest.post('/admin/encryption/disable', {});
-    },
-
-    /**
-     * Recover encryption key from password
-     * @param {string} password - Admin password
-     * @returns {Promise<Object>} { success, message }
-     */
-    async recoverEncryptionKey(password) {
-        return apiRequest.post('/admin/encryption/recover', { password });
     },
 
     /**

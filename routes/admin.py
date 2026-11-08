@@ -385,37 +385,9 @@ def encryption_status():
     }), 200
 
 
-@admin_bp.route('/encryption/recover', methods=['POST'])
-@require_auth
-@require_role('admin')
-@handle_errors
-def encryption_recover():
-    """
-    Recover encryption key from password + salt file.
-    Used when the key file is lost but the salt file still exists.
-    Admin only.
-    """
-    from models.encryption import is_encryption_available, recover_key
-    from config import Config
-
-    if not is_encryption_available():
-        return jsonify({'error': 'pysqlcipher3 is not installed'}), 400
-
-    if not os.path.exists(Config.ENCRYPTION_SALT_FILE):
-        return jsonify({'error': 'Salt file not found — cannot recover key'}), 400
-
-    data = request.get_json()
-    if not data or 'password' not in data:
-        return jsonify({'error': 'Password is required'}), 400
-
-    try:
-        recover_key(data['password'])
-        return jsonify({
-            'success': True,
-            'message': 'Encryption key recovered and saved'
-        }), 200
-    except Exception as e:
-        return internal_error(e, 'Key recovery failed')
+# There is no key recovery route (L-16): the key is derived from the passphrase
+# and salt at /unlock (utils/unlock.py) after every restart. A recover route
+# could only run while unlocked, where it re-ran unlock and saved nothing.
 
 
 @admin_bp.route('/encryption/enable', methods=['POST'])
@@ -424,9 +396,9 @@ def encryption_recover():
 @handle_errors
 def encryption_enable():
     """
-    Enable database encryption. Requires password to derive the key.
-    Optionally accepts a custom key_file_path.
-    Admin only.
+    Enable database encryption. Requires the passphrase the key is derived from.
+    The key is held in memory, or also written to PTVAULT_ENCRYPTION_KEY_FILE
+    with the PTVAULT_STORE_KEY_FILE opt-in. Admin only.
     """
     from models.encryption import is_encryption_available, is_encryption_enabled, setup_encryption
     from config import Config
@@ -465,17 +437,16 @@ def encryption_enable():
         from models.database import get_db_connection
         g.db = get_db_connection()
 
-        AuditLogger.log_action(
-            action='encryption_enable',
-            resource_type='database',
-            details={'key_file': Config.ENCRYPTION_KEY_FILE}
-        )
-        return jsonify({
-            'success': True,
-            'message': 'Encryption enabled — database has been encrypted',
-            'key_file': Config.ENCRYPTION_KEY_FILE,
-            'salt_file': Config.ENCRYPTION_SALT_FILE
-        }), 200
+        # Say where the key really is (L-16): a key file is named only when one
+        # was written, so nobody backs up a file that does not exist.
+        key_storage = 'file' if Config.STORE_KEY_FILE else 'memory'
+        result = {'key_storage': key_storage, 'salt_file': Config.ENCRYPTION_SALT_FILE}
+        if key_storage == 'file':
+            result['key_file'] = Config.ENCRYPTION_KEY_FILE
+        AuditLogger.log_action(action='encryption_enable', resource_type='database', details=result)
+        message = ('Encryption enabled — the key is held in memory: after a restart, unlock with this passphrase'
+                   if key_storage == 'memory' else 'Encryption enabled — the key is also stored in the key file')
+        return jsonify({'success': True, 'message': message, **result}), 200
     except Exception as e:
         return internal_error(e, 'Failed to enable encryption')
 

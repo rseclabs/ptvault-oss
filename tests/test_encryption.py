@@ -203,8 +203,8 @@ class TestSetupAndRecovery:
         assert not os.path.exists(Config.ENCRYPTION_KEY_FILE)
         assert not os.path.exists(Config.ENCRYPTION_SALT_FILE)
 
-    def test_recover_key_from_salt(self, tmp_data_dir, monkeypatch):
-        """recover_key re-derives the key from password + salt and holds it in memory (M-8)."""
+    def test_unlock_rederives_the_key_from_salt(self, tmp_data_dir, monkeypatch):
+        """unlock re-derives the key from password + salt and holds it in memory (M-8)."""
         conn = sqlite3.connect(Config.DATABASE_PATH)
         conn.execute("CREATE TABLE t (x INTEGER)")
         conn.commit()
@@ -213,13 +213,13 @@ class TestSetupAndRecovery:
         original_key = encryption.get_encryption_key()
 
         encryption.lock()          # a restart
-        recovered = encryption.recover_key('my_password')
+        recovered = encryption.unlock('my_password')
         assert recovered == original_key
         assert encryption.get_encryption_key() == original_key
         assert not os.path.exists(Config.ENCRYPTION_KEY_FILE)
 
-    def test_recover_wrong_password(self, tmp_data_dir, monkeypatch):
-        """recover_key with wrong password should produce a different key."""
+    def test_unlock_without_an_encrypted_database(self, tmp_data_dir, monkeypatch):
+        """unlock refuses when there is no encrypted database for the key to open."""
         monkeypatch.setattr(encryption, '_SQLCIPHER_AVAILABLE', True)
 
         salt = encryption.generate_salt()
@@ -227,7 +227,7 @@ class TestSetupAndRecovery:
 
         # There is no encrypted database for the key to open
         with pytest.raises(encryption.InvalidPassphrase):
-            encryption.recover_key('wrong_password')
+            encryption.unlock('wrong_password')
         assert not os.path.exists(Config.DATABASE_PATH)
 
 

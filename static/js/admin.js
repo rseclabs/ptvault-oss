@@ -154,19 +154,6 @@ const AdminPanel = {
                         <button class="btn btn-primary" onclick="AdminPanel.confirmEnableEncryption()">Encrypt Database</button>
                     </div>
                 </div>
-
-                <!-- Key Recovery Form (hidden) -->
-                <div id="encryptionRecoverForm" class="admin-form" style="display:none;">
-                    <p class="form-info">Enter the database passphrase to re-derive the encryption key.</p>
-                    <div class="form-group">
-                        <label for="recoverPassword">Database passphrase *</label>
-                        <input type="password" id="recoverPassword" placeholder="The passphrase chosen at setup" required>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn btn-secondary" onclick="AdminPanel.hideRecoverForm()">Cancel</button>
-                        <button class="btn btn-primary" onclick="AdminPanel.confirmRecoverKey()">Recover Key</button>
-                    </div>
-                </div>
             </div>
 
             <!-- CyberChef Management (admin only) -->
@@ -752,11 +739,6 @@ const AdminPanel = {
                 required.className = 'encryption-detail-value';
             }
 
-            if (s.locked && s.available) {
-                const recoverForm = document.getElementById('encryptionRecoverForm');
-                if (recoverForm) recoverForm.style.display = 'block';
-            }
-
             // Load CyberChef status if settings tab is active and admin
             if (AppState.currentUser?.role === 'admin') {
                 this.loadCyberChefStatus();
@@ -787,10 +769,6 @@ const AdminPanel = {
         document.getElementById('encryptionPassword').value = '';
     },
 
-    hideRecoverForm() {
-        document.getElementById('encryptionRecoverForm').style.display = 'none';
-        document.getElementById('recoverPassword').value = '';
-    },
 
     async confirmEnableEncryption() {
         const password = document.getElementById('encryptionPassword').value;
@@ -837,30 +815,6 @@ const AdminPanel = {
             showToast('Failed to disable encryption: ' + error.message, 'error');
         } finally {
             toggleBtn.disabled = false;
-        }
-    },
-
-    async confirmRecoverKey() {
-        const password = document.getElementById('recoverPassword').value;
-        if (!password) {
-            showToast('Password is required', 'error');
-            return;
-        }
-
-        const btn = document.querySelector('#encryptionRecoverForm .btn-primary');
-        btn.disabled = true;
-        btn.textContent = 'Recovering...';
-
-        try {
-            const result = await API.admin.recoverEncryptionKey(password);
-            showToast(result.message || 'Key recovered successfully', 'success');
-            this.hideRecoverForm();
-            await this.loadEncryptionStatus();
-        } catch (error) {
-            showToast('Failed to recover key: ' + error.message, 'error');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Recover Key';
         }
     },
 

@@ -38,3 +38,31 @@ def test_a_strong_passphrase_enables_encryption(enable):
     resp = enable({'password': STRONG})
     assert resp.status_code == 200, resp.get_json()
     assert enable.calls == [STRONG]
+
+
+# ------------------------------------------------------------------ L-16
+# The admin encryption routes describe what actually happens: the key is held
+# in memory unless PTVAULT_STORE_KEY_FILE is set, and unlocking is done at
+# /unlock (the old recover route re-ran unlock and claimed to save a key file).
+
+def test_enable_reports_where_the_key_is_kept(enable, live_app):
+    body = enable({'password': STRONG}).get_json()
+    assert body['key_storage'] == 'memory' and 'key_file' not in body
+
+    conn = live_app.db()
+    details = conn.execute("SELECT details FROM audit_log WHERE action = 'encryption_enable'").fetchone()[0]
+    conn.close()
+    assert 'memory' in details and 'encryption.key' not in details and 'no.key' not in details
+
+
+def test_enable_names_the_key_file_only_when_one_is_written(enable, monkeypatch):
+    from config import Config
+    monkeypatch.setattr(Config, 'STORE_KEY_FILE', True)
+    body = enable({'password': STRONG}).get_json()
+    assert body['key_storage'] == 'file' and body['key_file'] == Config.ENCRYPTION_KEY_FILE
+
+
+def test_the_recover_route_is_gone(live_app):
+    client = live_app.client_for('admin')
+    assert client.post('/api/admin/encryption/recover', json={'password': STRONG}).status_code == 404
+    assert not hasattr(encryption, 'recover_key')

@@ -19,7 +19,7 @@ The status panel shows:
 |-------|-------------|
 | **Available** | Whether SQLCipher is installed |
 | **Enabled** | Whether the current database is encrypted |
-| **Key File Exists** | Whether the derived key file is present |
+| **Key** | Where the key is kept: in memory (the default), or also in a key file with the `PTVAULT_STORE_KEY_FILE` opt-in |
 | **Salt File Exists** | Whether the salt file (for key derivation) is present |
 | **Required by Policy** | Whether the `PTVAULT_ENCRYPTION_REQUIRED` env var prevents disabling |
 
@@ -62,12 +62,7 @@ PTVault decrypts the database and forgets the key (the salt file is kept).
 
 ## Key Recovery
 
-The key is re-derived from the database passphrase and the salt file whenever the database is unlocked, so there is no key file to lose. From the admin panel you can also re-derive it:
-
-1. Go to **Admin > Settings** → Database Encryption
-2. Click **Recover Key**
-3. Enter the database passphrase
-4. PTVault re-derives the key and holds it in memory
+The key is re-derived from the database passphrase and the salt file whenever the database is unlocked, so there is no key file to lose. After a restart every page redirects to the **unlock page** (`/unlock`); enter the database passphrase there. There is no separate recovery step.
 
 If the salt file is lost, or the passphrase is forgotten, the database **cannot be recovered** without brute-forcing the key. This is by design.
 

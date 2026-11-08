@@ -325,25 +325,6 @@ def setup_encryption(password):
     logger.info("Encryption setup complete — salt file created, key held in memory")
 
 
-def recover_key(password):
-    """
-    Re-derive the encryption key from the password and existing salt file.
-    Writes a new key file.
-
-    Used when the key file is lost but the salt file still exists.
-
-    Args:
-        password: The master password.
-
-    Returns:
-        str: The re-derived key.
-
-    Raises:
-        FileNotFoundError: If the salt file doesn't exist.
-    """
-    return unlock(password)
-
-
 def get_connection(db_path):
     """
     Get a database connection — encrypted (SQLCipher) or plain (sqlite3).
