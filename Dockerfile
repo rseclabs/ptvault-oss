@@ -19,8 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 #   docker compose build --build-arg PTVAULT_UID=$(id -u) --build-arg PTVAULT_GID=$(id -g)
 ARG PTVAULT_UID=1000
 ARG PTVAULT_GID=1000
-RUN groupadd --gid "${PTVAULT_GID}" ptvault \
-    && useradd --uid "${PTVAULT_UID}" --gid "${PTVAULT_GID}" --no-create-home \
+# --non-unique: the host's IDs may already exist in the image (macOS gives
+# GID 20, which is "dialout" here), and the user still has to match them.
+RUN groupadd --non-unique --gid "${PTVAULT_GID}" ptvault \
+    && useradd --non-unique --uid "${PTVAULT_UID}" --gid "${PTVAULT_GID}" --no-create-home \
        --home-dir /app --shell /usr/sbin/nologin ptvault
 
 # Set working directory

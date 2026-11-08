@@ -145,6 +145,7 @@ For the exact, tested dependency versions with every download checked against a 
 git clone https://github.com/rseclabs/ptvault-oss.git
 cd ptvault-oss
 cp .env.example .env
+mkdir -p data          # create it yourself: if Docker creates it, it is owned by root
 docker compose up -d
 ```
 

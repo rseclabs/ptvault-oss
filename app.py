@@ -30,6 +30,17 @@ try:
 except InsecureSecretError as e:
     logger.critical("Refusing to start: %s", e)
     sys.exit(1)
+except PermissionError as e:
+    # Typically Docker: ./data did not exist, so Docker created it owned by root,
+    # and the container runs as an unprivileged user (L-5)
+    data_dir = os.path.dirname(os.path.abspath(Config.DATABASE_PATH))
+    logger.critical("Cannot write to the data folder %s (%s). It must be writable by user %s. "
+                    "With Docker: stop the container, then on the host create the folder yourself "
+                    "(rmdir data && mkdir data, if it is empty) or give it to the container user "
+                    "(sudo chown -R 1000:1000 data), and start again; to run as your own user, build with "
+                    "PTVAULT_UID=$(id -u) PTVAULT_GID=$(id -g) docker compose build.",
+                    data_dir, e.strerror, os.getuid())
+    sys.exit(1)
 
 from models.database import init_db, get_db_connection, run_migrations, setup_required
 from models.encryption import (auto_unlock_from_env, check_and_migrate_if_needed, is_encryption_available,

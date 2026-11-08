@@ -191,8 +191,13 @@ sudo usermod -aG docker $USER
 
 2. **Build and start**:
    ```bash
+   mkdir -p data          # create it yourself: if Docker creates it, it is owned by root
    docker compose up -d
    ```
+
+   The container runs as an unprivileged user (UID 1000), so `./data` must be
+   writable by it. If you created `./data` as your own user on Linux with a UID
+   other than 1000, build with `PTVAULT_UID=$(id -u) PTVAULT_GID=$(id -g) docker compose build`.
 
 3. **View logs**:
    ```bash
