@@ -90,17 +90,17 @@ const ReportingManager = {
                 <!-- Sub-tabs -->
                 <div class="reporting-tabs">
                     <button class="reporting-tab ${this.activeTab === 'writeups' ? 'active' : ''}"
-                            data-tab="writeups" onclick="ReportingManager.switchTab('writeups')">
+                            data-tab="writeups" ${on('click', 'ReportingManager.switchTab', 'writeups')}>
                         <span class="tab-icon"><i data-lucide="notebook-pen"></i></span>
                         <span>Writeups Database</span>
                     </button>
                     <button class="reporting-tab ${this.activeTab === 'generation' ? 'active' : ''}"
-                            data-tab="generation" onclick="ReportingManager.switchTab('generation')">
+                            data-tab="generation" ${on('click', 'ReportingManager.switchTab', 'generation')}>
                         <span class="tab-icon"><i data-lucide="file-chart-column"></i></span>
                         <span>Report Generation</span>
                     </button>
                     <button class="reporting-tab ${this.activeTab === 'templates' ? 'active' : ''}"
-                            data-tab="templates" onclick="ReportingManager.switchTab('templates')">
+                            data-tab="templates" ${on('click', 'ReportingManager.switchTab', 'templates')}>
                         <span class="tab-icon"><i data-lucide="layout-template"></i></span>
                         <span>Templates</span>
                     </button>
@@ -181,7 +181,7 @@ const ReportingManager = {
                     <!-- Category Filter -->
                     <div class="filter-section">
                         <label>Category</label>
-                        <select id="categoryFilter" onchange="ReportingManager.applyFilters()">
+                        <select id="categoryFilter" ${on('change', 'ReportingManager.applyFilters')}>
                             <option value="all">All Categories</option>
                             ${this.categories.map(cat => `
                                 <option value="${escapeHtml(cat.name)}" ${this.filters.category === cat.name ? 'selected' : ''}>
@@ -194,7 +194,7 @@ const ReportingManager = {
                     <!-- Type Filter -->
                     <div class="filter-section">
                         <label>Type</label>
-                        <select id="typeFilter" onchange="ReportingManager.applyFilters()">
+                        <select id="typeFilter" ${on('change', 'ReportingManager.applyFilters')}>
                             <option value="all" ${this.filters.writeup_type === 'all' ? 'selected' : ''}>All Types</option>
                             <option value="finding" ${this.filters.writeup_type === 'finding' ? 'selected' : ''}>Findings</option>
                             <option value="narrative" ${this.filters.writeup_type === 'narrative' ? 'selected' : ''}>Narratives</option>
@@ -204,7 +204,7 @@ const ReportingManager = {
                     <!-- Criticality Filter -->
                     <div class="filter-section">
                         <label>Criticality</label>
-                        <select id="criticalityFilter" onchange="ReportingManager.applyFilters()">
+                        <select id="criticalityFilter" ${on('change', 'ReportingManager.applyFilters')}>
                             <option value="all">All Levels</option>
                             <option value="critical" ${this.filters.criticality === 'critical' ? 'selected' : ''}>Critical</option>
                             <option value="high" ${this.filters.criticality === 'high' ? 'selected' : ''}>High</option>
@@ -214,7 +214,7 @@ const ReportingManager = {
                     </div>
 
                     <div class="writeups-sidebar-footer">
-                        <button class="btn btn-primary btn-block" onclick="ReportingManager.showAddWriteupModal()">
+                        <button class="btn btn-primary btn-block" ${on('click', 'ReportingManager.showAddWriteupModal')}>
                             + Add Writeup
                         </button>
                     </div>
@@ -229,7 +229,7 @@ const ReportingManager = {
                                    value="${escapeHtml(this.filters.search)}" autocomplete="off">
                         </div>
                         <div class="writeups-header-actions">
-                            <button class="btn btn-secondary" onclick="ReportingManager.showComparisonModal()" title="Compare multiple engagements">
+                            <button class="btn btn-secondary" ${on('click', 'ReportingManager.showComparisonModal')} title="Compare multiple engagements">
                                 <i data-lucide="bar-chart-2"></i>
                                 Compare Engagements
                             </button>
@@ -255,7 +255,7 @@ const ReportingManager = {
                     <div class="empty-icon"><i data-lucide="notebook-pen"></i></div>
                     <h3>No writeups found</h3>
                     <p>Create your first writeup to build your vulnerability database.</p>
-                    <button class="btn btn-primary" onclick="ReportingManager.showAddWriteupModal()">
+                    <button class="btn btn-primary" ${on('click', 'ReportingManager.showAddWriteupModal')}>
                         + Add Writeup
                     </button>
                 </div>
@@ -284,7 +284,7 @@ const ReportingManager = {
 
         return `
             <div class="writeup-card ${criticalityClass}" data-writeup-id="${writeup.id}"
-                 onclick="ReportingManager.showEditWriteupModal(${writeup.id})"
+                 ${on('click', 'ReportingManager.showEditWriteupModal', writeup.id)}
                  title="${escapeHtml(writeup.description || writeup.name)}">
                 <div class="writeup-header">
                     <div class="writeup-title-row">
@@ -300,11 +300,11 @@ const ReportingManager = {
                     ${writeup.tags ? `<span class="writeup-tags">${escapeHtml(writeup.tags)}</span>` : ''}
                 </div>
 
-                <div class="writeup-actions" onclick="event.stopPropagation()">
-                    <button class="btn btn-icon btn-sm" onclick="ReportingManager.showEditWriteupModal(${writeup.id})" title="Edit">
+                <div class="writeup-actions" ${on('click', 'event.stopPropagation')}>
+                    <button class="btn btn-icon btn-sm" ${on('click', 'ReportingManager.showEditWriteupModal', writeup.id)} title="Edit">
                         <i data-lucide="edit-2"></i>
                     </button>
-                    <button class="btn btn-icon btn-sm btn-danger" onclick="ReportingManager.deleteWriteup(${writeup.id})" title="Delete">
+                    <button class="btn btn-icon btn-sm btn-danger" ${on('click', 'ReportingManager.deleteWriteup', writeup.id)} title="Delete">
                         <i data-lucide="trash-2"></i>
                     </button>
                 </div>
@@ -336,7 +336,7 @@ const ReportingManager = {
                 <!-- Toolbar -->
                 <div class="report-toolbar">
                     <div class="report-selector">
-                        <select id="reportSelect" onchange="ReportingManager.loadReport(this.value)">
+                        <select id="reportSelect" ${on('change', 'ReportingManager.loadReport', ARG.value)}>
                             <option value="">-- New Report --</option>
                             ${this.savedReports.map(r => `
                                 <option value="${r.id}" ${this.currentReport?.id === r.id ? 'selected' : ''}>
@@ -346,30 +346,30 @@ const ReportingManager = {
                         </select>
                         <input type="text" id="reportName" placeholder="Report name..."
                                value="${escapeHtml(this.currentReport?.name || '')}"
-                               onchange="ReportingManager.updateReportName(this.value)">
-                        <button class="btn btn-primary btn-sm" onclick="ReportingManager.saveReport()">
+                               ${on('change', 'ReportingManager.updateReportName', ARG.value)}>
+                        <button class="btn btn-primary btn-sm" ${on('click', 'ReportingManager.saveReport')}>
                             <i data-lucide="save"></i> Save
                         </button>
-                        <button class="btn btn-sm btn-new" onclick="ReportingManager.newReport()">
+                        <button class="btn btn-sm btn-new" ${on('click', 'ReportingManager.newReport')}>
                             <i data-lucide="file-plus"></i> New
                         </button>
                         ${this.currentReport?.id ? `
-                            <button class="btn btn-danger btn-sm" onclick="ReportingManager.deleteReport()">
+                            <button class="btn btn-danger btn-sm" ${on('click', 'ReportingManager.deleteReport')}>
                                 <i data-lucide="trash-2"></i>
                             </button>
                         ` : ''}
                         ${this.savedReports.length > 0 ? `
-                            <button class="btn btn-sm btn-gear" onclick="ReportingManager.showManageReportsModal()" title="Manage Reports">
+                            <button class="btn btn-sm btn-gear" ${on('click', 'ReportingManager.showManageReportsModal')} title="Manage Reports">
                                 <i data-lucide="settings"></i>
                             </button>
                         ` : ''}
                     </div>
                     <div class="export-buttons">
                         <span class="export-label">Export:</span>
-                        <button class="btn btn-sm btn-export-html" onclick="ReportingManager.exportReport('html')" title="Export as HTML">HTML</button>
-                        <button class="btn btn-sm btn-export-md" onclick="ReportingManager.exportReport('markdown')" title="Export as Markdown">MD</button>
-                        <button class="btn btn-sm btn-export-pdf" onclick="ReportingManager.exportReport('pdf')" title="Export as PDF with cover page">PDF</button>
-                        <button class="btn btn-sm btn-export-word" onclick="ReportingManager.exportReport('docx')" title="Export as Word">Word</button>
+                        <button class="btn btn-sm btn-export-html" ${on('click', 'ReportingManager.exportReport', 'html')} title="Export as HTML">HTML</button>
+                        <button class="btn btn-sm btn-export-md" ${on('click', 'ReportingManager.exportReport', 'markdown')} title="Export as Markdown">MD</button>
+                        <button class="btn btn-sm btn-export-pdf" ${on('click', 'ReportingManager.exportReport', 'pdf')} title="Export as PDF with cover page">PDF</button>
+                        <button class="btn btn-sm btn-export-word" ${on('click', 'ReportingManager.exportReport', 'docx')} title="Export as Word">Word</button>
                     </div>
                 </div>
 
@@ -389,9 +389,9 @@ const ReportingManager = {
 
                     <!-- MIDDLE: Workspace -->
                     <div class="report-panel workspace-panel"
-                         ondragover="ReportingManager.handleDragOver(event)"
-                         ondrop="ReportingManager.handleWorkspaceDrop(event)"
-                         ondragleave="ReportingManager.handleDragLeave(event)">
+                         ${on('dragover', 'ReportingManager.handleDragOver', ARG.event, ARG.el)}
+                         ${on('drop', 'ReportingManager.handleWorkspaceDrop', ARG.event, ARG.el)}
+                         ${on('dragleave', 'ReportingManager.handleDragLeave', ARG.event, ARG.el)}>
                         <div class="panel-header">
                             <h4>Report Workspace</h4>
                             <span class="item-count">${this.workspaceItems.length} item${this.workspaceItems.length !== 1 ? 's' : ''}</span>
@@ -425,8 +425,8 @@ const ReportingManager = {
                  draggable="true"
                  data-type="engagement_finding"
                  data-id="${finding.id}"
-                 ondragstart="ReportingManager.handleDragStart(event, 'engagement_finding', ${finding.id})"
-                 ondragend="ReportingManager.handleDragEnd(event)">
+                 ${on('dragstart', 'ReportingManager.handleDragStart', ARG.event, 'engagement_finding', finding.id)}
+                 ${on('dragend', 'ReportingManager.handleDragEnd', ARG.event)}>
                 <span class="drag-handle">⋮⋮</span>
                 <div class="source-item-content">
                     <span class="criticality-badge criticality-${this._criticality(finding.criticality)}">${this._criticality(finding.criticality)}</span>
@@ -437,7 +437,7 @@ const ReportingManager = {
 
         return `
             <div class="source-section ${isCollapsed ? 'collapsed' : ''}">
-                <div class="section-header" onclick="ReportingManager.toggleSourceSection('findings')">
+                <div class="section-header" ${on('click', 'ReportingManager.toggleSourceSection', 'findings')}>
                     <span class="collapse-icon">${isCollapsed ? '▶' : '▼'}</span>
                     <h5>Engagement Findings (${this.engagementFindings.length})</h5>
                 </div>
@@ -461,8 +461,8 @@ const ReportingManager = {
                  draggable="true"
                  data-type="writeup"
                  data-id="${writeup.id}"
-                 ondragstart="ReportingManager.handleDragStart(event, 'writeup', ${writeup.id})"
-                 ondragend="ReportingManager.handleDragEnd(event)">
+                 ${on('dragstart', 'ReportingManager.handleDragStart', ARG.event, 'writeup', writeup.id)}
+                 ${on('dragend', 'ReportingManager.handleDragEnd', ARG.event)}>
                 <span class="drag-handle">⋮⋮</span>
                 <div class="source-item-content">
                     ${writeup.writeup_type === 'narrative'
@@ -491,7 +491,7 @@ const ReportingManager = {
 
         return `
             <div class="source-section ${isCollapsed ? 'collapsed' : ''}">
-                <div class="section-header" onclick="ReportingManager.toggleSourceSection('writeups')">
+                <div class="section-header" ${on('click', 'ReportingManager.toggleSourceSection', 'writeups')}>
                     <span class="collapse-icon">${isCollapsed ? '▶' : '▼'}</span>
                     <h5>Writeups Database (${this.writeups.length})</h5>
                 </div>
@@ -544,8 +544,8 @@ const ReportingManager = {
                  draggable="true"
                  data-type="format_tool"
                  data-id="${tool.id}"
-                 ondragstart="ReportingManager.handleDragStart(event, 'format_tool', '${tool.id}')"
-                 ondragend="ReportingManager.handleDragEnd(event)">
+                 ${on('dragstart', 'ReportingManager.handleDragStart', ARG.event, 'format_tool', String(tool.id))}
+                 ${on('dragend', 'ReportingManager.handleDragEnd', ARG.event)}>
                 <span class="drag-handle">⋮⋮</span>
                 <div class="source-item-content">
                     <span class="format-tool-icon">${tool.icon}</span>
@@ -557,7 +557,7 @@ const ReportingManager = {
 
         return `
             <div class="source-section ${isCollapsed ? 'collapsed' : ''}">
-                <div class="section-header" onclick="ReportingManager.toggleSourceSection('formatTools')">
+                <div class="section-header" ${on('click', 'ReportingManager.toggleSourceSection', 'formatTools')}>
                     <span class="collapse-icon">${isCollapsed ? '▶' : '▼'}</span>
                     <h5>Format Tools</h5>
                 </div>
@@ -628,10 +628,10 @@ const ReportingManager = {
                          draggable="true"
                          data-position="${index}"
                          data-uuid="${escapeHtml(item.id)}"
-                         ondragstart="ReportingManager.handleWorkspaceDragStart(event, ${index})"
-                         ondragend="ReportingManager.handleDragEnd(event)"
-                         ondragover="ReportingManager.handleItemDragOver(event, ${index})"
-                         ondrop="ReportingManager.handleItemDrop(event, ${index})">
+                         ${on('dragstart', 'ReportingManager.handleWorkspaceDragStart', ARG.event, index)}
+                         ${on('dragend', 'ReportingManager.handleDragEnd', ARG.event)}
+                         ${on('dragover', 'ReportingManager.handleItemDragOver', ARG.event, index, ARG.el)}
+                         ${on('drop', 'ReportingManager.handleItemDrop', ARG.event, index, ARG.el)}>
                         <span class="drag-handle">⋮⋮</span>
                         <div class="workspace-item-content">
                             <span class="format-tool-badge">${escapeHtml(item.icon || '?')}</span>
@@ -640,11 +640,11 @@ const ReportingManager = {
                         </div>
                         <div class="workspace-item-actions">
                             ${isEditable ? `
-                                <button class="btn btn-icon btn-sm" onclick="ReportingManager.showFormatToolEditor('${item.id}', '${toolId}')" title="Edit">
+                                <button class="btn btn-icon btn-sm" ${on('click', 'ReportingManager.showFormatToolEditor', String(item.id), String(toolId))} title="Edit">
                                     <i data-lucide="edit-2"></i>
                                 </button>
                             ` : ''}
-                            <button class="btn btn-icon btn-sm" onclick="ReportingManager.removeWorkspaceItem('${item.id}')" title="Remove">
+                            <button class="btn btn-icon btn-sm" ${on('click', 'ReportingManager.removeWorkspaceItem', String(item.id))} title="Remove">
                                 <i data-lucide="x"></i>
                             </button>
                         </div>
@@ -662,10 +662,10 @@ const ReportingManager = {
                      draggable="true"
                      data-position="${index}"
                      data-uuid="${escapeHtml(item.id)}"
-                     ondragstart="ReportingManager.handleWorkspaceDragStart(event, ${index})"
-                     ondragend="ReportingManager.handleDragEnd(event)"
-                     ondragover="ReportingManager.handleItemDragOver(event, ${index})"
-                     ondrop="ReportingManager.handleItemDrop(event, ${index})">
+                     ${on('dragstart', 'ReportingManager.handleWorkspaceDragStart', ARG.event, index)}
+                     ${on('dragend', 'ReportingManager.handleDragEnd', ARG.event)}
+                     ${on('dragover', 'ReportingManager.handleItemDragOver', ARG.event, index, ARG.el)}
+                     ${on('drop', 'ReportingManager.handleItemDrop', ARG.event, index, ARG.el)}>
                     <span class="drag-handle">⋮⋮</span>
                     <div class="workspace-item-content">
                         ${isNarrative
@@ -677,10 +677,10 @@ const ReportingManager = {
                         ${!showTitle ? '<span class="tool-info" title="Title hidden">No Title</span>' : headingLevel !== 'h3' ? `<span class="tool-info" title="Heading level">${headingLevel.toUpperCase()}</span>` : ''}
                     </div>
                     <div class="workspace-item-actions">
-                        <button class="btn btn-icon btn-sm ${isExpanded ? 'active' : ''}" onclick="ReportingManager.toggleWriteupTitleEditor('${item.id}')" title="Title Settings">
+                        <button class="btn btn-icon btn-sm ${isExpanded ? 'active' : ''}" ${on('click', 'ReportingManager.toggleWriteupTitleEditor', String(item.id))} title="Title Settings">
                             <i data-lucide="edit-2"></i>
                         </button>
-                        <button class="btn btn-icon btn-sm" onclick="ReportingManager.removeWorkspaceItem('${item.id}')" title="Remove">
+                        <button class="btn btn-icon btn-sm" ${on('click', 'ReportingManager.removeWorkspaceItem', String(item.id))} title="Remove">
                             <i data-lucide="x"></i>
                         </button>
                     </div>
@@ -690,13 +690,13 @@ const ReportingManager = {
                     <div class="editor-row">
                         <label class="toggle-label">
                             <input type="checkbox" ${showTitle ? 'checked' : ''}
-                                   onchange="ReportingManager.updateWriteupTitleSetting('${item.id}', 'show_title', this.checked)">
+                                   ${on('change', 'ReportingManager.updateWriteupTitleSetting', String(item.id), 'show_title', ARG.checked)}>
                             <span>Show title in report</span>
                         </label>
                         <div class="editor-field">
                             <label>Heading</label>
                             <select class="form-input form-input-sm"
-                                    onchange="ReportingManager.updateWriteupTitleSetting('${item.id}', 'heading_level', this.value)"
+                                    ${on('change', 'ReportingManager.updateWriteupTitleSetting', String(item.id), 'heading_level', ARG.value)}
                                     style="width: auto;">
                                 <option value="h1" ${headingLevel === 'h1' ? 'selected' : ''}>H1</option>
                                 <option value="h2" ${headingLevel === 'h2' ? 'selected' : ''}>H2</option>
@@ -1213,7 +1213,7 @@ const ReportingManager = {
             <div id="writeupFormCard" class="inline-form-card">
                 <div class="inline-form-header">
                     <h3>${isEdit ? 'Edit Writeup' : 'Add Writeup'}</h3>
-                    <button class="btn btn-icon" onclick="ReportingManager.hideWriteupForm()" title="Cancel">
+                    <button class="btn btn-icon" ${on('click', 'ReportingManager.hideWriteupForm')} title="Cancel">
                         <i data-lucide="x"></i>
                     </button>
                 </div>
@@ -1221,15 +1221,15 @@ const ReportingManager = {
                     <span class="warning-icon"><i data-lucide="triangle-alert"></i></span>
                     <span>Writeups are shared across all engagements. Do not include sensitive client information, IP addresses, or engagement-specific details.</span>
                 </div>
-                <form id="writeupForm" onsubmit="ReportingManager.handleWriteupFormSubmit(event)">
+                <form id="writeupForm" ${on('submit', 'ReportingManager.handleWriteupFormSubmit', ARG.event)}>
                     <input type="hidden" id="writeupFormId" value="${isEdit ? writeup.id : ''}">
 
                     <!-- Type Toggle -->
                     <div class="form-group">
                         <label>Writeup Type</label>
                         <div class="writeup-type-toggle">
-                            <button type="button" class="type-toggle-btn ${isFinding ? 'active' : ''}" data-type="finding" onclick="ReportingManager.toggleWriteupType('form', 'finding')">Finding</button>
-                            <button type="button" class="type-toggle-btn ${!isFinding ? 'active' : ''}" data-type="narrative" onclick="ReportingManager.toggleWriteupType('form', 'narrative')">Narrative</button>
+                            <button type="button" class="type-toggle-btn ${isFinding ? 'active' : ''}" data-type="finding" ${on('click', 'ReportingManager.toggleWriteupType', 'form', 'finding')}>Finding</button>
+                            <button type="button" class="type-toggle-btn ${!isFinding ? 'active' : ''}" data-type="narrative" ${on('click', 'ReportingManager.toggleWriteupType', 'form', 'narrative')}>Narrative</button>
                         </div>
                         <input type="hidden" id="writeupFormType" name="writeup_type" value="${wt}">
                         <p class="type-hint" id="writeupFormTypeHint">${isFinding ? 'Findings include criticality, CVSS score, and remediation information.' : 'Narratives are for introductions, methodology, executive summaries, etc.'}</p>
@@ -1311,7 +1311,7 @@ const ReportingManager = {
                     </div>
 
                     <div class="inline-form-footer">
-                        <button type="button" class="btn btn-secondary" onclick="ReportingManager.hideWriteupForm()">Cancel</button>
+                        <button type="button" class="btn btn-secondary" ${on('click', 'ReportingManager.hideWriteupForm')}>Cancel</button>
                         <button type="submit" class="btn btn-primary">${isEdit ? 'Save Changes' : 'Save Writeup'}</button>
                     </div>
                 </form>
@@ -1381,7 +1381,7 @@ const ReportingManager = {
                            value="${escapeHtml(this.filters.search)}" autocomplete="off">
                 </div>
                 <div class="writeups-header-actions">
-                    <button class="btn btn-secondary" onclick="ReportingManager.showComparisonModal()" title="Compare multiple engagements">
+                    <button class="btn btn-secondary" ${on('click', 'ReportingManager.showComparisonModal')} title="Compare multiple engagements">
                         <i data-lucide="bar-chart-2"></i>
                         Compare Engagements
                     </button>
@@ -1619,11 +1619,11 @@ const ReportingManager = {
     /**
      * Handle drag over workspace
      */
-    handleDragOver(event) {
+    handleDragOver(event, el = event.currentTarget) {
         event.preventDefault();
         event.dataTransfer.dropEffect = this.dragState.draggedFrom === 'source' ? 'copy' : 'move';
 
-        const workspacePanel = event.currentTarget;
+        const workspacePanel = el;
         if (workspacePanel) {
             workspacePanel.classList.add('drag-over');
         }
@@ -1632,8 +1632,8 @@ const ReportingManager = {
     /**
      * Handle drag leave workspace
      */
-    handleDragLeave(event) {
-        const workspacePanel = event.currentTarget;
+    handleDragLeave(event, el = event.currentTarget) {
+        const workspacePanel = el;
         if (workspacePanel) {
             workspacePanel.classList.remove('drag-over');
         }
@@ -1642,7 +1642,7 @@ const ReportingManager = {
     /**
      * Handle drag over individual workspace item
      */
-    handleItemDragOver(event, targetPosition) {
+    handleItemDragOver(event, targetPosition, el = event.currentTarget) {
         event.preventDefault();
         event.stopPropagation();
 
@@ -1652,7 +1652,7 @@ const ReportingManager = {
         });
 
         // Add drop target indicator
-        const item = event.currentTarget;
+        const item = el;
         if (item) {
             const rect = item.getBoundingClientRect();
             const midY = rect.top + rect.height / 2;
@@ -1667,10 +1667,10 @@ const ReportingManager = {
     /**
      * Handle drop on workspace (add new item at end)
      */
-    async handleWorkspaceDrop(event) {
+    async handleWorkspaceDrop(event, el = event.currentTarget) {
         event.preventDefault();
 
-        const workspacePanel = event.currentTarget;
+        const workspacePanel = el;
         if (workspacePanel) {
             workspacePanel.classList.remove('drag-over');
         }
@@ -1686,12 +1686,12 @@ const ReportingManager = {
     /**
      * Handle drop on workspace item (insert at position)
      */
-    async handleItemDrop(event, targetPosition) {
+    async handleItemDrop(event, targetPosition, el = event.currentTarget) {
         event.preventDefault();
         event.stopPropagation();
 
         // Determine insert position based on drop position
-        const item = event.currentTarget;
+        const item = el;
         let insertPosition = targetPosition;
         if (item && item.classList.contains('drop-target-after')) {
             insertPosition = targetPosition + 1;
@@ -2387,7 +2387,7 @@ const ReportingManager = {
             <div class="modal-content table-editor-modal">
                 <div class="modal-header">
                     <h3>Edit Table</h3>
-                    <button class="btn btn-icon" onclick="closeModal('tableEditorModal')">
+                    <button class="btn btn-icon" ${on('click', 'closeModal', 'tableEditorModal')}>
                         <i data-lucide="x"></i>
                     </button>
                 </div>
@@ -2395,13 +2395,13 @@ const ReportingManager = {
                     <div class="table-editor-controls">
                         <div class="control-group">
                             <label>Columns:</label>
-                            <button class="btn btn-sm" onclick="ReportingManager.addTableColumn()">+ Add Column</button>
-                            <button class="btn btn-sm btn-danger" onclick="ReportingManager.removeTableColumn()">- Remove</button>
+                            <button class="btn btn-sm" ${on('click', 'ReportingManager.addTableColumn')}>+ Add Column</button>
+                            <button class="btn btn-sm btn-danger" ${on('click', 'ReportingManager.removeTableColumn')}>- Remove</button>
                         </div>
                         <div class="control-group">
                             <label>Rows:</label>
-                            <button class="btn btn-sm" onclick="ReportingManager.addTableRow()">+ Add Row</button>
-                            <button class="btn btn-sm btn-danger" onclick="ReportingManager.removeTableRow()">- Remove</button>
+                            <button class="btn btn-sm" ${on('click', 'ReportingManager.addTableRow')}>+ Add Row</button>
+                            <button class="btn btn-sm btn-danger" ${on('click', 'ReportingManager.removeTableRow')}>- Remove</button>
                         </div>
                     </div>
                     <div class="table-editor-grid" id="tableEditorGrid">
@@ -2409,8 +2409,8 @@ const ReportingManager = {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn" onclick="closeModal('tableEditorModal')">Cancel</button>
-                    <button class="btn btn-primary" onclick="ReportingManager.saveTableEdits()">Save Changes</button>
+                    <button class="btn" ${on('click', 'closeModal', 'tableEditorModal')}>Cancel</button>
+                    <button class="btn btn-primary" ${on('click', 'ReportingManager.saveTableEdits')}>Save Changes</button>
                 </div>
             </div>
         `;
@@ -2436,7 +2436,7 @@ const ReportingManager = {
                         ${headers.map((h, i) => `
                             <th>
                                 <input type="text" value="${escapeHtml(h)}"
-                                       onchange="ReportingManager.updateTableHeader(${i}, this.value)"
+                                       ${on('change', 'ReportingManager.updateTableHeader', i, ARG.value)}
                                        placeholder="Header ${i + 1}">
                             </th>
                         `).join('')}
@@ -2448,7 +2448,7 @@ const ReportingManager = {
                             ${row.map((cell, colIdx) => `
                                 <td>
                                     <input type="text" value="${escapeHtml(cell)}"
-                                           onchange="ReportingManager.updateTableCell(${rowIdx}, ${colIdx}, this.value)"
+                                           ${on('change', 'ReportingManager.updateTableCell', rowIdx, colIdx, ARG.value)}
                                            placeholder="Data">
                                 </td>
                             `).join('')}
@@ -2605,7 +2605,7 @@ const ReportingManager = {
             <th>
                 <input type="text" class="ctable-header-input" data-col="${ci}"
                        value="${escapeHtml(h)}" placeholder="Header"
-                       onchange="ReportingManager._flushCtableInputs(); ReportingManager.editingCtableData.headers[${ci}] = this.value;">
+                       ${on('change', 'ReportingManager.setCtableHeader', ci, ARG.value)}>
             </th>
         `).join('');
 
@@ -2616,7 +2616,7 @@ const ReportingManager = {
                     <button class="ctable-swatch${c.color === col ? ' active' : ''}"
                             style="background:${colorLabels[col]};"
                             title="${col}"
-                            onclick="ReportingManager._flushCtableInputs(); ReportingManager.setCtableColor(${ri}, ${ci}, '${col}');"
+                            ${on('click', 'ReportingManager.setCtableColorFlushed', ri, ci, String(col))}
                             type="button"></button>
                 `).join('');
                 return `
@@ -2627,7 +2627,7 @@ const ReportingManager = {
                         <div class="ctable-swatches">
                             <button class="ctable-swatch ctable-swatch-none${!c.color ? ' active' : ''}"
                                     title="No color"
-                                    onclick="ReportingManager._flushCtableInputs(); ReportingManager.setCtableColor(${ri}, ${ci}, null);"
+                                    ${on('click', 'ReportingManager.setCtableColorFlushed', ri, ci, null)}
                                     type="button">✕</button>
                             ${swatches}
                         </div>
@@ -2641,14 +2641,14 @@ const ReportingManager = {
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>Edit Findings Table</h3>
-                    <button onclick="closeModal('coloredTableEditorModal')" class="btn btn-sm btn-secondary">✕</button>
+                    <button ${on('click', 'closeModal', 'coloredTableEditorModal')} class="btn btn-sm btn-secondary">✕</button>
                 </div>
                 <div class="modal-body">
                     <div class="ctable-editor-controls">
-                        <button onclick="ReportingManager.ctableAddRow()" class="btn btn-sm btn-secondary" type="button">+ Add Row</button>
-                        <button onclick="ReportingManager.ctableRemoveRow()" class="btn btn-sm btn-secondary" type="button">- Remove Row</button>
-                        <button onclick="ReportingManager.ctableAddCol()" class="btn btn-sm btn-secondary" type="button">+ Add Column</button>
-                        <button onclick="ReportingManager.ctableRemoveCol()" class="btn btn-sm btn-secondary" type="button">- Remove Column</button>
+                        <button ${on('click', 'ReportingManager.ctableAddRow')} class="btn btn-sm btn-secondary" type="button">+ Add Row</button>
+                        <button ${on('click', 'ReportingManager.ctableRemoveRow')} class="btn btn-sm btn-secondary" type="button">- Remove Row</button>
+                        <button ${on('click', 'ReportingManager.ctableAddCol')} class="btn btn-sm btn-secondary" type="button">+ Add Column</button>
+                        <button ${on('click', 'ReportingManager.ctableRemoveCol')} class="btn btn-sm btn-secondary" type="button">- Remove Column</button>
                     </div>
                     <div class="ctable-editor-wrap">
                         <table class="ctable-editor-table">
@@ -2659,8 +2659,8 @@ const ReportingManager = {
                     <p class="ctable-hint">Click a color swatch to set cell background. Click ✕ to clear color.</p>
                 </div>
                 <div class="modal-footer">
-                    <button onclick="closeModal('coloredTableEditorModal')" class="btn btn-secondary">Cancel</button>
-                    <button onclick="ReportingManager.saveColoredTableEdits()" class="btn btn-primary">Save Table</button>
+                    <button ${on('click', 'closeModal', 'coloredTableEditorModal')} class="btn btn-secondary">Cancel</button>
+                    <button ${on('click', 'ReportingManager.saveColoredTableEdits')} class="btn btn-primary">Save Table</button>
                 </div>
             </div>
         `;
@@ -2701,6 +2701,18 @@ const ReportingManager = {
     /**
      * Set color on a specific cell and re-render editor
      */
+    /** Coloured-table header edit: keep typed cell values, then set the header (L-21). */
+    setCtableHeader(ci, value) {
+        this._flushCtableInputs();
+        this.editingCtableData.headers[ci] = value;
+    },
+
+    /** Colour picker: keep typed cell values, then set the colour (L-21). */
+    setCtableColorFlushed(ri, ci, color) {
+        this._flushCtableInputs();
+        this.setCtableColor(ri, ci, color);
+    },
+
     setCtableColor(ri, ci, color) {
         if (!this.editingCtableData) return;
         const cell = this.editingCtableData.rows[ri][ci];
@@ -2916,7 +2928,7 @@ const ReportingManager = {
             <div class="modal-content format-tool-editor-modal">
                 <div class="modal-header">
                     <h3>${title}</h3>
-                    <button class="btn btn-icon" onclick="closeModal('formatToolEditorModal')">
+                    <button class="btn btn-icon" ${on('click', 'closeModal', 'formatToolEditorModal')}>
                         <i data-lucide="x"></i>
                     </button>
                 </div>
@@ -2924,8 +2936,8 @@ const ReportingManager = {
                     ${editorBody}
                 </div>
                 <div class="modal-footer">
-                    <button class="btn" onclick="closeModal('formatToolEditorModal')">Cancel</button>
-                    <button class="btn btn-primary" onclick="ReportingManager.saveFormatToolEdits()">Save Changes</button>
+                    <button class="btn" ${on('click', 'closeModal', 'formatToolEditorModal')}>Cancel</button>
+                    <button class="btn btn-primary" ${on('click', 'ReportingManager.saveFormatToolEdits')}>Save Changes</button>
                 </div>
             </div>
         `;
@@ -2994,14 +3006,14 @@ const ReportingManager = {
                             ${items.map((item, idx) => `
                                 <div class="list-item-row" data-index="${idx}">
                                     <span class="drag-handle">⋮⋮</span>
-                                    <input type="text" value="${escapeHtml(item)}" class="form-control" onchange="ReportingManager.updateListItem(${idx}, this.value)">
-                                    <button class="btn btn-icon btn-sm btn-danger" onclick="ReportingManager.removeListItem(${idx})">
+                                    <input type="text" value="${escapeHtml(item)}" class="form-control" ${on('change', 'ReportingManager.updateListItem', idx, ARG.value)}>
+                                    <button class="btn btn-icon btn-sm btn-danger" ${on('click', 'ReportingManager.removeListItem', idx)}>
                                         <i data-lucide="x"></i>
                                     </button>
                                 </div>
                             `).join('')}
                         </div>
-                        <button class="btn btn-sm" onclick="ReportingManager.addListItem()">+ Add Item</button>
+                        <button class="btn btn-sm" ${on('click', 'ReportingManager.addListItem')}>+ Add Item</button>
                     </div>
                 `;
 
@@ -3016,15 +3028,15 @@ const ReportingManager = {
                         <div class="list-items" id="listEditorItems">
                             ${checkItems.map((item, idx) => `
                                 <div class="list-item-row" data-index="${idx}">
-                                    <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="ReportingManager.updateChecklistItem(${idx}, 'checked', this.checked)">
-                                    <input type="text" value="${escapeHtml(item.text)}" class="form-control" onchange="ReportingManager.updateChecklistItem(${idx}, 'text', this.value)">
-                                    <button class="btn btn-icon btn-sm btn-danger" onclick="ReportingManager.removeChecklistItem(${idx})">
+                                    <input type="checkbox" ${item.checked ? 'checked' : ''} ${on('change', 'ReportingManager.updateChecklistItem', idx, 'checked', ARG.checked)}>
+                                    <input type="text" value="${escapeHtml(item.text)}" class="form-control" ${on('change', 'ReportingManager.updateChecklistItem', idx, 'text', ARG.value)}>
+                                    <button class="btn btn-icon btn-sm btn-danger" ${on('click', 'ReportingManager.removeChecklistItem', idx)}>
                                         <i data-lucide="x"></i>
                                     </button>
                                 </div>
                             `).join('')}
                         </div>
-                        <button class="btn btn-sm" onclick="ReportingManager.addChecklistItem()">+ Add Item</button>
+                        <button class="btn btn-sm" ${on('click', 'ReportingManager.addChecklistItem')}>+ Add Item</button>
                     </div>
                 `;
 
@@ -3075,19 +3087,19 @@ const ReportingManager = {
                         <label>Alert Type</label>
                         <div class="alert-type-selector">
                             <label class="alert-option ${d.type === 'info' ? 'selected' : ''}">
-                                <input type="radio" name="alertType" value="info" ${d.type === 'info' ? 'checked' : ''} onchange="ReportingManager.updateAlertTypePreview()">
+                                <input type="radio" name="alertType" value="info" ${d.type === 'info' ? 'checked' : ''} ${on('change', 'ReportingManager.updateAlertTypePreview')}>
                                 <span class="alert-preview alert-info">ℹ Info</span>
                             </label>
                             <label class="alert-option ${d.type === 'warning' ? 'selected' : ''}">
-                                <input type="radio" name="alertType" value="warning" ${d.type === 'warning' ? 'checked' : ''} onchange="ReportingManager.updateAlertTypePreview()">
+                                <input type="radio" name="alertType" value="warning" ${d.type === 'warning' ? 'checked' : ''} ${on('change', 'ReportingManager.updateAlertTypePreview')}>
                                 <span class="alert-preview alert-warning">⚠ Warning</span>
                             </label>
                             <label class="alert-option ${d.type === 'danger' ? 'selected' : ''}">
-                                <input type="radio" name="alertType" value="danger" ${d.type === 'danger' ? 'checked' : ''} onchange="ReportingManager.updateAlertTypePreview()">
+                                <input type="radio" name="alertType" value="danger" ${d.type === 'danger' ? 'checked' : ''} ${on('change', 'ReportingManager.updateAlertTypePreview')}>
                                 <span class="alert-preview alert-danger">⛔ Danger</span>
                             </label>
                             <label class="alert-option ${d.type === 'success' ? 'selected' : ''}">
-                                <input type="radio" name="alertType" value="success" ${d.type === 'success' ? 'checked' : ''} onchange="ReportingManager.updateAlertTypePreview()">
+                                <input type="radio" name="alertType" value="success" ${d.type === 'success' ? 'checked' : ''} ${on('change', 'ReportingManager.updateAlertTypePreview')}>
                                 <span class="alert-preview alert-success">✓ Success</span>
                             </label>
                         </div>
@@ -3182,17 +3194,17 @@ const ReportingManager = {
                                 <div class="timeline-step-row" data-index="${idx}">
                                     <div class="step-number">${idx + 1}</div>
                                     <div class="step-fields">
-                                        <input type="text" value="${escapeHtml(step.time)}" placeholder="Time" class="form-control time-input" onchange="ReportingManager.updateTimelineStep(${idx}, 'time', this.value)">
-                                        <input type="text" value="${escapeHtml(step.title)}" placeholder="Title" class="form-control" onchange="ReportingManager.updateTimelineStep(${idx}, 'title', this.value)">
-                                        <input type="text" value="${escapeHtml(step.description)}" placeholder="Description" class="form-control" onchange="ReportingManager.updateTimelineStep(${idx}, 'description', this.value)">
+                                        <input type="text" value="${escapeHtml(step.time)}" placeholder="Time" class="form-control time-input" ${on('change', 'ReportingManager.updateTimelineStep', idx, 'time', ARG.value)}>
+                                        <input type="text" value="${escapeHtml(step.title)}" placeholder="Title" class="form-control" ${on('change', 'ReportingManager.updateTimelineStep', idx, 'title', ARG.value)}>
+                                        <input type="text" value="${escapeHtml(step.description)}" placeholder="Description" class="form-control" ${on('change', 'ReportingManager.updateTimelineStep', idx, 'description', ARG.value)}>
                                     </div>
-                                    <button class="btn btn-icon btn-sm btn-danger" onclick="ReportingManager.removeTimelineStep(${idx})">
+                                    <button class="btn btn-icon btn-sm btn-danger" ${on('click', 'ReportingManager.removeTimelineStep', idx)}>
                                         <i data-lucide="x"></i>
                                     </button>
                                 </div>
                             `).join('')}
                         </div>
-                        <button class="btn btn-sm" onclick="ReportingManager.addTimelineStep()">+ Add Step</button>
+                        <button class="btn btn-sm" ${on('click', 'ReportingManager.addTimelineStep')}>+ Add Step</button>
                     </div>
                 `;
 
@@ -3202,7 +3214,7 @@ const ReportingManager = {
                 return `
                     <div class="form-group">
                         <label>Matrix Size</label>
-                        <select id="editorSize" class="form-control" onchange="ReportingManager.updateRiskMatrixPreview()">
+                        <select id="editorSize" class="form-control" ${on('change', 'ReportingManager.updateRiskMatrixPreview')}>
                             <option value="3" ${size === 3 ? 'selected' : ''}>3×3 (Simple)</option>
                             <option value="5" ${size === 5 ? 'selected' : ''}>5×5 (Detailed)</option>
                         </select>
@@ -3220,7 +3232,7 @@ const ReportingManager = {
                     <div class="form-row">
                         <div class="form-group">
                             <label>CVSS Score</label>
-                            <input type="number" id="editorScore" value="${this._number(d.score, 0, 0, 10)}" min="0" max="10" step="0.1" class="form-control" onchange="ReportingManager.updateCvssPreview()">
+                            <input type="number" id="editorScore" value="${this._number(d.score, 0, 0, 10)}" min="0" max="10" step="0.1" class="form-control" ${on('change', 'ReportingManager.updateCvssPreview')}>
                         </div>
                         <div class="form-group cvss-severity-display">
                             <label>Severity</label>
@@ -3436,8 +3448,8 @@ const ReportingManager = {
         container.innerHTML = items.map((item, idx) => `
             <div class="list-item-row" data-index="${idx}">
                 <span class="drag-handle">⋮⋮</span>
-                <input type="text" value="${escapeHtml(item)}" class="form-control" onchange="ReportingManager.updateListItem(${idx}, this.value)">
-                <button class="btn btn-icon btn-sm btn-danger" onclick="ReportingManager.removeListItem(${idx})">
+                <input type="text" value="${escapeHtml(item)}" class="form-control" ${on('change', 'ReportingManager.updateListItem', idx, ARG.value)}>
+                <button class="btn btn-icon btn-sm btn-danger" ${on('click', 'ReportingManager.removeListItem', idx)}>
                     <i data-lucide="x"></i>
                 </button>
             </div>
@@ -3475,9 +3487,9 @@ const ReportingManager = {
         const items = this.editingToolData.items || [];
         container.innerHTML = items.map((item, idx) => `
             <div class="list-item-row" data-index="${idx}">
-                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="ReportingManager.updateChecklistItem(${idx}, 'checked', this.checked)">
-                <input type="text" value="${escapeHtml(item.text)}" class="form-control" onchange="ReportingManager.updateChecklistItem(${idx}, 'text', this.value)">
-                <button class="btn btn-icon btn-sm btn-danger" onclick="ReportingManager.removeChecklistItem(${idx})">
+                <input type="checkbox" ${item.checked ? 'checked' : ''} ${on('change', 'ReportingManager.updateChecklistItem', idx, 'checked', ARG.checked)}>
+                <input type="text" value="${escapeHtml(item.text)}" class="form-control" ${on('change', 'ReportingManager.updateChecklistItem', idx, 'text', ARG.value)}>
+                <button class="btn btn-icon btn-sm btn-danger" ${on('click', 'ReportingManager.removeChecklistItem', idx)}>
                     <i data-lucide="x"></i>
                 </button>
             </div>
@@ -3517,11 +3529,11 @@ const ReportingManager = {
             <div class="timeline-step-row" data-index="${idx}">
                 <div class="step-number">${idx + 1}</div>
                 <div class="step-fields">
-                    <input type="text" value="${escapeHtml(step.time)}" placeholder="Time" class="form-control time-input" onchange="ReportingManager.updateTimelineStep(${idx}, 'time', this.value)">
-                    <input type="text" value="${escapeHtml(step.title)}" placeholder="Title" class="form-control" onchange="ReportingManager.updateTimelineStep(${idx}, 'title', this.value)">
-                    <input type="text" value="${escapeHtml(step.description)}" placeholder="Description" class="form-control" onchange="ReportingManager.updateTimelineStep(${idx}, 'description', this.value)">
+                    <input type="text" value="${escapeHtml(step.time)}" placeholder="Time" class="form-control time-input" ${on('change', 'ReportingManager.updateTimelineStep', idx, 'time', ARG.value)}>
+                    <input type="text" value="${escapeHtml(step.title)}" placeholder="Title" class="form-control" ${on('change', 'ReportingManager.updateTimelineStep', idx, 'title', ARG.value)}>
+                    <input type="text" value="${escapeHtml(step.description)}" placeholder="Description" class="form-control" ${on('change', 'ReportingManager.updateTimelineStep', idx, 'description', ARG.value)}>
                 </div>
-                <button class="btn btn-icon btn-sm btn-danger" onclick="ReportingManager.removeTimelineStep(${idx})">
+                <button class="btn btn-icon btn-sm btn-danger" ${on('click', 'ReportingManager.removeTimelineStep', idx)}>
                     <i data-lucide="x"></i>
                 </button>
             </div>
@@ -3558,7 +3570,7 @@ const ReportingManager = {
                             ${labels.cols.map((col, colIdx) => {
                                 const isHighlighted = highlighted.row === rowIdx && highlighted.col === colIdx;
                                 const risk = this.getRiskLevel(rowIdx, colIdx, size);
-                                return `<td class="risk-${risk} ${isHighlighted ? 'highlighted' : ''}" onclick="ReportingManager.selectRiskCell(${rowIdx}, ${colIdx})"></td>`;
+                                return `<td class="risk-${risk} ${isHighlighted ? 'highlighted' : ''}" ${on('click', 'ReportingManager.selectRiskCell', rowIdx, colIdx)}></td>`;
                             }).join('')}
                         </tr>
                     `).join('')}
@@ -3724,14 +3736,14 @@ const ReportingManager = {
                 <div class="templates-header">
                     <h3>Report Templates</h3>
                     <div class="templates-header-actions">
-                        <select id="templateCategoryFilter" onchange="ReportingManager.applyTemplateFilters()" class="form-control">
+                        <select id="templateCategoryFilter" ${on('change', 'ReportingManager.applyTemplateFilters')} class="form-control">
                             <option value="all">All Categories</option>
                             <option value="executive">Executive</option>
                             <option value="technical">Technical</option>
                             <option value="compliance">Compliance</option>
                             <option value="custom">Custom</option>
                         </select>
-                        <button class="btn btn-primary" onclick="ReportingManager.showNewTemplateModal()">
+                        <button class="btn btn-primary" ${on('click', 'ReportingManager.showNewTemplateModal')}>
                             <i data-lucide="plus"></i>
                             Create Template
                         </button>
@@ -3764,17 +3776,17 @@ const ReportingManager = {
                     ${template.is_default ? '<span class="badge badge-info">Default</span>' : ''}
                 </div>
                 <div class="template-actions">
-                    <button class="btn btn-sm btn-secondary" onclick="ReportingManager.previewTemplate(${template.id})">
+                    <button class="btn btn-sm btn-secondary" ${on('click', 'ReportingManager.previewTemplate', template.id)}>
                         <i data-lucide="eye"></i> Preview
                     </button>
-                    <button class="btn btn-sm btn-primary" onclick="ReportingManager.useTemplate(${template.id})">
+                    <button class="btn btn-sm btn-primary" ${on('click', 'ReportingManager.useTemplate', template.id)}>
                         <i data-lucide="file-plus"></i> Use Template
                     </button>
                     ${!template.is_default ? `
-                        <button class="btn btn-sm btn-icon" onclick="ReportingManager.editTemplate(${template.id})" title="Edit">
+                        <button class="btn btn-sm btn-icon" ${on('click', 'ReportingManager.editTemplate', template.id)} title="Edit">
                             <i data-lucide="edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-icon text-danger" onclick="ReportingManager.deleteTemplate(${template.id})" title="Delete">
+                        <button class="btn btn-sm btn-icon text-danger" ${on('click', 'ReportingManager.deleteTemplate', template.id)} title="Delete">
                             <i data-lucide="trash-2"></i>
                         </button>
                     ` : ''}

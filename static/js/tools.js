@@ -724,7 +724,7 @@ const CVSSCalculator = {
                             <button class="cvss-metric-btn ${this.state[metricKey] === opt.value ? 'selected' : ''}"
                                     data-metric="${metricKey}"
                                     data-value="${opt.value}"
-                                    onclick="CVSSCalculator.selectMetric('${metricKey}', '${opt.value}')"
+                                    ${on('click', 'CVSSCalculator.selectMetric', String(metricKey), String(opt.value))}
                                     title="${opt.description}">
                                 ${opt.label}
                             </button>
@@ -767,10 +767,10 @@ const CVSSCalculator = {
                         </div>
 
                         <div class="cvss-actions">
-                            <button id="cvss-copy-btn" class="btn btn-primary" onclick="CVSSCalculator.copyVector()" disabled>
+                            <button id="cvss-copy-btn" class="btn btn-primary" ${on('click', 'CVSSCalculator.copyVector')} disabled>
                                 Copy Vector String
                             </button>
-                            <button class="btn btn-secondary" onclick="CVSSCalculator.reset()">
+                            <button class="btn btn-secondary" ${on('click', 'CVSSCalculator.reset')}>
                                 Reset
                             </button>
                         </div>
@@ -859,32 +859,32 @@ const ToolsManager = {
             <div class="tools-page">
                 <div class="tools-tabs">
                     <button class="tools-tab ${this.activeTab === 'cyberchef' ? 'active' : ''}"
-                            data-tool="cyberchef" onclick="ToolsManager.switchTool('cyberchef')">
+                            data-tool="cyberchef" ${on('click', 'ToolsManager.switchTool', 'cyberchef')}>
                         <span class="tool-icon"><i data-lucide="chef-hat"></i></span>
                         <span>CyberChef</span>
                     </button>
                     <button class="tools-tab ${this.activeTab === 'command' ? 'active' : ''}"
-                            data-tool="command" onclick="ToolsManager.switchTool('command')">
+                            data-tool="command" ${on('click', 'ToolsManager.switchTool', 'command')}>
                         <span class="tool-icon"><i data-lucide="terminal"></i></span>
                         <span>Command</span>
                     </button>
                     <button class="tools-tab ${this.activeTab === 'calculators' ? 'active' : ''}"
-                            data-tool="calculators" onclick="ToolsManager.switchTool('calculators')">
+                            data-tool="calculators" ${on('click', 'ToolsManager.switchTool', 'calculators')}>
                         <span class="tool-icon"><i data-lucide="calculator"></i></span>
                         <span>Calculators</span>
                     </button>
                     <button class="tools-tab ${this.activeTab === 'decoders' ? 'active' : ''}"
-                            data-tool="decoders" onclick="ToolsManager.switchTool('decoders')">
+                            data-tool="decoders" ${on('click', 'ToolsManager.switchTool', 'decoders')}>
                         <span class="tool-icon"><i data-lucide="lock-open"></i></span>
                         <span>Decoders</span>
                     </button>
                     <button class="tools-tab ${this.activeTab === 'attackmaps' ? 'active' : ''}"
-                            data-tool="attackmaps" onclick="ToolsManager.switchTool('attackmaps')">
+                            data-tool="attackmaps" ${on('click', 'ToolsManager.switchTool', 'attackmaps')}>
                         <span class="tool-icon"><i data-lucide="map"></i></span>
                         <span>Attack Maps</span>
                     </button>
                     <button class="tools-tab ${this.activeTab === 'data' ? 'active' : ''}"
-                            data-tool="data" onclick="ToolsManager.switchTool('data')">
+                            data-tool="data" ${on('click', 'ToolsManager.switchTool', 'data')}>
                         <span class="tool-icon"><i data-lucide="database"></i></span>
                         <span>Data</span>
                     </button>
@@ -936,17 +936,17 @@ const ToolsManager = {
                     </p>
                 </div>
                 <div class="tools-data-grid">
-                    <button class="tools-data-action" id="importToolBtn" onclick="dataImportClicked()" title="Import tool output (Nmap, Nessus, Burp, …)">
+                    <button class="tools-data-action" id="importToolBtn" ${on('click', 'dataImportClicked')} title="Import tool output (Nmap, Nessus, Burp, …)">
                         <span class="tools-data-icon">↑</span>
                         <span class="tools-data-label">Import</span>
                         <span class="tools-data-hint">Parse Nmap, Nessus, Burp, ZAP, Nuclei, BloodHound, and more.</span>
                     </button>
-                    <button class="tools-data-action" onclick="dataExportClicked()" title="Export this engagement to JSON / Markdown / template">
+                    <button class="tools-data-action" ${on('click', 'dataExportClicked')} title="Export this engagement to JSON / Markdown / template">
                         <span class="tools-data-icon">↓</span>
                         <span class="tools-data-label">Export</span>
                         <span class="tools-data-hint">JSON, Markdown, or a report template.</span>
                     </button>
-                    <button class="tools-data-action" onclick="dataRestoreClicked()" title="Restore a previously exported JSON backup">
+                    <button class="tools-data-action" ${on('click', 'dataRestoreClicked')} title="Restore a previously exported JSON backup">
                         <span class="tools-data-icon">⟲</span>
                         <span class="tools-data-label">Restore</span>
                         <span class="tools-data-hint">Re-import a JSON backup of an engagement.</span>
@@ -978,7 +978,7 @@ const ToolsManager = {
                         <div class="loading">Loading...</div>
                     </div>
                     <div class="commands-sidebar-footer">
-                        <button class="btn btn-primary btn-block" onclick="CommandManager.openAddModal()">
+                        <button class="btn btn-primary btn-block" ${on('click', 'CommandManager.openAddModal')}>
                             + Add Command
                         </button>
                     </div>
@@ -992,7 +992,7 @@ const ToolsManager = {
                             <input type="text" id="commandSearch" placeholder="Search commands..." autocomplete="off">
                         </div>
                         <div class="commands-header-actions">
-                            <button class="btn btn-icon" id="favoritesFilterBtn" onclick="CommandManager.toggleFavoritesFilter()" title="Show favorites only">
+                            <button class="btn btn-icon" id="favoritesFilterBtn" ${on('click', 'CommandManager.toggleFavoritesFilter')} title="Show favorites only">
                                 <span id="favoritesFilterIcon">☆</span>
                             </button>
                             <span id="commandsCount" class="commands-count">0 commands</span>
@@ -1152,7 +1152,7 @@ const ToolsManager = {
 
                         <!-- Advanced Options -->
                         <div class="msf-form-section msf-advanced-section">
-                            <button type="button" class="advanced-toggle" onclick="MSFVenomBuilder.toggleAdvanced()">
+                            <button type="button" class="advanced-toggle" ${on('click', 'MSFVenomBuilder.toggleAdvanced')}>
                                 <span class="toggle-icon">+</span>
                                 Advanced Options (Encoding & Encryption)
                             </button>
@@ -1198,10 +1198,10 @@ const ToolsManager = {
                         </div>
                         <pre id="msf-command-preview" class="command-preview">${MSFVenomBuilder.generateCommand()}</pre>
                         <div class="preview-actions">
-                            <button class="btn btn-primary" onclick="MSFVenomBuilder.copyToClipboard()">
+                            <button class="btn btn-primary" ${on('click', 'MSFVenomBuilder.copyToClipboard')}>
                                 Copy to Clipboard
                             </button>
-                            <button class="btn btn-secondary" onclick="MSFVenomBuilder.saveToCommands()">
+                            <button class="btn btn-secondary" ${on('click', 'MSFVenomBuilder.saveToCommands')}>
                                 Save to Commands
                             </button>
                         </div>
@@ -1241,7 +1241,7 @@ const ToolsManager = {
                 <p>CyberChef is a powerful web app for encoding, decoding, and analyzing data.</p>
                 ${AppState.currentUser?.role === 'admin' ? `
                 <p class="install-size">Download size: ~83 MB (pinned release, checksum verified)</p>
-                <button class="btn btn-primary btn-lg" onclick="ToolsManager.installCyberChef()" id="installCyberChefBtn">
+                <button class="btn btn-primary btn-lg" ${on('click', 'ToolsManager.installCyberChef')} id="installCyberChefBtn">
                     <span class="btn-text">Install CyberChef</span>
                     <span class="btn-loading" style="display:none;">Installing...</span>
                 </button>` : `
@@ -1260,7 +1260,7 @@ const ToolsManager = {
                 <h3>CyberChef</h3>
                 <p>A web app for encoding, decoding, and analyzing data.</p>
                 <p class="version-info">Version: ${escapeHtml(this.cyberchefStatus?.version || 'Unknown')}</p>
-                <button class="btn btn-primary btn-lg" onclick="ToolsManager.openCyberChef()">
+                <button class="btn btn-primary btn-lg" ${on('click', 'ToolsManager.openCyberChef')}>
                     Open CyberChef
                 </button>
             </div>
@@ -1393,23 +1393,23 @@ const ToolsManager = {
                             <option>Loading...</option>
                         </select>
                     </div>
-                    <button class="btn btn-sm btn-primary" onclick="AttackMapEditor.promptNewMap()" title="Create a new attack map">+ New</button>
-                    <button class="btn btn-sm btn-secondary" onclick="AttackMapEditor.duplicateCurrentMap()" title="Duplicate the current map">Dup</button>
-                    <button class="btn btn-sm btn-quiet-danger" onclick="AttackMapEditor.deleteCurrentMap()" title="Delete the current map">Del</button>
+                    <button class="btn btn-sm btn-primary" ${on('click', 'AttackMapEditor.promptNewMap')} title="Create a new attack map">+ New</button>
+                    <button class="btn btn-sm btn-secondary" ${on('click', 'AttackMapEditor.duplicateCurrentMap')} title="Duplicate the current map">Dup</button>
+                    <button class="btn btn-sm btn-quiet-danger" ${on('click', 'AttackMapEditor.deleteCurrentMap')} title="Delete the current map">Del</button>
 
                     <div class="atk-divider" aria-hidden="true"></div>
 
                     <!-- Connect mode -->
-                    <button id="attackMapConnectBtn" class="btn btn-sm btn-secondary atk-connect" onclick="AttackMapEditor.toggleConnectMode()"
+                    <button id="attackMapConnectBtn" class="btn btn-sm btn-secondary atk-connect" ${on('click', 'AttackMapEditor.toggleConnectMode')}
                             title="Toggle connect mode to draw arrows between nodes">
                         <i data-lucide="link"></i> Connect
                     </button>
 
                     <!-- Zoom -->
                     <div class="atk-zoom">
-                        <button class="btn btn-sm btn-secondary" onclick="AttackMapEditor.zoomIn()" title="Zoom in" aria-label="Zoom in">+</button>
-                        <button class="btn btn-sm btn-secondary" onclick="AttackMapEditor.zoomOut()" title="Zoom out" aria-label="Zoom out">−</button>
-                        <button class="btn btn-sm btn-secondary" onclick="AttackMapEditor.zoomFit()" title="Zoom to fit all nodes">Fit</button>
+                        <button class="btn btn-sm btn-secondary" ${on('click', 'AttackMapEditor.zoomIn')} title="Zoom in" aria-label="Zoom in">+</button>
+                        <button class="btn btn-sm btn-secondary" ${on('click', 'AttackMapEditor.zoomOut')} title="Zoom out" aria-label="Zoom out">−</button>
+                        <button class="btn btn-sm btn-secondary" ${on('click', 'AttackMapEditor.zoomFit')} title="Zoom to fit all nodes">Fit</button>
                     </div>
                 </div>
 
@@ -1627,7 +1627,7 @@ const ShellOneLinersManager = {
         const categoryTabs = Object.entries(this.CATEGORY_LABELS).map(([key, label]) => `
             <button class="shell-category-tab ${this.state.activeCategory === key ? 'active' : ''}"
                     data-category="${key}"
-                    onclick="ShellOneLinersManager.switchCategory('${key}')">
+                    ${on('click', 'ShellOneLinersManager.switchCategory', String(key))}>
                 <span class="tab-icon">${this.CATEGORY_ICONS[key]}</span>
                 <span>${label}</span>
             </button>
@@ -1679,7 +1679,7 @@ const ShellOneLinersManager = {
                         </div>
 
                         <div class="shell-var-actions">
-                            <button class="btn btn-sm btn-secondary" onclick="ShellOneLinersManager.detectLocalIP()">
+                            <button class="btn btn-sm btn-secondary" ${on('click', 'ShellOneLinersManager.detectLocalIP')}>
                                 Detect Local IP
                             </button>
                         </div>
@@ -1716,7 +1716,7 @@ const ShellOneLinersManager = {
         const buttons = [
             `<button class="shell-subcategory-btn ${this.state.activeSubcategory === 'all' ? 'active' : ''}"
                      data-subcategory="all"
-                     onclick="ShellOneLinersManager.filterBySubcategory('all')">All</button>`
+                     ${on('click', 'ShellOneLinersManager.filterBySubcategory', 'all')}>All</button>`
         ];
 
         subcats.forEach(sub => {
@@ -1988,28 +1988,28 @@ const SubnetCalculator = {
                 <div class="subnet-result-row">
                     <span class="subnet-label">Network Address</span>
                     <span class="subnet-value">${escapeHtml(r.networkAddress)}</span>
-                    <button class="btn btn-icon btn-sm" onclick="SubnetCalculator.copyValue('${r.networkAddress}')" title="Copy">
+                    <button class="btn btn-icon btn-sm" ${on('click', 'SubnetCalculator.copyValue', String(r.networkAddress))} title="Copy">
                         <i data-lucide="copy" class="icon-sm"></i>
                     </button>
                 </div>
                 <div class="subnet-result-row">
                     <span class="subnet-label">Broadcast Address</span>
                     <span class="subnet-value">${escapeHtml(r.broadcastAddress)}</span>
-                    <button class="btn btn-icon btn-sm" onclick="SubnetCalculator.copyValue('${r.broadcastAddress}')" title="Copy">
+                    <button class="btn btn-icon btn-sm" ${on('click', 'SubnetCalculator.copyValue', String(r.broadcastAddress))} title="Copy">
                         <i data-lucide="copy" class="icon-sm"></i>
                     </button>
                 </div>
                 <div class="subnet-result-row">
                     <span class="subnet-label">First Usable IP</span>
                     <span class="subnet-value">${escapeHtml(r.firstUsable)}</span>
-                    <button class="btn btn-icon btn-sm" onclick="SubnetCalculator.copyValue('${r.firstUsable}')" title="Copy">
+                    <button class="btn btn-icon btn-sm" ${on('click', 'SubnetCalculator.copyValue', String(r.firstUsable))} title="Copy">
                         <i data-lucide="copy" class="icon-sm"></i>
                     </button>
                 </div>
                 <div class="subnet-result-row">
                     <span class="subnet-label">Last Usable IP</span>
                     <span class="subnet-value">${escapeHtml(r.lastUsable)}</span>
-                    <button class="btn btn-icon btn-sm" onclick="SubnetCalculator.copyValue('${r.lastUsable}')" title="Copy">
+                    <button class="btn btn-icon btn-sm" ${on('click', 'SubnetCalculator.copyValue', String(r.lastUsable))} title="Copy">
                         <i data-lucide="copy" class="icon-sm"></i>
                     </button>
                 </div>
@@ -2024,14 +2024,14 @@ const SubnetCalculator = {
                 <div class="subnet-result-row">
                     <span class="subnet-label">Subnet Mask</span>
                     <span class="subnet-value">${escapeHtml(r.subnetMask)} (/${r.cidr})</span>
-                    <button class="btn btn-icon btn-sm" onclick="SubnetCalculator.copyValue('${r.subnetMask}')" title="Copy">
+                    <button class="btn btn-icon btn-sm" ${on('click', 'SubnetCalculator.copyValue', String(r.subnetMask))} title="Copy">
                         <i data-lucide="copy" class="icon-sm"></i>
                     </button>
                 </div>
                 <div class="subnet-result-row">
                     <span class="subnet-label">Wildcard Mask</span>
                     <span class="subnet-value">${escapeHtml(r.wildcardMask)}</span>
-                    <button class="btn btn-icon btn-sm" onclick="SubnetCalculator.copyValue('${r.wildcardMask}')" title="Copy">
+                    <button class="btn btn-icon btn-sm" ${on('click', 'SubnetCalculator.copyValue', String(r.wildcardMask))} title="Copy">
                         <i data-lucide="copy" class="icon-sm"></i>
                     </button>
                 </div>
@@ -2084,12 +2084,12 @@ const SubnetCalculator = {
 
                         <div class="subnet-quick-masks">
                             <span class="quick-mask-label">Common masks:</span>
-                            <button class="btn btn-sm btn-secondary" onclick="SubnetCalculator.setQuickMask('/8')">/8</button>
-                            <button class="btn btn-sm btn-secondary" onclick="SubnetCalculator.setQuickMask('/16')">/16</button>
-                            <button class="btn btn-sm btn-secondary" onclick="SubnetCalculator.setQuickMask('/24')">/24</button>
-                            <button class="btn btn-sm btn-secondary" onclick="SubnetCalculator.setQuickMask('/25')">/25</button>
-                            <button class="btn btn-sm btn-secondary" onclick="SubnetCalculator.setQuickMask('/27')">/27</button>
-                            <button class="btn btn-sm btn-secondary" onclick="SubnetCalculator.setQuickMask('/30')">/30</button>
+                            <button class="btn btn-sm btn-secondary" ${on('click', 'SubnetCalculator.setQuickMask', '/8')}>/8</button>
+                            <button class="btn btn-sm btn-secondary" ${on('click', 'SubnetCalculator.setQuickMask', '/16')}>/16</button>
+                            <button class="btn btn-sm btn-secondary" ${on('click', 'SubnetCalculator.setQuickMask', '/24')}>/24</button>
+                            <button class="btn btn-sm btn-secondary" ${on('click', 'SubnetCalculator.setQuickMask', '/25')}>/25</button>
+                            <button class="btn btn-sm btn-secondary" ${on('click', 'SubnetCalculator.setQuickMask', '/27')}>/27</button>
+                            <button class="btn btn-sm btn-secondary" ${on('click', 'SubnetCalculator.setQuickMask', '/30')}>/30</button>
                         </div>
                     </div>
 
@@ -2131,7 +2131,7 @@ const CommandHubManager = {
     render() {
         const sidebarItems = Object.entries(this.SUB_TOOLS).map(([key, tool]) => `
             <div class="category-item ${this.activeSubTool === key ? 'active' : ''}"
-                 onclick="CommandHubManager.switchSubTool('${key}')">
+                 ${on('click', 'CommandHubManager.switchSubTool', String(key))}>
                 <span class="category-icon">${tool.icon}</span>
                 <span class="category-name">${tool.label}</span>
             </div>
@@ -2216,7 +2216,7 @@ const CalculatorsManager = {
     render() {
         const sidebarItems = Object.entries(this.SUB_TOOLS).map(([key, tool]) => `
             <div class="category-item ${this.activeSubTool === key ? 'active' : ''}"
-                 onclick="CalculatorsManager.switchSubTool('${key}')">
+                 ${on('click', 'CalculatorsManager.switchSubTool', String(key))}>
                 <span class="category-icon">${tool.icon}</span>
                 <span class="category-name">${tool.label}</span>
             </div>
@@ -2294,7 +2294,7 @@ const DecodersManager = {
     render() {
         const sidebarItems = Object.entries(this.SUB_TOOLS).map(([key, tool]) => `
             <div class="category-item ${this.activeSubTool === key ? 'active' : ''}"
-                 onclick="DecodersManager.switchSubTool('${key}')">
+                 ${on('click', 'DecodersManager.switchSubTool', String(key))}>
                 <span class="category-icon">${tool.icon}</span>
                 <span class="category-name">${tool.label}</span>
             </div>
@@ -2579,7 +2579,7 @@ const JWTDecoder = {
                                   placeholder="Paste your JWT token here..."
                                   rows="4">${escapeHtml(this.state.token)}</textarea>
                         <div class="jwt-input-actions">
-                            <button class="btn btn-sm btn-secondary" onclick="JWTDecoder.loadSampleToken()">
+                            <button class="btn btn-sm btn-secondary" ${on('click', 'JWTDecoder.loadSampleToken')}>
                                 Load Sample Token
                             </button>
                         </div>
@@ -2592,7 +2592,7 @@ const JWTDecoder = {
                             <div class="jwt-section-title">
                                 <span class="section-dot header-dot"></span>
                                 <span>Header</span>
-                                <button class="btn btn-icon btn-sm" onclick="JWTDecoder.copySection('header')" title="Copy">
+                                <button class="btn btn-icon btn-sm" ${on('click', 'JWTDecoder.copySection', 'header')} title="Copy">
                                     <i data-lucide="copy" class="icon-sm"></i>
                                 </button>
                             </div>
@@ -2603,7 +2603,7 @@ const JWTDecoder = {
                             <div class="jwt-section-title">
                                 <span class="section-dot payload-dot"></span>
                                 <span>Payload</span>
-                                <button class="btn btn-icon btn-sm" onclick="JWTDecoder.copySection('payload')" title="Copy">
+                                <button class="btn btn-icon btn-sm" ${on('click', 'JWTDecoder.copySection', 'payload')} title="Copy">
                                     <i data-lucide="copy" class="icon-sm"></i>
                                 </button>
                             </div>
@@ -2614,7 +2614,7 @@ const JWTDecoder = {
                             <div class="jwt-section-title">
                                 <span class="section-dot signature-dot"></span>
                                 <span>Signature</span>
-                                <button class="btn btn-icon btn-sm" onclick="JWTDecoder.copySection('signature')" title="Copy">
+                                <button class="btn btn-icon btn-sm" ${on('click', 'JWTDecoder.copySection', 'signature')} title="Copy">
                                     <i data-lucide="copy" class="icon-sm"></i>
                                 </button>
                             </div>
@@ -2756,6 +2756,12 @@ const PowerShellEncoder = {
         this.process();
     },
 
+    /** Template picker: load the chosen template, then reset the picker (L-21). */
+    loadTemplateFromSelect(select) {
+        if (select.value) this.loadTemplate(select.value);
+        select.value = '';
+    },
+
     loadTemplate(name) {
         const template = this.TEMPLATES[name];
         if (!template) return;
@@ -2839,18 +2845,18 @@ const PowerShellEncoder = {
                 <div class="ps-container">
                     <div class="ps-mode-toggle">
                         <button class="ps-mode-btn ${this.state.mode === 'encode' ? 'active' : ''}"
-                                data-mode="encode" onclick="PowerShellEncoder.setMode('encode')">
+                                data-mode="encode" ${on('click', 'PowerShellEncoder.setMode', 'encode')}>
                             Encode
                         </button>
                         <button class="ps-mode-btn ${this.state.mode === 'decode' ? 'active' : ''}"
-                                data-mode="decode" onclick="PowerShellEncoder.setMode('decode')">
+                                data-mode="decode" ${on('click', 'PowerShellEncoder.setMode', 'decode')}>
                             Decode
                         </button>
                     </div>
 
                     <div class="ps-templates">
                         <label>Quick Templates:</label>
-                        <select onchange="if(this.value) PowerShellEncoder.loadTemplate(this.value); this.value='';">
+                        <select ${on('change', 'PowerShellEncoder.loadTemplateFromSelect', ARG.el)}>
                             <option value="">Select a template...</option>
                             ${templateOptions}
                         </select>
@@ -2869,7 +2875,7 @@ const PowerShellEncoder = {
                         <div class="ps-panel ps-output-panel">
                             <div class="ps-panel-header">
                                 <span>Output</span>
-                                <button class="btn btn-sm btn-secondary" onclick="PowerShellEncoder.copyOutput()">
+                                <button class="btn btn-sm btn-secondary" ${on('click', 'PowerShellEncoder.copyOutput')}>
                                     Copy
                                 </button>
                             </div>
@@ -2882,7 +2888,7 @@ const PowerShellEncoder = {
                     <div id="ps-command-section" class="ps-command-section" style="display: none;">
                         <div class="ps-command-header">
                             <span>Full Command</span>
-                            <button class="btn btn-sm btn-primary" onclick="PowerShellEncoder.copyCommand()">
+                            <button class="btn btn-sm btn-primary" ${on('click', 'PowerShellEncoder.copyCommand')}>
                                 Copy Command
                             </button>
                         </div>
@@ -3193,7 +3199,7 @@ const MarkdownCheatSheet = {
     render() {
         const categoryItems = Object.entries(this.CATEGORIES).map(([key, cat]) => `
             <div class="category-item ${this.activeCategory === key ? 'active' : ''}"
-                 onclick="MarkdownCheatSheet.switchCategory('${key}')">
+                 ${on('click', 'MarkdownCheatSheet.switchCategory', String(key))}>
                 <span class="category-icon">${cat.icon}</span>
                 <span class="category-name">${cat.label}</span>
                 <span class="category-count">${this.ENTRIES[key].length}</span>
@@ -3295,7 +3301,7 @@ const MarkdownCheatSheet = {
                 <div class="md-cheat-header">
                     <span class="md-cheat-name">${escapeHtml(entry.name)}</span>
                     ${categoryBadge}
-                    <button class="btn btn-xs btn-primary" onclick="MarkdownCheatSheet.copySyntax(this)" title="Copy syntax">
+                    <button class="btn btn-xs btn-primary" ${on('click', 'MarkdownCheatSheet.copySyntax', ARG.el)} title="Copy syntax">
                         <i data-lucide="copy"></i>
                     </button>
                 </div>

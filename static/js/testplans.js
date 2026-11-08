@@ -113,28 +113,28 @@ const TestPlansManager = {
                     <button class="testplans-tab ${this.activeTab === 'atomics' ? 'active' : ''}" role="tab" id="tp-tab-atomics"
                             aria-selected="${this.activeTab === 'atomics'}" aria-controls="testplansContent"
                             tabindex="${this.activeTab === 'atomics' ? '0' : '-1'}"
-                            data-tab="atomics" onclick="TestPlansManager.switchTab('atomics')">
+                            data-tab="atomics" ${on('click', 'TestPlansManager.switchTab', 'atomics')}>
                         <span class="tab-icon" aria-hidden="true"><i data-lucide="library"></i></span>
                         <span>Atomics Library</span>
                     </button>
                     <button class="testplans-tab ${this.activeTab === 'navigator' ? 'active' : ''}" role="tab" id="tp-tab-navigator"
                             aria-selected="${this.activeTab === 'navigator'}" aria-controls="testplansContent"
                             tabindex="${this.activeTab === 'navigator' ? '0' : '-1'}"
-                            data-tab="navigator" onclick="TestPlansManager.switchTab('navigator')">
+                            data-tab="navigator" ${on('click', 'TestPlansManager.switchTab', 'navigator')}>
                         <span class="tab-icon" aria-hidden="true"><i data-lucide="map"></i></span>
                         <span>Navigator Import</span>
                     </button>
                     <button class="testplans-tab ${this.activeTab === 'plans' ? 'active' : ''}" role="tab" id="tp-tab-plans"
                             aria-selected="${this.activeTab === 'plans'}" aria-controls="testplansContent"
                             tabindex="${this.activeTab === 'plans' ? '0' : '-1'}"
-                            data-tab="plans" onclick="TestPlansManager.switchTab('plans')">
+                            data-tab="plans" ${on('click', 'TestPlansManager.switchTab', 'plans')}>
                         <span class="tab-icon" aria-hidden="true"><i data-lucide="clipboard-list"></i></span>
                         <span>Plans</span>
                     </button>
                     <button class="testplans-tab ${this.activeTab === 'executions' ? 'active' : ''}" role="tab" id="tp-tab-executions"
                             aria-selected="${this.activeTab === 'executions'}" aria-controls="testplansContent"
                             tabindex="${this.activeTab === 'executions' ? '0' : '-1'}"
-                            data-tab="executions" onclick="TestPlansManager.switchTab('executions')">
+                            data-tab="executions" ${on('click', 'TestPlansManager.switchTab', 'executions')}>
                         <span class="tab-icon" aria-hidden="true"><i data-lucide="play"></i></span>
                         <span>Executions</span>
                     </button>
@@ -375,7 +375,7 @@ const TestPlansManager = {
                             <span class="status-meta">Updated: ${status.last_updated ? new Date(status.last_updated).toLocaleDateString() : 'Unknown'}</span>
                             ${status.version ? `<span class="status-meta" title="Pinned Atomic Red Team commit">Version: ${escapeHtml(String(status.version).slice(0, 12))}</span>` : ''}
                         </div>
-                        ${isAdmin ? `<button class="btn btn-secondary" onclick="TestPlansManager.downloadAtomics()">
+                        ${isAdmin ? `<button class="btn btn-secondary" ${on('click', 'TestPlansManager.downloadAtomics')}>
                             Update Library
                         </button>` : ''}
                     ` : `
@@ -384,7 +384,7 @@ const TestPlansManager = {
                             <span>Library not installed</span>
                             <span class="status-meta">${isAdmin ? 'Download the Atomic Red Team tests to get started' : 'Ask an administrator to download the Atomic Red Team tests'}</span>
                         </div>
-                        ${isAdmin ? `<button class="btn btn-primary" onclick="TestPlansManager.downloadAtomics()">
+                        ${isAdmin ? `<button class="btn btn-primary" ${on('click', 'TestPlansManager.downloadAtomics')}>
                             Download Library (~170 MB, pinned and verified)
                         </button>` : ''}
                     `}
@@ -430,7 +430,7 @@ const TestPlansManager = {
             return `
                 <div class="atomics-empty" role="alert">
                     <p>Failed to load atomics: ${escapeHtml(this.atomicsError)}</p>
-                    <button class="btn btn-secondary" onclick="TestPlansManager.loadAtomics()">Retry</button>
+                    <button class="btn btn-secondary" ${on('click', 'TestPlansManager.loadAtomics')}>Retry</button>
                 </div>
             `;
         }
@@ -480,10 +480,10 @@ const TestPlansManager = {
                                 <span class="atomic-platforms">${escapeHtml(platformStr)}</span>
                             </div>
                             <div class="atomic-row-actions">
-                                <button class="btn btn-icon btn-xs" onclick="TestPlansManager.viewAtomic(${atomic.id})" title="View Details" aria-label="View details for ${escapeHtml(atomic.technique_id)} ${escapeHtml(atomic.atomic_test_name)}">
+                                <button class="btn btn-icon btn-xs" ${on('click', 'TestPlansManager.viewAtomic', atomic.id)} title="View Details" aria-label="View details for ${escapeHtml(atomic.technique_id)} ${escapeHtml(atomic.atomic_test_name)}">
                                     <i data-lucide="eye"></i>
                                 </button>
-                                <button class="btn btn-icon btn-xs btn-primary" onclick="TestPlansManager.addAtomicToPlan(${atomic.id})" title="Add to Plan" aria-label="Add ${escapeHtml(atomic.technique_id)} ${escapeHtml(atomic.atomic_test_name)} to a plan">
+                                <button class="btn btn-icon btn-xs btn-primary" ${on('click', 'TestPlansManager.addAtomicToPlan', atomic.id)} title="Add to Plan" aria-label="Add ${escapeHtml(atomic.technique_id)} ${escapeHtml(atomic.atomic_test_name)} to a plan">
                                     <i data-lucide="plus"></i>
                                 </button>
                             </div>
@@ -506,7 +506,7 @@ const TestPlansManager = {
             <div class="atomics-pager" aria-live="polite">
                 <span class="atomics-count">Showing ${shown.toLocaleString()} of ${total.toLocaleString()} tests</span>
                 ${hasMore ? `
-                    <button class="btn btn-secondary btn-sm" onclick="TestPlansManager.loadMoreAtomics()" ${this.atomicsLoading ? 'disabled' : ''}>
+                    <button class="btn btn-secondary btn-sm" ${on('click', 'TestPlansManager.loadMoreAtomics')} ${this.atomicsLoading ? 'disabled' : ''}>
                         ${this.atomicsLoading ? 'Loading...' : `Load ${Math.min(this.atomicsPageSize, total - shown)} more`}
                     </button>
                 ` : ''}
@@ -586,10 +586,10 @@ const TestPlansManager = {
                                         <span class="layer-row-date">${new Date(layer.created_at).toLocaleDateString()}</span>
                                     </div>
                                     <div class="layer-row-actions">
-                                        <button class="btn btn-xs btn-primary" onclick="TestPlansManager.matchLayerToAtomics(${layer.id})" aria-label="Create a test plan from layer ${escapeHtml(layer.name || '')}">
+                                        <button class="btn btn-xs btn-primary" ${on('click', 'TestPlansManager.matchLayerToAtomics', layer.id)} aria-label="Create a test plan from layer ${escapeHtml(layer.name || '')}">
                                             Create plan
                                         </button>
-                                        <button class="btn btn-icon btn-xs btn-danger" onclick="TestPlansManager.deleteLayer(${layer.id})" title="Delete" aria-label="Delete layer ${escapeHtml(layer.name || '')}">
+                                        <button class="btn btn-icon btn-xs btn-danger" ${on('click', 'TestPlansManager.deleteLayer', layer.id)} title="Delete" aria-label="Delete layer ${escapeHtml(layer.name || '')}">
                                             <i data-lucide="trash-2"></i>
                                         </button>
                                     </div>
@@ -616,7 +616,7 @@ const TestPlansManager = {
             <div class="test-plans">
                 <div class="plans-header">
                     <h2>Test Plans</h2>
-                    <button class="btn btn-primary" onclick="TestPlansManager.createPlan()">
+                    <button class="btn btn-primary" ${on('click', 'TestPlansManager.createPlan')}>
                         + New Test Plan
                     </button>
                 </div>
@@ -631,7 +631,7 @@ const TestPlansManager = {
                     ` : engagementPlans.length === 0 ? `
                         <p class="plans-section-empty">
                             No plans in this engagement yet. Pick a template below and choose <strong>Use</strong>,
-                            or <button type="button" class="btn-link" onclick="TestPlansManager.createPlan('engagement')">create a new plan</button>.
+                            or <button type="button" class="btn-link" ${on('click', 'TestPlansManager.createPlan', 'engagement')}>create a new plan</button>.
                         </p>
                     ` : `
                         <div class="plans-list-compact">
@@ -648,7 +648,7 @@ const TestPlansManager = {
                     ${templates.length === 0 ? `
                         <p class="plans-section-empty">
                             No templates yet. Save an engagement plan as a template, or
-                            <button type="button" class="btn-link" onclick="TestPlansManager.createPlan('template')">create a template</button>.
+                            <button type="button" class="btn-link" ${on('click', 'TestPlansManager.createPlan', 'template')}>create a template</button>.
                         </p>
                     ` : `
                         <div class="plans-list-compact">
@@ -663,17 +663,17 @@ const TestPlansManager = {
     renderPlanRow(plan, hasEngagement) {
         const name = escapeHtml(plan.name);
         const scopeActions = plan.is_template ? `
-            <button class="btn btn-xs btn-primary" onclick="TestPlansManager.useTemplate(${plan.id})"
+            <button class="btn btn-xs btn-primary" ${on('click', 'TestPlansManager.useTemplate', plan.id)}
                     ${hasEngagement ? '' : 'disabled'}
                     title="${hasEngagement ? 'Copy into this engagement' : 'Select an engagement first'}"
                     aria-label="Use template ${name} in this engagement">
                 Use
             </button>
-            <button class="btn btn-xs" onclick="TestPlansManager.duplicatePlan(${plan.id})" title="Duplicate template" aria-label="Duplicate template ${name}">
+            <button class="btn btn-xs" ${on('click', 'TestPlansManager.duplicatePlan', plan.id)} title="Duplicate template" aria-label="Duplicate template ${name}">
                 <i data-lucide="copy"></i>
             </button>
         ` : `
-            <button class="btn btn-xs" onclick="TestPlansManager.saveAsTemplate(${plan.id})" title="Save as template" aria-label="Save ${name} as a template">
+            <button class="btn btn-xs" ${on('click', 'TestPlansManager.saveAsTemplate', plan.id)} title="Save as template" aria-label="Save ${name} as a template">
                 <i data-lucide="bookmark-plus"></i>
             </button>
         `;
@@ -692,13 +692,13 @@ const TestPlansManager = {
                 </div>
                 <div class="plan-row-actions">
                     ${scopeActions}
-                    <button class="btn btn-xs" onclick="TestPlansManager.editPlan(${plan.id})" title="Edit" aria-label="Edit ${name}">
+                    <button class="btn btn-xs" ${on('click', 'TestPlansManager.editPlan', plan.id)} title="Edit" aria-label="Edit ${name}">
                         <i data-lucide="edit-2"></i>
                     </button>
-                    <button class="btn btn-xs" onclick="TestPlansManager.generateScript(${plan.id})" title="Generate Script" aria-label="Generate script for ${name}">
+                    <button class="btn btn-xs" ${on('click', 'TestPlansManager.generateScript', plan.id)} title="Generate Script" aria-label="Generate script for ${name}">
                         <i data-lucide="file-code"></i>
                     </button>
-                    <button class="btn btn-xs btn-danger" onclick="TestPlansManager.deletePlan(${plan.id})" title="Delete" aria-label="Delete ${name}">
+                    <button class="btn btn-xs btn-danger" ${on('click', 'TestPlansManager.deletePlan', plan.id)} title="Delete" aria-label="Delete ${name}">
                         <i data-lucide="trash-2"></i>
                     </button>
                 </div>
@@ -750,9 +750,9 @@ const TestPlansManager = {
                         ${this.executions.length ? `
                             <div class="exec-view-toggle" role="group" aria-label="Executions view">
                                 <button type="button" class="${isGrid ? 'active' : ''}" aria-pressed="${isGrid}"
-                                        onclick="TestPlansManager.setExecutionView('grid')">Grid</button>
+                                        ${on('click', 'TestPlansManager.setExecutionView', 'grid')}>Grid</button>
                                 <button type="button" class="${isGrid ? '' : 'active'}" aria-pressed="${!isGrid}"
-                                        onclick="TestPlansManager.setExecutionView('list')">List</button>
+                                        ${on('click', 'TestPlansManager.setExecutionView', 'list')}>List</button>
                             </div>
                             <select id="executionPlanFilter" class="form-select" aria-label="${isGrid ? 'Plan shown in the grid' : 'Filter executions by plan'}">
                                 ${isGrid ? '' : '<option value="">All Plans</option>'}
@@ -761,7 +761,7 @@ const TestPlansManager = {
                                 `).join('')}
                             </select>
                         ` : ''}
-                        <button class="btn btn-primary" onclick="TestPlansManager.startNewExecution()">
+                        <button class="btn btn-primary" ${on('click', 'TestPlansManager.startNewExecution')}>
                             Start Execution
                         </button>
                     </div>
@@ -806,7 +806,7 @@ const TestPlansManager = {
                     <div class="empty-icon" aria-hidden="true"><i data-lucide="triangle-alert"></i></div>
                     <h3>Couldn't load executions</h3>
                     <p>${escapeHtml(this.executionsError)}</p>
-                    <button class="btn btn-secondary" onclick="TestPlansManager.switchTab('executions')">Retry</button>
+                    <button class="btn btn-secondary" ${on('click', 'TestPlansManager.switchTab', 'executions')}>Retry</button>
                 </div>
             `;
         }
@@ -817,7 +817,7 @@ const TestPlansManager = {
                     <div class="empty-icon" aria-hidden="true"><i data-lucide="play"></i></div>
                     <h3>No executions yet</h3>
                     <p>Start a test plan execution to track your testing progress.</p>
-                    <button class="btn btn-primary" onclick="TestPlansManager.startNewExecution()">Start Execution</button>
+                    <button class="btn btn-primary" ${on('click', 'TestPlansManager.startNewExecution')}>Start Execution</button>
                 </div>
             `;
         }
@@ -943,14 +943,14 @@ const TestPlansManager = {
             <div class="exec-grid-toolbar">
                 <input type="search" id="execGridSearch" class="form-input" placeholder="Filter tests by technique, name, or tactic"
                        aria-label="Filter tests" value="${escapeHtml(this.gridSearch || '')}"
-                       oninput="TestPlansManager.setGridSearch(this.value)">
+                       ${on('input', 'TestPlansManager.setGridSearch', ARG.value)}>
                 <select id="execGridOutcome" class="form-select" aria-label="Show tests with outcome"
-                        onchange="TestPlansManager.setGridOutcomeFilter(this.value)">
+                        ${on('change', 'TestPlansManager.setGridOutcomeFilter', ARG.value)}>
                     <option value="">Any outcome</option>
                     ${this.OUTCOMES.map(o => `<option value="${o.value}" ${this.gridOutcomeFilter === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}
                     <option value="none" ${this.gridOutcomeFilter === 'none' ? 'selected' : ''}>Not evaluated</option>
                 </select>
-                <button type="button" class="btn btn-secondary" onclick="TestPlansManager.showImportLogModal()"
+                <button type="button" class="btn btn-secondary" ${on('click', 'TestPlansManager.showImportLogModal')}
                         title="Fill in status and output from the log your PTVault script wrote">
                     Import log
                 </button>
@@ -975,7 +975,7 @@ const TestPlansManager = {
                     ${addableHosts.map(h => `<option value="${h.id}">${escapeHtml(h.ip || h.hostname || `Host ${h.id}`)}${h.ip && h.hostname ? ` (${escapeHtml(h.hostname)})` : ''}</option>`).join('')}
                     ${canAddNoHost ? '<option value="none">No specific host</option>' : ''}
                 </select>
-                <button type="button" class="btn btn-xs btn-primary" onclick="TestPlansManager.addHostToGrid()">Run</button>
+                <button type="button" class="btn btn-xs btn-primary" ${on('click', 'TestPlansManager.addHostToGrid')}>Run</button>
             </div>
         `;
 
@@ -998,7 +998,7 @@ const TestPlansManager = {
                 <td class="exec-grid-cell">
                     <button type="button" class="exec-cell outcome-${e.outcome || 'none'} ${e.id === selectedId ? 'is-selected' : ''}"
                             data-exec-id="${e.id}" tabindex="${e.id === rovingId ? 0 : -1}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}"
-                            onclick="TestPlansManager.openExecution(${e.id})">
+                            ${on('click', 'TestPlansManager.openExecution', e.id)}>
                         ${this.statusSvg(e.status)}
                         <span class="exec-cell-label">${outcome ? outcome.short : '&ndash;'}</span>
                     </button>
@@ -1110,7 +1110,7 @@ const TestPlansManager = {
                                         <span class="exec-row-date">${exec.execution_started_at ? new Date(exec.execution_started_at).toLocaleDateString() : '-'}</span>
                                     </div>
                                     <div class="exec-row-actions">
-                                        <button class="btn btn-xs btn-primary" onclick="TestPlansManager.openExecution(${exec.id})"
+                                        <button class="btn btn-xs btn-primary" ${on('click', 'TestPlansManager.openExecution', exec.id)}
                                                 aria-label="Record results for ${escapeHtml(exec.technique_id || '')} ${escapeHtml(exec.atomic_test_name || exec.custom_name || 'test')}">
                                             Record
                                         </button>
@@ -1531,7 +1531,7 @@ const TestPlansManager = {
                             <span class="technique-id">${escapeHtml(atomic.technique_id)}</span>
                             <h3>${escapeHtml(atomic.atomic_test_name)}</h3>
                         </div>
-                        <button class="modal-close" onclick="TestPlansManager.closeModal('atomicDetailModal')">&times;</button>
+                        <button class="modal-close" ${on('click', 'TestPlansManager.closeModal', 'atomicDetailModal')}>&times;</button>
                     </div>
                     <div class="modal-body">
                         <div class="detail-section">
@@ -1567,8 +1567,8 @@ const TestPlansManager = {
                         ` : ''}
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" onclick="TestPlansManager.addAtomicToPlan(${atomic.id})">Add to Plan</button>
-                        <button class="btn btn-secondary" onclick="TestPlansManager.closeModal('atomicDetailModal')">Close</button>
+                        <button class="btn btn-primary" ${on('click', 'TestPlansManager.addAtomicToPlan', atomic.id)}>Add to Plan</button>
+                        <button class="btn btn-secondary" ${on('click', 'TestPlansManager.closeModal', 'atomicDetailModal')}>Close</button>
                     </div>
                 </div>
             </div>
@@ -1593,7 +1593,7 @@ const TestPlansManager = {
                 <div class="modal-content modal-small">
                     <div class="modal-header">
                         <h3>Add to Test Plan</h3>
-                        <button class="modal-close" onclick="TestPlansManager.closeModal('addToPlanModal')">&times;</button>
+                        <button class="modal-close" ${on('click', 'TestPlansManager.closeModal', 'addToPlanModal')}>&times;</button>
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
@@ -1604,8 +1604,8 @@ const TestPlansManager = {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" onclick="TestPlansManager.confirmAddToPlan(${atomicId})">Add</button>
-                        <button class="btn btn-secondary" onclick="TestPlansManager.closeModal('addToPlanModal')">Cancel</button>
+                        <button class="btn btn-primary" ${on('click', 'TestPlansManager.confirmAddToPlan', atomicId)}>Add</button>
+                        <button class="btn btn-secondary" ${on('click', 'TestPlansManager.closeModal', 'addToPlanModal')}>Cancel</button>
                     </div>
                 </div>
             </div>
@@ -1656,6 +1656,11 @@ const TestPlansManager = {
         }
     },
 
+    /** Edit button in the plan detail view (L-21). */
+    editCurrentPlan() {
+        this.showPlanModal(this.currentEditPlan);
+    },
+
     showPlanModal(plan) {
         const isEdit = plan !== null;
         const hasEngagement = this.currentEngagementId() !== null;
@@ -1683,7 +1688,7 @@ const TestPlansManager = {
                 <div class="modal-content modal-medium">
                     <div class="modal-header">
                         <h3>${isEdit ? `Edit ${plan.is_template ? 'Template' : 'Test Plan'}` : 'Create Test Plan'}</h3>
-                        <button class="modal-close" onclick="TestPlansManager.closeModal('planModal')">&times;</button>
+                        <button class="modal-close" ${on('click', 'TestPlansManager.closeModal', 'planModal')}>&times;</button>
                     </div>
                     <div class="modal-body">
                         ${scopeField}
@@ -1710,8 +1715,8 @@ const TestPlansManager = {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" onclick="TestPlansManager.savePlan(${isEdit ? plan.id : 'null'})">${isEdit ? 'Save Changes' : 'Create Plan'}</button>
-                        <button class="btn btn-secondary" onclick="TestPlansManager.closeModal('planModal')">Cancel</button>
+                        <button class="btn btn-primary" ${on('click', 'TestPlansManager.savePlan', isEdit ? plan.id : 'null')}>${isEdit ? 'Save Changes' : 'Create Plan'}</button>
+                        <button class="btn btn-secondary" ${on('click', 'TestPlansManager.closeModal', 'planModal')}>Cancel</button>
                     </div>
                 </div>
             </div>
@@ -1787,23 +1792,23 @@ const TestPlansManager = {
             <div class="plan-editor">
                 <div class="editor-header">
                     <div class="editor-title">
-                        <button class="btn btn-secondary btn-back" onclick="TestPlansManager.closePlanEditor()">
+                        <button class="btn btn-secondary btn-back" ${on('click', 'TestPlansManager.closePlanEditor')}>
                             &larr; Back to Plans
                         </button>
                         <h2>${escapeHtml(plan.name)}</h2>
                         <span class="plan-scope-badge ${plan.is_template ? 'is-template' : ''}">${plan.is_template ? 'Template' : 'Engagement plan'}</span>
-                        <button class="btn btn-sm btn-secondary" onclick="TestPlansManager.showPlanModal(TestPlansManager.currentEditPlan)">
+                        <button class="btn btn-sm btn-secondary" ${on('click', 'TestPlansManager.editCurrentPlan')}>
                             Edit Details
                         </button>
                     </div>
                     <div class="editor-actions">
-                        <button class="btn btn-secondary" onclick="TestPlansManager.showAddFromLibraryModal()">
+                        <button class="btn btn-secondary" ${on('click', 'TestPlansManager.showAddFromLibraryModal')}>
                             + Add from Library
                         </button>
-                        <button class="btn btn-secondary" onclick="TestPlansManager.showAddCustomTestModal()">
+                        <button class="btn btn-secondary" ${on('click', 'TestPlansManager.showAddCustomTestModal')}>
                             + Add Custom Test
                         </button>
-                        <button class="btn btn-primary" onclick="TestPlansManager.generateScript(${plan.id})">
+                        <button class="btn btn-primary" ${on('click', 'TestPlansManager.generateScript', plan.id)}>
                             Generate Script
                         </button>
                     </div>
@@ -1826,7 +1831,7 @@ const TestPlansManager = {
                     <div class="editor-filter">
                         <input type="search" id="planItemFilter" class="form-input" placeholder="Filter by technique, test name, executor or platform"
                                aria-label="Filter tests in this plan" value="${escapeHtml(this.planItemFilter || '')}"
-                               oninput="TestPlansManager.setPlanItemFilter(this.value)">
+                               ${on('input', 'TestPlansManager.setPlanItemFilter', ARG.value)}>
                         <span class="editor-filter-count" id="planItemFilterCount" aria-live="polite"></span>
                     </div>
                 ` : ''}
@@ -1913,17 +1918,17 @@ const TestPlansManager = {
                     ${item.notes ? `<span class="item-row-notes" role="img" aria-label="Has notes" title="${escapeHtml(item.notes)}"><i data-lucide="notebook-pen"></i></span>` : ''}
                 </div>
                 <div class="item-row-actions">
-                    ${item.needs_review ? `<button class="btn btn-secondary btn-xs" onclick="TestPlansManager.markItemReviewed(${planId}, ${item.id})" title="I have checked this test's current command">Mark reviewed</button>` : ''}
-                    <button class="btn btn-icon btn-xs" onclick="TestPlansManager.editPlanItem(${planId}, ${item.id})" title="Edit" aria-label="Edit ${escapeHtml(name)}">
+                    ${item.needs_review ? `<button class="btn btn-secondary btn-xs" ${on('click', 'TestPlansManager.markItemReviewed', planId, item.id)} title="I have checked this test's current command">Mark reviewed</button>` : ''}
+                    <button class="btn btn-icon btn-xs" ${on('click', 'TestPlansManager.editPlanItem', planId, item.id)} title="Edit" aria-label="Edit ${escapeHtml(name)}">
                         <i data-lucide="edit-2"></i>
                     </button>
                     <label class="item-include" title="Include in generated scripts and executions">
                         <input type="checkbox" ${isEnabled ? 'checked' : ''}
-                               onchange="TestPlansManager.toggleItemEnabled(${planId}, ${item.id}, this.checked ? 1 : 0, this)"
+                               ${on('change', 'TestPlansManager.toggleItemEnabledFromCheckbox', planId, item.id, ARG.el)}
                                aria-label="Include ${escapeHtml(name)} in scripts">
                         <span>Include</span>
                     </label>
-                    <button class="btn btn-icon btn-xs btn-danger" onclick="TestPlansManager.removePlanItem(${planId}, ${item.id})" title="Remove" aria-label="Remove ${escapeHtml(name)} from plan">
+                    <button class="btn btn-icon btn-xs btn-danger" ${on('click', 'TestPlansManager.removePlanItem', planId, item.id)} title="Remove" aria-label="Remove ${escapeHtml(name)} from plan">
                         <i data-lucide="trash-2"></i>
                     </button>
                 </div>
@@ -1950,12 +1955,12 @@ const TestPlansManager = {
                 <div class="modal-content modal-large">
                     <div class="modal-header">
                         <h3>Add from Atomics Library</h3>
-                        <button class="modal-close" onclick="TestPlansManager.closeModal('addFromLibraryModal')">&times;</button>
+                        <button class="modal-close" ${on('click', 'TestPlansManager.closeModal', 'addFromLibraryModal')}>&times;</button>
                     </div>
                     <div class="modal-body">
                         <div class="library-search">
-                            <input type="text" id="librarySearchInput" class="form-input" placeholder="Search techniques, tests..." aria-label="Search atomics library" oninput="TestPlansManager.filterLibraryModal()">
-                            <select id="libraryPlatformFilter" class="form-select" aria-label="Filter by platform" onchange="TestPlansManager.searchLibraryModal()">
+                            <input type="text" id="librarySearchInput" class="form-input" placeholder="Search techniques, tests..." aria-label="Search atomics library" ${on('input', 'TestPlansManager.filterLibraryModal')}>
+                            <select id="libraryPlatformFilter" class="form-select" aria-label="Filter by platform" ${on('change', 'TestPlansManager.searchLibraryModal')}>
                                 <option value="">All Platforms</option>
                                 <option value="windows">Windows</option>
                                 <option value="linux">Linux</option>
@@ -1968,8 +1973,8 @@ const TestPlansManager = {
                     </div>
                     <div class="modal-footer">
                         <span class="selection-count" id="librarySelectionCount">0 selected</span>
-                        <button class="btn btn-primary" onclick="TestPlansManager.addSelectedAtomics()">Add Selected</button>
-                        <button class="btn btn-secondary" onclick="TestPlansManager.closeModal('addFromLibraryModal')">Cancel</button>
+                        <button class="btn btn-primary" ${on('click', 'TestPlansManager.addSelectedAtomics')}>Add Selected</button>
+                        <button class="btn btn-secondary" ${on('click', 'TestPlansManager.closeModal', 'addFromLibraryModal')}>Cancel</button>
                     </div>
                 </div>
             </div>
@@ -2006,7 +2011,7 @@ const TestPlansManager = {
 
         return Object.values(grouped).slice(0, 50).map(t => `
             <div class="library-technique">
-                <div class="library-technique-header" onclick="this.classList.toggle('expanded')">
+                <div class="library-technique-header" ${on('click', 'this.classList.toggle', 'expanded')}>
                     <span class="technique-id">${escapeHtml(t.technique_id)}</span>
                     <span class="technique-name">${escapeHtml(t.technique_name)}</span>
                     <span class="test-count">${t.tests.length} tests</span>
@@ -2014,7 +2019,7 @@ const TestPlansManager = {
                 <div class="library-technique-tests">
                     ${t.tests.map(test => `
                         <label class="library-test-item">
-                            <input type="checkbox" name="libraryAtomic" value="${test.id}" ${this.librarySelected.has(test.id) ? 'checked' : ''} onchange="TestPlansManager.toggleLibrarySelection(${test.id}, this.checked)">
+                            <input type="checkbox" name="libraryAtomic" value="${test.id}" ${this.librarySelected.has(test.id) ? 'checked' : ''} ${on('change', 'TestPlansManager.toggleLibrarySelection', test.id, ARG.checked)}>
                             <span class="test-name">${escapeHtml(test.atomic_test_name)}</span>
                             <span class="test-platforms">${(test.supported_platforms || []).join(', ')}</span>
                         </label>
@@ -2124,7 +2129,7 @@ const TestPlansManager = {
                 <div class="modal-content modal-medium">
                     <div class="modal-header">
                         <h3>Add Custom Test</h3>
-                        <button class="modal-close" onclick="TestPlansManager.closeModal('addCustomTestModal')">&times;</button>
+                        <button class="modal-close" ${on('click', 'TestPlansManager.closeModal', 'addCustomTestModal')}>&times;</button>
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
@@ -2149,8 +2154,8 @@ const TestPlansManager = {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" onclick="TestPlansManager.saveCustomTest()">Add Test</button>
-                        <button class="btn btn-secondary" onclick="TestPlansManager.closeModal('addCustomTestModal')">Cancel</button>
+                        <button class="btn btn-primary" ${on('click', 'TestPlansManager.saveCustomTest')}>Add Test</button>
+                        <button class="btn btn-secondary" ${on('click', 'TestPlansManager.closeModal', 'addCustomTestModal')}>Cancel</button>
                     </div>
                 </div>
             </div>
@@ -2238,7 +2243,7 @@ const TestPlansManager = {
             <div class="modal-content" style="max-width: 700px;">
                 <div class="modal-header">
                     <h3>Edit Test Item</h3>
-                    <button class="modal-close" onclick="TestPlansManager.closeModal('editItemModal')">&times;</button>
+                    <button class="modal-close" ${on('click', 'TestPlansManager.closeModal', 'editItemModal')}>&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="item-info" style="background: var(--bg-secondary); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
@@ -2287,8 +2292,8 @@ const TestPlansManager = {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="TestPlansManager.closeModal('editItemModal')">Cancel</button>
-                    <button class="btn btn-primary" onclick="TestPlansManager.saveItemEdit(${planId}, ${item.id})">
+                    <button class="btn btn-secondary" ${on('click', 'TestPlansManager.closeModal', 'editItemModal')}>Cancel</button>
+                    <button class="btn btn-primary" ${on('click', 'TestPlansManager.saveItemEdit', planId, item.id)}>
                         Save Changes
                     </button>
                 </div>
@@ -2349,6 +2354,11 @@ const TestPlansManager = {
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
         showToast('Marked reviewed', 'success');
+    },
+
+    /** Plan item checkbox (L-21). */
+    toggleItemEnabledFromCheckbox(planId, itemId, checkbox) {
+        return this.toggleItemEnabled(planId, itemId, checkbox.checked ? 1 : 0, checkbox);
     },
 
     async toggleItemEnabled(planId, itemId, enabled, checkbox) {
@@ -2598,17 +2608,17 @@ const TestPlansManager = {
             <div class="modal-content" style="max-width: 700px;">
                 <div class="modal-header">
                     <h3>Generate Script - Platform Matching</h3>
-                    <button class="modal-close" onclick="TestPlansManager.closeModal('generateScriptModal')">&times;</button>
+                    <button class="modal-close" ${on('click', 'TestPlansManager.closeModal', 'generateScriptModal')}>&times;</button>
                 </div>
                 <div class="modal-body">
                     <p style="margin-bottom: 12px;">Generate an executable script for: <strong>${escapeHtml(plan.name)}</strong></p>
 
                     <!-- Tabs -->
                     <div class="script-modal-tabs" style="display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 12px;">
-                        <button class="script-tab active" data-tab="platform" onclick="TestPlansManager.switchScriptTab('platform')" style="padding: 8px 16px; border: none; background: none; cursor: pointer; border-bottom: 2px solid var(--primary-color); color: var(--text-color); font-weight: 600;">
+                        <button class="script-tab active" data-tab="platform" ${on('click', 'TestPlansManager.switchScriptTab', 'platform')} style="padding: 8px 16px; border: none; background: none; cursor: pointer; border-bottom: 2px solid var(--primary-color); color: var(--text-color); font-weight: 600;">
                             Platform
                         </button>
-                        <button class="script-tab" data-tab="instructions" onclick="TestPlansManager.switchScriptTab('instructions')" style="padding: 8px 16px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
+                        <button class="script-tab" data-tab="instructions" ${on('click', 'TestPlansManager.switchScriptTab', 'instructions')} style="padding: 8px 16px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
                             Instructions
                         </button>
                     </div>
@@ -2765,12 +2775,12 @@ Stop-Transcript
                     </div>
                 </div>
                 <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-start; flex-wrap: wrap;">
-                    <button class="btn btn-secondary" onclick="TestPlansManager.closeModal('generateScriptModal')" style="padding: 8px 16px;">Cancel</button>
-                    <button class="btn btn-info" onclick="TestPlansManager.showMatchPreview(${plan.id})" title="Preview which tests match each platform" style="padding: 8px 16px;">
+                    <button class="btn btn-secondary" ${on('click', 'TestPlansManager.closeModal', 'generateScriptModal')} style="padding: 8px 16px;">Cancel</button>
+                    <button class="btn btn-info" ${on('click', 'TestPlansManager.showMatchPreview', plan.id)} title="Preview which tests match each platform" style="padding: 8px 16px;">
                         <i data-lucide="eye" style="width: 14px; height: 14px; margin-right: 5px;"></i>
                         Preview Matched Atomics
                     </button>
-                    <button class="btn btn-primary" onclick="TestPlansManager.downloadScript(${plan.id})" style="padding: 8px 16px;">
+                    <button class="btn btn-primary" ${on('click', 'TestPlansManager.downloadScript', plan.id)} style="padding: 8px 16px;">
                         <i data-lucide="download" style="width: 14px; height: 14px; margin-right: 5px;"></i>
                         Download Script
                     </button>
@@ -2934,7 +2944,7 @@ Stop-Transcript
         previewContent.innerHTML = `
             <div class="modal-header">
                 <h3>Preview Matched Atomics</h3>
-                <button class="modal-close" onclick="TestPlansManager.closeModal('generateScriptModal')">&times;</button>
+                <button class="modal-close" ${on('click', 'TestPlansManager.closeModal', 'generateScriptModal')}>&times;</button>
             </div>
             <div class="modal-body">
                 <p style="margin-bottom: 20px;">Platform compatibility breakdown for: <strong>${escapeHtml(plan.name)}</strong></p>
@@ -2957,13 +2967,13 @@ Stop-Transcript
 
                 <!-- Tabs for detailed view -->
                 <div style="border-bottom: 1px solid var(--border-color); margin-bottom: 15px;">
-                    <button class="preview-tab active" data-tab="linux" onclick="TestPlansManager.switchPreviewTab('linux')" style="padding: 10px 20px; border: none; background: none; cursor: pointer; border-bottom: 2px solid var(--primary-color); color: var(--text-color); font-weight: 600;">
+                    <button class="preview-tab active" data-tab="linux" ${on('click', 'TestPlansManager.switchPreviewTab', 'linux')} style="padding: 10px 20px; border: none; background: none; cursor: pointer; border-bottom: 2px solid var(--primary-color); color: var(--text-color); font-weight: 600;">
                         <i data-lucide="terminal"></i> Bash (${linuxTests.length + bothTests.length})
                     </button>
-                    <button class="preview-tab" data-tab="windows" onclick="TestPlansManager.switchPreviewTab('windows')" style="padding: 10px 20px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
+                    <button class="preview-tab" data-tab="windows" ${on('click', 'TestPlansManager.switchPreviewTab', 'windows')} style="padding: 10px 20px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
                         <i data-lucide="square-terminal"></i> PowerShell (${windowsTests.length + bothTests.length})
                     </button>
-                    <button class="preview-tab" data-tab="both" onclick="TestPlansManager.switchPreviewTab('both')" style="padding: 10px 20px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
+                    <button class="preview-tab" data-tab="both" ${on('click', 'TestPlansManager.switchPreviewTab', 'both')} style="padding: 10px 20px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
                         ✓ Both (${bothTests.length})
                     </button>
                 </div>
@@ -2986,7 +2996,7 @@ Stop-Transcript
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="TestPlansManager.hideMatchPreview()">
+                <button class="btn btn-secondary" ${on('click', 'TestPlansManager.hideMatchPreview')}>
                     <i data-lucide="arrow-left" style="width: 16px; height: 16px; margin-right: 6px;"></i>
                     Back
                 </button>
@@ -3153,7 +3163,7 @@ Stop-Transcript
                 <div class="modal-content modal-medium">
                     <div class="modal-header">
                         <h3>Match "${escapeHtml(layer.name)}" to Atomics</h3>
-                        <button class="modal-close" onclick="TestPlansManager.closeMatchFilterDialog()">&times;</button>
+                        <button class="modal-close" ${on('click', 'TestPlansManager.closeMatchFilterDialog')}>&times;</button>
                     </div>
                     <div class="modal-body">
                         <p class="modal-description">
@@ -3180,8 +3190,8 @@ Stop-Transcript
                                 ${colorOptions}
                             </div>
                             <div class="filter-actions">
-                                <button class="btn btn-sm btn-secondary" onclick="TestPlansManager.selectAllColors(true)">Select All</button>
-                                <button class="btn btn-sm btn-secondary" onclick="TestPlansManager.selectAllColors(false)">Select None</button>
+                                <button class="btn btn-sm btn-secondary" ${on('click', 'TestPlansManager.selectAllColors', true)}>Select All</button>
+                                <button class="btn btn-sm btn-secondary" ${on('click', 'TestPlansManager.selectAllColors', false)}>Select None</button>
                             </div>
                         </div>
                         ` : ''}
@@ -3216,9 +3226,9 @@ Stop-Transcript
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" onclick="TestPlansManager.previewMatches(${layer.id})">Preview Matches</button>
-                        <button class="btn btn-primary" onclick="TestPlansManager.createPlanFromMatches(${layer.id})" id="createPlanBtn" disabled>Create Test Plan</button>
-                        <button class="btn btn-secondary" onclick="TestPlansManager.closeMatchFilterDialog()">Cancel</button>
+                        <button class="btn btn-secondary" ${on('click', 'TestPlansManager.previewMatches', layer.id)}>Preview Matches</button>
+                        <button class="btn btn-primary" ${on('click', 'TestPlansManager.createPlanFromMatches', layer.id)} id="createPlanBtn" disabled>Create Test Plan</button>
+                        <button class="btn btn-secondary" ${on('click', 'TestPlansManager.closeMatchFilterDialog')}>Cancel</button>
                     </div>
                 </div>
             </div>
@@ -3427,7 +3437,7 @@ Stop-Transcript
             <div class="modal-content" style="max-width: 500px;">
                 <div class="modal-header">
                     <h3>Start Test Execution</h3>
-                    <button class="modal-close" onclick="TestPlansManager.closeModal('startExecutionModal')">&times;</button>
+                    <button class="modal-close" ${on('click', 'TestPlansManager.closeModal', 'startExecutionModal')}>&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
@@ -3464,8 +3474,8 @@ Stop-Transcript
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="TestPlansManager.closeModal('startExecutionModal')">Cancel</button>
-                    <button class="btn btn-primary" onclick="TestPlansManager.confirmStartExecution()">
+                    <button class="btn btn-secondary" ${on('click', 'TestPlansManager.closeModal', 'startExecutionModal')}>Cancel</button>
+                    <button class="btn btn-primary" ${on('click', 'TestPlansManager.confirmStartExecution')}>
                         Start Execution
                     </button>
                 </div>
@@ -3536,7 +3546,7 @@ Stop-Transcript
             <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="importLogTitle" style="max-width: 680px;">
                 <div class="modal-header">
                     <h3 id="importLogTitle">Import session log</h3>
-                    <button class="modal-close" onclick="TestPlansManager.closeModal('importLogModal')" aria-label="Close">&times;</button>
+                    <button class="modal-close" ${on('click', 'TestPlansManager.closeModal', 'importLogModal')} aria-label="Close">&times;</button>
                 </div>
                 <div class="modal-body">
                     <p class="import-log-intro">
@@ -3548,7 +3558,7 @@ Stop-Transcript
                     <div class="import-log-fields">
                         <div class="import-log-field">
                             <label for="importLogHost">Ran on</label>
-                            <select id="importLogHost" class="form-select" onchange="TestPlansManager.runImportPreview()">
+                            <select id="importLogHost" class="form-select" ${on('change', 'TestPlansManager.runImportPreview')}>
                                 ${columnHosts.length ? `<optgroup label="In this grid">${columnHosts.map(h => hostOption(h)).join('')}</optgroup>` : ''}
                                 ${otherHosts.length ? `<optgroup label="Other in-scope hosts">${otherHosts.map(hostOption).join('')}</optgroup>` : ''}
                                 <option value="">No specific host</option>
@@ -3557,14 +3567,14 @@ Stop-Transcript
                         <div class="import-log-field">
                             <label for="importLogFile">Log file</label>
                             <input type="file" id="importLogFile" accept=".log,.txt,text/plain"
-                                   onchange="TestPlansManager.onImportLogFile(this.files[0])">
+                                   ${on('change', 'TestPlansManager.onImportLogFile', ARG.file)}>
                         </div>
                     </div>
                     <div id="importLogPreview" class="import-log-preview" aria-live="polite"></div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="TestPlansManager.closeModal('importLogModal')">Cancel</button>
-                    <button class="btn btn-primary" id="importLogApply" onclick="TestPlansManager.confirmImportLog()" disabled>Import results</button>
+                    <button class="btn btn-secondary" ${on('click', 'TestPlansManager.closeModal', 'importLogModal')}>Cancel</button>
+                    <button class="btn btn-primary" id="importLogApply" ${on('click', 'TestPlansManager.confirmImportLog')} disabled>Import results</button>
                 </div>
             </div>
         `;
@@ -3729,6 +3739,20 @@ Stop-Transcript
         document.getElementById('execPanelHeading')?.focus();
     },
 
+    /** Execution panel form: save without moving to the next test (L-21). */
+    submitExecutionPanel(event) {
+        event.preventDefault();
+        this.saveExecutionPanel(false);
+    },
+
+    /** Escape in the execution panel closes it (L-21). */
+    onExecutionPanelKey(event) {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            this.closeExecutionPanel();
+        }
+    },
+
     closeExecutionPanel() {
         if (!this.confirmDiscardPanel()) return;
         const previousId = this.panel?.exec?.id;
@@ -3805,14 +3829,14 @@ Stop-Transcript
                     ${exec.technique_id ? `<span class="exec-panel-technique">${escapeHtml(exec.technique_id)}</span>` : ''}
                     ${escapeHtml(testName)}
                 </h3>
-                <button type="button" class="exec-panel-close" onclick="TestPlansManager.closeExecutionPanel()" aria-label="Close execution details">&times;</button>
+                <button type="button" class="exec-panel-close" ${on('click', 'TestPlansManager.closeExecutionPanel')} aria-label="Close execution details">&times;</button>
             </div>
             <p class="exec-panel-meta">${escapeHtml(host)} &middot; ${escapeHtml(exec.plan_name || '')}</p>
 
             <form id="execPanelForm" class="exec-panel-form"
-                  oninput="TestPlansManager.markPanelDirty()" onchange="TestPlansManager.markPanelDirty()"
-                  onsubmit="event.preventDefault(); TestPlansManager.saveExecutionPanel(false);"
-                  onkeydown="if (event.key === 'Escape') { event.preventDefault(); TestPlansManager.closeExecutionPanel(); }">
+                  ${on('input', 'TestPlansManager.markPanelDirty')} ${on('change', 'TestPlansManager.markPanelDirty')}
+                  ${on('submit', 'TestPlansManager.submitExecutionPanel', ARG.event)}
+                  ${on('keydown', 'TestPlansManager.onExecutionPanelKey', ARG.event)}>
                 <fieldset class="exec-field">
                     <legend>Status</legend>
                     <div class="exec-segmented">
@@ -3870,10 +3894,10 @@ Stop-Transcript
                 </div>
 
                 <div class="exec-panel-actions">
-                    <button type="button" class="btn btn-sm btn-danger" onclick="TestPlansManager.deleteExecution(${exec.id})">Delete</button>
+                    <button type="button" class="btn btn-sm btn-danger" ${on('click', 'TestPlansManager.deleteExecution', exec.id)}>Delete</button>
                     <span class="exec-panel-dirty" id="execPanelDirty" aria-live="polite"></span>
                     <button type="submit" class="btn btn-sm btn-secondary">Save</button>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="TestPlansManager.saveExecutionPanel(true)">Save &amp; next</button>
+                    <button type="button" class="btn btn-sm btn-primary" ${on('click', 'TestPlansManager.saveExecutionPanel', true)}>Save &amp; next</button>
                 </div>
             </form>
         `;
@@ -3885,9 +3909,9 @@ Stop-Transcript
             <div class="exec-evidence-row" aria-labelledby="execEvidenceLabel">
                 ${exec.evidence_id
                     ? `<span class="exec-evidence-linked">${escapeHtml(exec.evidence_title || `Evidence #${exec.evidence_id}`)}</span>
-                       <button type="button" class="btn btn-xs btn-secondary" onclick="TestPlansManager.showEvidencePicker()">Change</button>`
+                       <button type="button" class="btn btn-xs btn-secondary" ${on('click', 'TestPlansManager.showEvidencePicker')}>Change</button>`
                     : `<span class="exec-evidence-none">None linked</span>
-                       <button type="button" class="btn btn-xs btn-secondary" onclick="TestPlansManager.showEvidencePicker()">Link evidence</button>`}
+                       <button type="button" class="btn btn-xs btn-secondary" ${on('click', 'TestPlansManager.showEvidencePicker')}>Link evidence</button>`}
             </div>
         `;
     },
@@ -3918,8 +3942,8 @@ Stop-Transcript
                         <option value="${e.id}" ${e.id === this.panel.exec.evidence_id ? 'selected' : ''}>${escapeHtml(e.title || 'Untitled')} (${escapeHtml((e.evidence_type || e.type || 'unknown').replace(/_/g, ' '))})</option>
                     `).join('')}
                 </select>
-                <button type="button" class="btn btn-xs btn-primary" onclick="TestPlansManager.confirmLinkEvidence()">Link</button>
-                <button type="button" class="btn btn-xs btn-secondary" onclick="TestPlansManager.cancelEvidencePicker()">Cancel</button>
+                <button type="button" class="btn btn-xs btn-primary" ${on('click', 'TestPlansManager.confirmLinkEvidence')}>Link</button>
+                <button type="button" class="btn btn-xs btn-secondary" ${on('click', 'TestPlansManager.cancelEvidencePicker')}>Cancel</button>
             </div>
         `;
         document.getElementById('evidenceSelect')?.focus();
