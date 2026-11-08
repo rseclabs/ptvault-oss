@@ -23,16 +23,19 @@ import re
 
 MAX_LOG_BYTES = 10 * 1024 * 1024        # refuse anything bigger
 MAX_OUTPUT_CHARS = 64 * 1024            # per test, keeps rows reasonable
+MAX_LINE_CHARS = 2 * MAX_OUTPUT_CHARS    # longer lines are cut (M-7); above the output cap so a cut line still reads as truncated
 
 _ANSI = re.compile(r'\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[@-Z\\-_]')
 _EVENT = re.compile(
     r'^\s*\[(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2})\]\s*'
-    r'\[(START|END|PASS|FAIL|SKIP|INFO|EXEC)\]\s*(.*?)\s*$'
+    # (.*\S)? rather than (.*?): a lazy group before \s*$ backtracks
+    # quadratically over a long run of spaces (M-7).
+    r'\[(START|END|PASS|FAIL|SKIP|INFO|EXEC)\]\s*(.*\S)?\s*$'
 )
-_ITEM_TAG = re.compile(r'\s*\[item=(\d+)\]\s*$')
+_ITEM_TAG = re.compile(r'\[item=(\d+)\]$')   # matched on an rstripped message
 _TEST_NUM = re.compile(r'\b[Tt]est (\d+)\b')
-_EXECUTING = re.compile(r'^Executing test (\d+):\s*(.*?)\s+-\s+(.*)$')
-_PREPARING = re.compile(r'^Preparing test:\s*(.*?)\s+-\s+(.*)$')
+_EXECUTING = re.compile(r'^Executing test (\d+):(.*)$')
+_PREPARING = re.compile(r'^Preparing test:(.*)$')
 _EXIT_CODE = re.compile(r'exit code:\s*(-?\d+)')
 _DURATION = re.compile(r'duration:\s*([\d.]+)s')
 _OUTPUT_START = re.compile(r'^-{2,}\s*Command Output\s*-*\s*$')
@@ -66,8 +69,28 @@ def _norm_technique(value):
     return None if value.lower() in _NO_TECHNIQUE else value
 
 
+def _split_on_dash(text):
+    """Split 'technique - name' at the first '-' with whitespace on both sides.
+
+    A linear scan: the equivalent regex (.*?)\s+-\s+ backtracks quadratically
+    over long whitespace runs (M-7). Returns (before, after) stripped, or None.
+    """
+    for i in range(1, len(text) - 1):
+        if text[i] == '-' and text[i - 1].isspace() and text[i + 1].isspace():
+            return text[:i].strip(), text[i + 1:].strip()
+    return None
+
+
+def _split_executing(message):
+    """'Executing test N: technique - name' -> (N, technique, name), or None."""
+    m = _EXECUTING.match(message)
+    parts = _split_on_dash(m.group(2)) if m else None
+    return (m.group(1),) + parts if parts else None
+
+
 def _split_tag(message):
     """Return (message without [item=N], item_id or None)."""
+    message = message.rstrip()
     m = _ITEM_TAG.search(message)
     if not m:
         return message, None
@@ -103,7 +126,7 @@ def parse_session_log(text: str):
     # split('\n') rather than splitlines(): a bare \r is a terminal redraw
     # (progress bars) and _clean() keeps only the final text on that line
     for raw_line in text.split('\n'):
-        line = _clean(raw_line)
+        line = _clean(raw_line[:MAX_LINE_CHARS])
 
         event = _EVENT.match(line)
         if not event:
@@ -118,26 +141,28 @@ def parse_session_log(text: str):
             continue
 
         ts, level, message = event.groups()
+        message = message or ''
         ts = ts.replace('T', ' ')
         message, item_id = _split_tag(message)
 
         if level == 'INFO':
             m = _PREPARING.match(message)
-            if m:
-                prepared = (_norm_technique(m.group(1)), m.group(2).strip())
+            parts = _split_on_dash(m.group(1)) if m else None
+            if parts:
+                prepared = (_norm_technique(parts[0]), parts[1])
             continue
 
         if level == 'START':
-            m = _EXECUTING.match(message)
+            m = _split_executing(message)
             if not m:
                 continue   # batch-level START ("Beginning batch execution ...")
             finish_capture()
-            number = int(m.group(1))
+            number = int(m[0])
             current = {
                 'test_number': number,
                 'item_id': item_id,
-                'technique_id': _norm_technique(m.group(2)),
-                'test_name': m.group(3).strip(),
+                'technique_id': _norm_technique(m[1]),
+                'test_name': m[2],
                 'status': 'in_progress',
                 'exit_code': None,
                 'duration_seconds': None,
