@@ -823,6 +823,34 @@ def render_markdown_content(content):
     return html.escape(content).replace('\n', '<br>')
 
 
+# Structural report fields become tag names, class names and CSS, where
+# escaping is not enough: accept only known values (H-7).
+_HEADING_TAGS = frozenset(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+_CRITICALITIES = frozenset(['critical', 'high', 'medium', 'low', 'info', 'informational'])
+_IMAGE_WIDTHS = frozenset(['100%', '75%', '50%', '25%'])
+
+
+def _as_number(value, default=None, low=None, high=None):
+    """A float within [low, high], or default if value is not such a number."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return default
+    if number != number or (low is not None and number < low) or (high is not None and number > high):
+        return default
+    return number
+
+
+def _heading_tag(value, default='h3'):
+    tag = str(value).strip().lower() if value is not None else ''
+    return tag if tag in _HEADING_TAGS else default
+
+
+def _criticality_class(value):
+    level = str(value or '').strip().lower()
+    return level if level in _CRITICALITIES else 'medium'
+
+
 def generate_html_export(report, items, for_print=False):
     """Generate HTML export of the report matching the preview exactly."""
 
@@ -1459,7 +1487,7 @@ def generate_html_export(report, items, for_print=False):
             elif tool_id == 'pagebreak':
                 html_content += '<div class="preview-pagebreak"><span>— Page Break —</span></div>'
             elif tool_id == 'sectionheader':
-                level = tool_data.get('level', 2)
+                level = int(_as_number(tool_data.get('level', 2), default=2, low=1, high=6))
                 text = html.escape(tool_data.get('text', 'Section Title'))
                 number = html.escape(tool_data.get('number', '')) + ' ' if tool_data.get('numbered') and tool_data.get('number') else ''
                 html_content += f'<h{level} class="preview-sectionheader">{number}{text}</h{level}>'
@@ -1516,7 +1544,8 @@ def generate_html_export(report, items, for_print=False):
                 html_content += f'<div class="preview-evidence"><div class="evidence-image-placeholder"><span class="placeholder-icon">📷</span><span class="placeholder-text">{caption}</span></div><div class="evidence-description"><strong>Description:</strong> {description}</div><div class="evidence-impact"><strong>Impact:</strong> {impact}</div></div>'
             elif tool_id == 'imageplaceholder':
                 caption = html.escape(tool_data.get('caption', 'Figure 1: Description'))
-                width = html.escape(tool_data.get('width', '100%'))
+                width = tool_data.get('width', '100%')
+                width = width if width in _IMAGE_WIDTHS else '100%'
                 html_content += f'<div class="preview-imageplaceholder" style="width: {width}"><div class="placeholder-box"><span class="placeholder-icon">🖼</span><span class="placeholder-text">Insert Image Here</span></div><div class="image-caption">{caption}</div></div>'
             elif tool_id == 'table':
                 table_data = item.get('tableData') or tool_data.get('tableData', {'headers': ['Column 1', 'Column 2'], 'rows': [['Data 1', 'Data 2']]})
@@ -1538,8 +1567,10 @@ def generate_html_export(report, items, for_print=False):
                     steps_html += f'<div class="timeline-step"><div class="timeline-marker"><span class="step-number">{idx + 1}</span></div><div class="timeline-content"><div class="step-time">{html.escape(str(step.get("time", "")))}</div><div class="step-title">{html.escape(str(step.get("title", "")))}</div><div class="step-description">{html.escape(str(step.get("description", "")))}</div></div></div>'
                 html_content += f'<div class="preview-timeline">{steps_html}</div>'
             elif tool_id == 'riskmatrix':
-                size = tool_data.get('size', 3)
+                size = 5 if _as_number(tool_data.get('size', 3)) == 5 else 3
                 highlighted = tool_data.get('highlighted', {'row': 1, 'col': 2})
+                if not isinstance(highlighted, dict):
+                    highlighted = {}
                 if size == 3:
                     row_labels = ['High', 'Medium', 'Low']
                     col_labels = ['Low', 'Medium', 'High']
@@ -1570,7 +1601,7 @@ def generate_html_export(report, items, for_print=False):
                     rows_html += f'<tr>{cells_html}</tr>'
                 html_content += f'<div class="preview-riskmatrix"><div class="matrix-ylabel">Likelihood</div><table class="risk-matrix size-{size}"><thead><tr>{header_html}</tr></thead><tbody>{rows_html}</tbody></table><div class="matrix-xlabel">Impact</div></div>'
             elif tool_id == 'cvsscard':
-                score = tool_data.get('score', 7.5)
+                score = _as_number(tool_data.get('score', 7.5), default=0.0, low=0.0, high=10.0)
                 vector = html.escape(tool_data.get('vector', 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N'))
                 if score >= 9.0:
                     severity = 'Critical'
@@ -1604,7 +1635,7 @@ def generate_html_export(report, items, for_print=False):
 
         # Title display settings
         show_title = item.get('show_title', True)
-        heading_level = item.get('heading_level', 'h3')
+        heading_level = _heading_tag(item.get('heading_level', 'h3'))
 
         # Handle narrative
         if writeup_type == 'narrative':
@@ -1620,9 +1651,10 @@ def generate_html_export(report, items, for_print=False):
         # Handle finding
         else:
             title = html.escape(item.get('title', 'Untitled'))
-            criticality = item.get('criticality', 'medium')
-            cvss = item.get('cvss_score')
-            cvss_html = f'<span class="cvss">CVSS: {cvss}</span>' if cvss else ''
+            criticality_label = html.escape(str(item.get('criticality') or 'medium'))
+            criticality = _criticality_class(item.get('criticality'))
+            cvss = _as_number(item.get('cvss_score'), low=0.0, high=10.0)
+            cvss_html = f'<span class="cvss">CVSS: {cvss:g}</span>' if cvss else ''
             content = render_markdown_content(item.get('finding_content', '') or item.get('description', ''))
 
             remediation_html = ''
@@ -1636,7 +1668,7 @@ def generate_html_export(report, items, for_print=False):
         <div class="preview-finding criticality-{criticality}">
             {title_html}
             <div class="preview-meta">
-                <span class="criticality-badge criticality-{criticality}">{criticality}</span>
+                <span class="criticality-badge criticality-{criticality}">{criticality_label}</span>
                 {cvss_html}
             </div>
             <div class="preview-body">{content}</div>

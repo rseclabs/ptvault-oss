@@ -1,5 +1,6 @@
 """PDF generation utility for PTVault reports using WeasyPrint."""
 
+import html
 import logging
 from io import BytesIO
 
@@ -12,6 +13,27 @@ try:
 except (ImportError, OSError) as e:
     HAS_WEASYPRINT = False
     logger.warning(f"WeasyPrint not available: {str(e)}. PDF export will fall back to browser print dialog.")
+
+
+def _data_only_url_fetcher():
+    """A WeasyPrint URL fetcher that loads only data: URLs.
+
+    Report content is user-controlled; with the default fetcher an
+    <a rel="attachment" href="file://..."> or <img src="file://..."> embeds a
+    server file (the database, its key) in the PDF, and http(s) URLs make the
+    server send requests. Images in reports are inline data: URLs.
+    """
+    try:
+        from weasyprint.urls import URLFetcher  # WeasyPrint 68+
+        return URLFetcher(allowed_protocols={'data'})
+    except ImportError:
+        from weasyprint.urls import default_url_fetcher  # older WeasyPrint
+
+        def fetcher(url, *args, **kwargs):
+            if not url.lower().startswith('data:'):
+                raise ValueError(f"external resource blocked: {url.split(':', 1)[0]}")
+            return default_url_fetcher(url, *args, **kwargs)
+        return fetcher
 
 
 def generate_pdf_from_html(html_content, report_name=None):
@@ -39,7 +61,7 @@ def generate_pdf_from_html(html_content, report_name=None):
         font_config = FontConfiguration()
 
         # Generate PDF with proper font configuration
-        pdf_bytes = HTML(string=html_content).write_pdf(
+        pdf_bytes = HTML(string=html_content, url_fetcher=_data_only_url_fetcher()).write_pdf(
             font_config=font_config
         )
 
@@ -175,7 +197,7 @@ def generate_pdf_with_cover(html_content, engagement_data=None, report_name=None
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{report_name or "PTVault Report"}</title>
+    <title>{html.escape(report_name or "PTVault Report")}</title>
     {_get_combined_styles()}
 </head>
 <body>
@@ -193,10 +215,11 @@ def _generate_cover_page(engagement_data, report_name):
     if not engagement_data:
         engagement_data = {}
 
-    title = report_name or engagement_data.get('name', 'Penetration Test Report')
-    client = engagement_data.get('client', '')
-    start_date = engagement_data.get('start_date', '')
-    end_date = engagement_data.get('end_date', '')
+    # Every field is user-controlled text: escape it before it reaches WeasyPrint.
+    title = html.escape(str(report_name or engagement_data.get('name') or 'Penetration Test Report'))
+    client = html.escape(str(engagement_data.get('client_name') or engagement_data.get('client') or ''))
+    start_date = html.escape(str(engagement_data.get('start_date') or ''))
+    end_date = html.escape(str(engagement_data.get('end_date') or ''))
 
     # Format dates if present
     date_range = ''
