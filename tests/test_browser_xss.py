@@ -54,7 +54,8 @@ def ui(live_app, browser):
     app = live_app.app
     # The pages app.py serves (it cannot be imported in tests); routes must exist before the first request.
     for route, template in (('/dashboard', 'dashboard.html'), ('/note/new', 'note_editor.html'),
-                            ('/finding/new', 'finding_editor.html')):
+                            ('/finding/new', 'finding_editor.html'), ('/login', 'login.html'),
+                            ('/setup', 'setup.html'), ('/unlock-preview', 'unlock.html')):
         app.add_url_rule(route, template, lambda t=template: render_template(t))
     # The real security headers (CSP included) that app.py adds to every response.
     from utils.security_headers import apply_security_headers
@@ -69,6 +70,12 @@ def ui(live_app, browser):
                                 data=json.dumps({'engagement_id': ENGAGEMENT_A}),
                                 headers={'Content-Type': 'application/json'}).ok
     page = context.new_page()
+    # CSP violations from the first script on (L-21: the policy allows no inline script)
+    page.add_init_script("""
+        window.__csp = [];
+        document.addEventListener('securitypolicyviolation',
+            e => window.__csp.push(`${e.violatedDirective} ${e.sourceFile}:${e.lineNumber} ${e.sample}`));
+    """)
     page.goto(f'{base}/dashboard')
     page.wait_for_function("""() => window.API && window.HostManager
         && window.ReportingManager && window.AdminPanel && window.TestPlansManager && window.ShellOneLinersManager
@@ -661,6 +668,26 @@ VIEWS = {
 }
 
 
+# Every declared handler on the page names a function the dispatcher can call (L-21).
+UNRESOLVED = """() => {
+    const bad = [];
+    for (const el of document.querySelectorAll('*')) {
+        for (const a of el.attributes) {
+            if (!a.name.startsWith('data-on-')) continue;
+            let spec = null;
+            try { spec = JSON.parse(a.value); } catch (e) { spec = null; }
+            if (!Array.isArray(spec) || !_resolveHandler(spec[0])) bad.push(`${el.tagName} ${a.name}=${a.value}`);
+        }
+    }
+    return bad;
+}"""
+
+
+def _assert_handlers_and_policy(page):
+    assert page.evaluate(UNRESOLVED) == []
+    assert page.evaluate('() => window.__csp || []') == [], 'something inline was refused by the CSP'
+
+
 @pytest.mark.parametrize('view', VIEWS)
 def test_every_view_renders_stored_values_as_text(swept, view):
     page = swept.page
@@ -668,6 +695,7 @@ def test_every_view_renders_stored_values_as_text(swept, view):
     page.evaluate(script, swept.ids)
     page.wait_for_timeout(400)                 # renders scheduled with setTimeout, image errors
     _assert_clean(page)
+    _assert_handlers_and_policy(page)
     assert page.evaluate(SHOWN, [root, [P, SHORT_P]]) > 0, \
         f'{view}: the stored value was not rendered: ' + page.evaluate('r => document.querySelector(r)?.innerText.slice(0, 600)', root)
 
@@ -682,6 +710,7 @@ def test_editor_pages_render_stored_values_as_text(swept, path):
     page.wait_for_load_state('networkidle')
     page.wait_for_timeout(300)
     _assert_clean(page)
+    _assert_handlers_and_policy(page)
     assert page.evaluate(SHOWN, ['body', [P, SHORT_P]]) > 0, page.evaluate('() => document.body.innerText.slice(0, 600)')
 
 
@@ -752,3 +781,41 @@ def test_declared_handlers_call_the_named_method_with_their_arguments(ui):
         ['T', 'typed'], ['T', True],                       # bad1-bad4: refused paths call nothing
     ]
     _assert_clean(ui.page)
+
+
+def _declared_handler_paths():
+    """Every handler named in the source: on('event', 'Path', ...), stopAndCall targets, template attributes."""
+    import pathlib
+    import re
+    root = pathlib.Path(__file__).resolve().parent.parent
+    loaded = {m.group(1) for t in (root / 'templates').glob('*.html')
+              for m in re.finditer(r'<script[^>]+src="/(static/js/[^"?]+)', t.read_text())}
+    paths = {}
+    for path in sorted((root / 'static/js').rglob('*.js')):
+        if str(path.relative_to(root)) not in loaded:
+            continue                                                   # no page loads it
+        text = path.read_text()
+        for m in re.finditer(r"\bon\(\s*'[a-z]+'\s*,\s*'([\w$.]+)'", text):
+            paths.setdefault(m.group(1), str(path.relative_to(root)))
+        for m in re.finditer(r"'stopAndCall'\s*,\s*ARG\.event\s*,\s*'([\w$.]+)'", text):
+            paths.setdefault(m.group(1), str(path.relative_to(root)))
+    for path in sorted((root / 'templates').glob('*.html')):
+        for m in re.finditer(r"""data-on-[a-z]+=['"]\[\s*(?:"|&quot;)([\w$.]+)""", path.read_text()):
+            paths.setdefault(m.group(1), str(path.relative_to(root)))
+    return paths
+
+
+def test_every_declared_handler_in_the_source_exists(ui):
+    """Handlers in markup no test renders (dialogs, editors) still name real functions (L-21)."""
+    paths = _declared_handler_paths()
+    assert len(paths) > 300                                            # the scan found them
+    missing = ui.page.evaluate('names => names.filter(n => !_resolveHandler(n))', sorted(paths))
+    # Functions of the standalone editor pages are checked there
+    editor_only = {}
+    for route in ('/note/new', '/finding/new'):
+        ui.page.goto(ui.base + route)
+        ui.page.wait_for_load_state('networkidle')
+        still = ui.page.evaluate('names => names.filter(n => !_resolveHandler(n))', missing)
+        editor_only[route] = set(missing) - set(still)
+    missing = set(missing) - editor_only['/note/new'] - editor_only['/finding/new']
+    assert {n: paths[n] for n in missing} == {}

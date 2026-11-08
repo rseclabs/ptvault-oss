@@ -32,11 +32,13 @@ CYBERCHEF_CSP = (
 
 # Every library and font is vendored under static/vendor, so nothing loads
 # from a third-party host (L-1). No 'unsafe-eval': only CyberChef needs it,
-# and it has its own policy above. 'unsafe-inline' remains while the app uses
-# inline event handlers; removing it needs those converted first.
+# and it has its own policy above. No 'unsafe-inline' for scripts (L-21): event
+# handlers are declared in data-on-* attributes (static/js/utils.js on()) and
+# every script is a file, so an injected <img onerror> or <script> does not run
+# even if some output is not escaped. Styles still allow inline style= attributes.
 DEFAULT_CSP = (
     "default-src 'self'; "
-    "script-src 'self' 'unsafe-inline'; "
+    "script-src 'self'; "
     "style-src 'self' 'unsafe-inline'; "
     "font-src 'self'; "
     "img-src 'self' data: blob:; "

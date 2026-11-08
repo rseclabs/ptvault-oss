@@ -2,8 +2,9 @@
 
 Only CyberChef evaluates code at runtime, so 'unsafe-eval' is limited to its
 path; no directive names an external host (CyberChef is bundled locally);
-plugins, <base> and framing by other sites are blocked. 'unsafe-inline' stays
-until the inline event handlers are replaced (a separate change).
+plugins, <base> and framing by other sites are blocked. Scripts may not be
+inline (L-21): handlers are declared in data-on-* attributes, so an unescaped
+<img onerror> or injected <script> is refused by the browser.
 
 The browser test loads the real pages under the real headers and fails on
 any CSP violation, so a library that needs eval would be caught here.
@@ -18,6 +19,10 @@ from utils.security_headers import CYBERCHEF_CSP, DEFAULT_CSP, apply_security_he
 
 def _directives(csp):
     return {name: value for name, _, value in (p.strip().partition(' ') for p in csp.split(';') if p.strip())}
+
+
+def test_default_policy_allows_no_inline_script():
+    assert _directives(DEFAULT_CSP)['script-src'] == "'self'"
 
 
 def test_default_policy_has_no_eval_and_no_external_host():
@@ -49,7 +54,7 @@ def test_eval_is_allowed_only_on_the_cyberchef_path():
 VIOLATIONS = """() => window.__cspViolations.map(v => `${v.violatedDirective} ${v.blockedURI} ${v.sourceFile}:${v.lineNumber}`)"""
 
 
-@pytest.mark.parametrize('route', ['/dashboard', '/note/new', '/finding/new'])
+@pytest.mark.parametrize('route', ['/dashboard', '/note/new', '/finding/new', '/login', '/setup', '/unlock-preview'])
 def test_pages_run_under_the_policy_without_violations(ui, route):
     page = ui.page
     page.add_init_script("""
@@ -69,14 +74,15 @@ def test_pages_run_under_the_policy_without_violations(ui, route):
             d3.select('#cspProbe').append('svg').append('circle').attr('r', 3);
         }""")
     assert page.evaluate(VIOLATIONS) == []
-    # The policy is in force: the page's own string evaluation is refused. Code that
-    # Playwright evaluates (and anything it runs synchronously) is exempt from CSP, so the
-    # probe runs in a later task of the page.
+    # The policy is in force: an injected inline script and an inline handler do not run
+    # (L-21), and the browser reports both. Code Playwright evaluates is exempt from CSP;
+    # what it inserts into the page is not.
     page.evaluate("""() => {
         const s = document.createElement('script');
-        s.textContent = "setTimeout(function () { try { eval('1'); window.__evalProbe = 'ran'; }"
-                      + " catch (e) { window.__evalProbe = e.name; } }, 0)";
+        s.textContent = "window.__inlineProbe = 'ran'";
         document.head.appendChild(s);
+        document.body.insertAdjacentHTML('beforeend', '<img id="cspImg" src="data:," onerror="window.__inlineProbe = 1">');
     }""")
-    page.wait_for_function('() => window.__evalProbe !== undefined')
-    assert page.evaluate('() => window.__evalProbe') == 'EvalError'
+    page.wait_for_function('() => window.__cspViolations.length >= 2')
+    assert page.evaluate('() => window.__inlineProbe') is None
+    assert all(v.startswith('script-src') for v in page.evaluate(VIOLATIONS))
