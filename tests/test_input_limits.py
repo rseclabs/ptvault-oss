@@ -127,3 +127,12 @@ def test_deeply_nested_json_files_are_a_400(live_app, url, name):
     deep = b'[' * 100_000 + b']' * 100_000
     resp = client.post(url, data={'file': (io.BytesIO(deep), name)}, content_type='multipart/form-data')
     assert resp.status_code == 400
+
+
+def test_requirements_need_the_flask_that_sets_per_request_limits():
+    """Retest 2 L-35: request.max_content_length can be set per request only from Flask 3.1."""
+    import pathlib
+    import re
+    text = (pathlib.Path(__file__).resolve().parent.parent / 'requirements.txt').read_text()
+    match = re.search(r'^Flask>=(\d+)\.(\d+)', text, re.M)
+    assert match and (int(match.group(1)), int(match.group(2))) >= (3, 1)
