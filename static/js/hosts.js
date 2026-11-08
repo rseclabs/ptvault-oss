@@ -1302,7 +1302,7 @@ const HostManager = {
                 <tr data-id="${cred.id}">
                     <td>${escapeHtml(cred.username || '-')}</td>
                     <td>${passwordDisplay}</td>
-                    <td>${cred.password_type}</td>
+                    <td>${escapeHtml(cred.password_type)}</td>
                     <td>${escapeHtml(cred.service || '-')}</td>
                     <td>${escapeHtml(truncate(cred.notes || '', 50))}</td>
                     <td>

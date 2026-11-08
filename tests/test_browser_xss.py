@@ -332,3 +332,21 @@ def test_host_vulnerabilities_tab_escapes_every_field(ui):
     # A metadata record cannot pose as an editable engagement finding
     assert ui.page.evaluate("""() => HostManager.currentVulnerabilities
         .filter(v => v.is_engagement_finding).every(v => Number.isInteger(v.id))""")
+
+
+# ------------------------------------------------------------------ retest: H-14
+
+def test_host_credentials_table_escapes_password_type(ui):
+    ui.page.evaluate("""p => {
+        if (!document.getElementById('credentialsTableBody')) {
+            const t = document.createElement('table');
+            t.innerHTML = '<tbody id="credentialsTableBody"></tbody>';
+            document.body.appendChild(t);
+        }
+        HostManager.currentCredentials = [
+            { id: 1, username: p, has_secret: true, password_type: p, hash_type: p, service: p, notes: p },
+            { id: 2, username: p, has_secret: true, password_type: 'hash', hash_type: p, service: p, notes: p },
+        ];
+        HostManager.renderCredentials();
+    }""", P)
+    _assert_clean(ui.page)

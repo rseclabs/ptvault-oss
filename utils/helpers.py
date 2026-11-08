@@ -5,6 +5,8 @@
 PORT_PROTOCOLS = frozenset(['tcp', 'udp', 'sctp', 'ip', 'icmp'])
 PORT_STATES = frozenset(['open', 'closed', 'filtered', 'unfiltered', 'open|filtered', 'closed|filtered',
                          'unknown'])
+# Host credential secret types (H-14); the UI renders the value
+PASSWORD_TYPES = frozenset(['cleartext', 'hash'])
 HOST_COLORS = frozenset(['white', 'yellow', 'green', 'blue', 'red', 'purple', 'orange', 'teal', 'cyan', 'brown'])
 
 

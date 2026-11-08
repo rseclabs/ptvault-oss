@@ -7,7 +7,7 @@ from middleware.auth import require_auth, require_engagement_access
 from models.database import run_migrations
 from utils.audit_logger import audit_view
 from utils.error_handler import handle_errors, internal_error
-from utils.helpers import HOST_COLORS, PORT_STATES, parse_port_choice, parse_port_fields
+from utils.helpers import HOST_COLORS, PASSWORD_TYPES, PORT_STATES, parse_port_choice, parse_port_fields
 from utils.host_extractor import (
     get_hosts_for_engagement,
     get_evidence_without_hosts,
@@ -1050,6 +1050,8 @@ def create_credential(host_id):
     username = data.get('username')
     password = data.get('password')
     password_type = data.get('password_type', 'cleartext')
+    if password_type not in PASSWORD_TYPES:
+        return jsonify({"error": "password_type must be 'cleartext' or 'hash'"}), 400
     hash_type = data.get('hash_type') if password_type == 'hash' else None
     service = data.get('service')
     notes = data.get('notes')
@@ -1107,6 +1109,9 @@ def update_credential(host_id, cred_id):
     # Build dynamic update
     update_fields = []
     update_values = []
+
+    if 'password_type' in data and data['password_type'] not in PASSWORD_TYPES:
+        return jsonify({"error": "password_type must be 'cleartext' or 'hash'"}), 400
 
     for field in ['username', 'password', 'password_type', 'hash_type', 'service', 'notes']:
         if field in data:

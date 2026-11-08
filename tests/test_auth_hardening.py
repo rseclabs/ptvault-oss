@@ -157,7 +157,7 @@ def test_host_and_credential_changes_are_audited(live_app):
     host_id = host.get('id') or host.get('host', {}).get('id')
     client.put(f'/api/hosts/{host_id}', json={'hostname': 'h'})
     cred = client.post(f'/api/hosts/{host_id}/credentials',
-                       json={'username': 'u', 'password': 'p', 'password_type': 'clear_text'})
+                       json={'username': 'u', 'password': 'p', 'password_type': 'cleartext'})
     assert cred.status_code == 201
     client.delete(f'/api/hosts/{host_id}')
 

@@ -141,3 +141,26 @@ def test_sanitizer_drops_script_links(href):
 @pytest.mark.parametrize('href', ['https://example.com/a?b=1', 'http://x', 'mailto:a@b.c', '#sec', '/rel/path'])
 def test_sanitizer_keeps_safe_links(href):
     assert f'href="{href}"' in _sanitize_html(f'<a href="{href}">x</a>')
+
+
+# ------------------------------------------------------------------ retest H-14: credential password_type
+
+def _credential(live, **body):
+    return _editor(live).post(f'/api/hosts/{live.host_id}/credentials', json={'username': 'u', **body})
+
+
+@pytest.mark.parametrize('value', [INJECT, 'Hash', '', None, 1])
+def test_create_credential_rejects_unknown_password_type(host, value):
+    assert _credential(host, password_type=value).status_code == 400
+
+
+def test_create_credential_password_type_defaults_and_allow_list(host):
+    assert _credential(host).get_json()['password_type'] == 'cleartext'
+    assert _credential(host, password_type='hash', hash_type='NTLM').get_json()['password_type'] == 'hash'
+
+
+def test_update_credential_rejects_unknown_password_type(host):
+    cred_id = _credential(host).get_json()['id']
+    client = _editor(host)
+    assert client.put(f'/api/hosts/{host.host_id}/credentials/{cred_id}', json={'password_type': INJECT}).status_code == 400
+    assert client.put(f'/api/hosts/{host.host_id}/credentials/{cred_id}', json={'password_type': 'hash'}).status_code == 200
