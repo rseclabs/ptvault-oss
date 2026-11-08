@@ -151,7 +151,7 @@ class BaseDAO:
                 values.append(offset)
 
         cursor = self.db.cursor()
-        logger.debug(f"Executing: {query} with values: {values}")
+        logger.debug("Executing: %s", query)          # never the values (L-18)
         cursor.execute(query, values)
 
         return [self._row_to_dict(row) for row in cursor.fetchall()]
@@ -176,7 +176,7 @@ class BaseDAO:
 
         cursor = self.db.cursor()
         query = f"SELECT * FROM {self.table_name} WHERE {where_clause}"
-        logger.debug(f"Executing: {query} with values: {values}")
+        logger.debug("Executing: %s", query)          # never the values (L-18)
         cursor.execute(query, values)
 
         row = cursor.fetchone()
@@ -198,7 +198,7 @@ class BaseDAO:
 
         cursor = self.db.cursor()
         query = f"SELECT * FROM {self.table_name} WHERE {where_clause} LIMIT 1"
-        logger.debug(f"Executing: {query} with values: {values}")
+        logger.debug("Executing: %s", query)          # never the values (L-18)
         cursor.execute(query, values)
 
         row = cursor.fetchone()
@@ -234,7 +234,7 @@ class BaseDAO:
 
         cursor = self.db.cursor()
         query = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders})"
-        logger.debug(f"Executing: {query} with values: {values}")
+        logger.debug("Executing: %s", query)          # never the values (L-18)
         cursor.execute(query, values)
         self.db.commit()
 
@@ -272,7 +272,7 @@ class BaseDAO:
 
         cursor = self.db.cursor()
         query = f"UPDATE {self.table_name} SET {set_clause} WHERE {where_clause}"
-        logger.debug(f"Executing: {query} with values: {values}")
+        logger.debug("Executing: %s", query)          # never the values (L-18)
         cursor.execute(query, values)
         self.db.commit()
 
@@ -304,7 +304,7 @@ class BaseDAO:
 
         cursor = self.db.cursor()
         query = f"DELETE FROM {self.table_name} WHERE {where_clause}"
-        logger.debug(f"Executing: {query} with values: {values}")
+        logger.debug("Executing: %s", query)          # never the values (L-18)
         cursor.execute(query, values)
         self.db.commit()
 
@@ -334,7 +334,7 @@ class BaseDAO:
 
         cursor = self.db.cursor()
         query = f"SELECT COUNT(*) FROM {self.table_name} WHERE {where_clause}"
-        logger.debug(f"Executing: {query} with values: {values}")
+        logger.debug("Executing: %s", query)          # never the values (L-18)
         cursor.execute(query, values)
 
         return cursor.fetchone()[0]

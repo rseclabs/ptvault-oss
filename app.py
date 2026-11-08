@@ -11,12 +11,12 @@ else:
     load_dotenv()
 
 from flask import Flask, jsonify, g, render_template, redirect, url_for, request
-from config import Config
+from config import Config, log_level
 from utils.security_headers import apply_security_headers
 
-# Configure logging
+# Configure logging: DEBUG only with PTVAULT_DEBUG (L-18)
 logging.basicConfig(
-    level=logging.DEBUG if os.environ.get('ENVIRONMENT', 'development') == 'development' else logging.INFO,
+    level=log_level(),
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
@@ -239,6 +239,8 @@ if __name__ == '__main__':
     debug = debugger_allowed(args.debug or Config.DEBUG, args.interface, Config.ENVIRONMENT, is_frozen)
     if (args.debug or Config.DEBUG) and not debug:
         logger.warning("Debug mode refused (production, frozen build or non-loopback interface)")
+    if debug:
+        logging.getLogger().setLevel(logging.DEBUG)          # --debug, like PTVAULT_DEBUG (L-18)
     app.run(
         host=args.interface,
         port=args.port,

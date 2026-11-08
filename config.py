@@ -33,6 +33,16 @@ def env_flag(name):
     return os.environ.get(name, '').strip().lower() in ('1', 'true', 'yes')
 
 
+def log_level():
+    """DEBUG only with PTVAULT_DEBUG; INFO otherwise, whatever ENVIRONMENT says (L-18).
+
+    Debug logs describe queries and parsing; ENVIRONMENT defaults to development,
+    so tying DEBUG to it made every source run verbose.
+    """
+    import logging
+    return logging.DEBUG if env_flag('PTVAULT_DEBUG') else logging.INFO
+
+
 def default_upload_folder(database_path):
     """PTVAULT_UPLOAD_FOLDER, or 'uploads' beside the database (M-14)."""
     return os.environ.get('PTVAULT_UPLOAD_FOLDER') or \
