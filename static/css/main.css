@@ -11482,6 +11482,17 @@ h4.preview-sectionheader { font-size: 1.1rem; border-bottom: none; }
     flex-shrink: 0;
 }
 
+/* Test changed by an Atomics refresh; scripts are blocked until reviewed (M-6) */
+.item-row-review {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: var(--space-3xs) 5px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-warning);
+    color: var(--color-warning);
+    flex-shrink: 0;
+}
+
 .item-row-meta {
     flex: 1;
     display: flex;

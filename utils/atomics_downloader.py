@@ -1,247 +1,212 @@
 """
 Atomic Red Team Downloader for PTVault.
-Downloads and extracts the Atomic Red Team repository from GitHub.
+
+Downloads one pinned commit of the Atomic Red Team repository, verifies it,
+and imports its atomics/ folder (M-6):
+
+- the archive is fetched with a timeout and a size cap,
+- zip entries cannot escape the work folder and the extracted size is capped,
+- a SHA-256 over the extracted atomics/ tree (every file's path and content)
+  must match ATOMICS_TREE_SHA256 - GitHub generates archive zips on demand, so
+  the tree, not the zip bytes, is what is pinned,
+- only then is the library replaced, beside the database (not in the working
+  directory), and only one download runs at a time.
+
+To move to a newer commit: pick one that has been on master for at least two
+weeks, download its archive, compute atomics_tree_sha256() over its atomics/
+folder, and update ATOMICS_COMMIT and ATOMICS_TREE_SHA256 together.
 """
 
+import hashlib
 import os
-import zipfile
 import shutil
+import tempfile
+import threading
+import zipfile
+
 import requests
-from datetime import datetime
+
 from config import Config
 
-# GitHub URL for Atomic Red Team master branch ZIP
-ATOMICS_ZIP_URL = "https://github.com/redcanaryco/atomic-red-team/archive/refs/heads/master.zip"
-ATOMICS_DIR = os.path.join(Config.DATA_DIR if hasattr(Config, 'DATA_DIR') else './data', 'atomics')
+ATOMICS_COMMIT = '1edbe50b8f49560110e6cf85161c1ef75a5732b7'   # master, 2026-10-21
+ATOMICS_ZIP_URL = f'https://github.com/redcanaryco/atomic-red-team/archive/{ATOMICS_COMMIT}.zip'
+ATOMICS_ARCHIVE_ROOT = f'atomic-red-team-{ATOMICS_COMMIT}'
+ATOMICS_TREE_SHA256 = '4a879134139745885e35528e8e8021f4abee4ebd8d42caec8471acc6640a454d'  # 1325 files under atomics/
+ATOMICS_MAX_DOWNLOAD_BYTES = 300 * 1024 * 1024     # the pinned archive is ~169 MB
+ATOMICS_MAX_EXTRACTED_BYTES = 600 * 1024 * 1024    # ~291 MB uncompressed
+ATOMICS_DOWNLOAD_TIMEOUT = (15, 120)               # connect, read (seconds)
+
+_download_lock = threading.Lock()
 
 
-def download_atomics_zip(progress_callback=None):
-    """
-    Download the Atomic Red Team ZIP file from GitHub.
+class AtomicsDownloadError(Exception):
+    """The pinned archive could not be fetched, verified or unpacked."""
 
-    Args:
-        progress_callback: Optional callback function(downloaded_bytes, total_bytes)
 
-    Returns:
-        str: Path to the downloaded ZIP file
-    """
-    zip_path = os.path.join(ATOMICS_DIR, 'atomic-red-team.zip')
+def atomics_dir():
+    """The Atomics folder: beside the database, like the key and salt files."""
+    return os.path.join(os.path.dirname(os.path.abspath(Config.DATABASE_PATH)), 'atomics')
 
-    # Create atomics directory if it doesn't exist
-    os.makedirs(ATOMICS_DIR, exist_ok=True)
 
-    # Download with streaming to handle large file
-    response = requests.get(ATOMICS_ZIP_URL, stream=True)
+def get_atomics_path():
+    """Get the path to the atomics techniques folder."""
+    return os.path.join(atomics_dir(), 'techniques')
+
+
+def is_atomics_installed():
+    """Check if atomics are installed."""
+    return os.path.isdir(get_atomics_path())
+
+
+def atomics_tree_sha256(root):
+    """SHA-256 over every file under root: sorted relative paths and their contents."""
+    entries = []
+    for dirpath, _, filenames in os.walk(root):
+        for name in filenames:
+            path = os.path.join(dirpath, name)
+            digest = hashlib.sha256()
+            with open(path, 'rb') as f:
+                for block in iter(lambda: f.read(1 << 20), b''):
+                    digest.update(block)
+            entries.append((os.path.relpath(path, root).replace(os.sep, '/'), digest.hexdigest()))
+    tree = hashlib.sha256()
+    for rel, file_hash in sorted(entries):
+        tree.update(f'{rel}\0{file_hash}\n'.encode('utf-8'))
+    return tree.hexdigest()
+
+
+def _download(zip_path):
+    """Yield (downloaded, total) while fetching the pinned archive to zip_path."""
+    response = requests.get(ATOMICS_ZIP_URL, stream=True, timeout=ATOMICS_DOWNLOAD_TIMEOUT)
     response.raise_for_status()
-
-    total_size = int(response.headers.get('content-length', 0))
+    total = int(response.headers.get('content-length') or 0) or 170 * 1024 * 1024
     downloaded = 0
-
     with open(zip_path, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            if chunk:
-                f.write(chunk)
-                downloaded += len(chunk)
-                if progress_callback:
-                    progress_callback(downloaded, total_size)
-
-    return zip_path
-
-
-def extract_atomics_zip(zip_path):
-    """
-    Extract the Atomic Red Team ZIP file.
-    Only extracts the atomics/ folder content.
-
-    Args:
-        zip_path: Path to the ZIP file
-
-    Returns:
-        str: Path to the extracted atomics folder
-    """
-    # Extract to temporary location
-    temp_extract_dir = os.path.join(ATOMICS_DIR, '_temp_extract')
-
-    # Clean up any previous temp extraction
-    if os.path.exists(temp_extract_dir):
-        shutil.rmtree(temp_extract_dir)
-
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(temp_extract_dir)
-
-    # Find the atomics folder inside the extracted content
-    # The ZIP extracts to atomic-red-team-master/atomics/
-    extracted_root = os.path.join(temp_extract_dir, 'atomic-red-team-master')
-    atomics_source = os.path.join(extracted_root, 'atomics')
-
-    if not os.path.exists(atomics_source):
-        raise FileNotFoundError(f"Could not find atomics folder in extracted ZIP")
-
-    # Move atomics content to final location
-    atomics_dest = os.path.join(ATOMICS_DIR, 'techniques')
-
-    # Remove old techniques folder if it exists
-    if os.path.exists(atomics_dest):
-        shutil.rmtree(atomics_dest)
-
-    # Move the atomics folder
-    shutil.move(atomics_source, atomics_dest)
-
-    # Clean up
-    shutil.rmtree(temp_extract_dir)
-    os.remove(zip_path)
-
-    return atomics_dest
+        for chunk in response.iter_content(chunk_size=65536):
+            if not chunk:
+                continue
+            downloaded += len(chunk)
+            if downloaded > ATOMICS_MAX_DOWNLOAD_BYTES:
+                raise AtomicsDownloadError('download is larger than expected')
+            f.write(chunk)
+            yield downloaded, total
 
 
-def download_and_parse_atomics(db_conn):
-    """
-    Main function to download, extract, and parse Atomic Red Team tests.
+def _extract_atomics(zip_path, work):
+    """Extract only <root>/atomics/ into work, refusing unsafe entries; return its path."""
+    dest = os.path.realpath(os.path.join(work, 'extract'))
+    prefix = f'{ATOMICS_ARCHIVE_ROOT}/atomics/'
+    with zipfile.ZipFile(zip_path) as archive:
+        members, total = [], 0
+        for info in archive.infolist():
+            name = info.filename
+            target = os.path.realpath(os.path.join(dest, name))
+            is_symlink = (info.external_attr >> 16) & 0o170000 == 0o120000
+            if os.path.isabs(name) or name.startswith(('/', '\\')) or is_symlink \
+                    or not target.startswith(dest + os.sep):
+                raise AtomicsDownloadError(f'unsafe path in archive: {name!r}')
+            if name.startswith(prefix):
+                members.append(info)
+                total += info.file_size
+        if total > ATOMICS_MAX_EXTRACTED_BYTES:
+            raise AtomicsDownloadError('archive contents are larger than expected')
+        if not members:
+            raise AtomicsDownloadError('archive does not contain the atomics folder')
+        archive.extractall(dest, members=members)
+    return os.path.join(dest, ATOMICS_ARCHIVE_ROOT, 'atomics')
 
-    Args:
-        db_conn: SQLite database connection
 
-    Returns:
-        dict: Result with status and statistics
-    """
-    from utils.atomics_parser import parse_all_atomics, update_atomics_metadata
-
-    try:
-        # Step 1: Download
-        print("Downloading Atomic Red Team repository...")
-        zip_path = download_atomics_zip()
-
-        # Step 2: Extract
-        print("Extracting atomics...")
-        atomics_path = extract_atomics_zip(zip_path)
-
-        # Step 3: Parse and populate database
-        print("Parsing atomic tests...")
-        stats = parse_all_atomics(atomics_path, db_conn)
-
-        # Step 4: Update metadata
-        update_atomics_metadata(db_conn, atomics_path, stats)
-
-        return {
-            "success": True,
-            "message": f"Successfully downloaded and parsed {stats['total_tests']} tests from {stats['total_techniques']} techniques",
-            "total_techniques": stats['total_techniques'],
-            "total_tests": stats['total_tests'],
-            "download_path": atomics_path
-        }
-
-    except requests.RequestException as e:
-        return {
-            "success": False,
-            "error": f"Failed to download: {str(e)}"
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "error": f"Failed to process atomics: {str(e)}"
-        }
+def _install(staged_atomics, work):
+    """Replace the installed library with the verified copy."""
+    os.makedirs(atomics_dir(), exist_ok=True)
+    final = get_atomics_path()
+    previous = os.path.join(work, 'previous')
+    if os.path.exists(final):
+        os.rename(final, previous)
+    shutil.move(staged_atomics, final)
+    return final
 
 
 def download_and_parse_atomics_with_progress(db_conn):
     """
-    Download, extract, and parse Atomic Red Team tests with progress updates.
-    Yields progress dictionaries for SSE streaming.
-
-    Args:
-        db_conn: SQLite database connection
-
-    Yields:
-        dict: Progress updates with stage, percent, message
+    Download, verify, install and parse the pinned Atomic Red Team commit.
+    Yields progress dictionaries for streaming (stage, percent, message).
     """
     from utils.atomics_parser import parse_all_atomics_with_progress, update_atomics_metadata
 
+    if not _download_lock.acquire(blocking=False):
+        yield {'stage': 'error', 'percent': 0, 'error': 'An Atomics download is already running'}
+        return
+    work = None
     try:
+        os.makedirs(atomics_dir(), exist_ok=True)
+        work = tempfile.mkdtemp(prefix='download-', dir=atomics_dir())
+        zip_path = os.path.join(work, 'atomic-red-team.zip')
+
         # Stage 1: Download (0-50%)
-        yield {'stage': 'download', 'percent': 0, 'message': 'Connecting to GitHub...'}
-
-        zip_path = os.path.join(ATOMICS_DIR, 'atomic-red-team.zip')
-        os.makedirs(ATOMICS_DIR, exist_ok=True)
-
-        response = requests.get(ATOMICS_ZIP_URL, stream=True, timeout=60)
-        response.raise_for_status()
-
-        total_size = int(response.headers.get('content-length', 0))
-        # Estimate ~500MB if no content-length
-        if total_size == 0:
-            total_size = 500 * 1024 * 1024
-
-        downloaded = 0
-        last_yield = 0
-        yield_interval = 512 * 1024  # Yield every 512KB
-
-        yield {'stage': 'download', 'percent': 1, 'message': 'Starting download...'}
-
-        with open(zip_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=65536):  # Larger chunks
-                if chunk:
-                    f.write(chunk)
-                    downloaded += len(chunk)
-
-                    # Only yield every yield_interval bytes to reduce overhead
-                    if downloaded - last_yield >= yield_interval:
-                        last_yield = downloaded
-                        download_percent = min(49, int((downloaded / total_size) * 50))
-                        downloaded_mb = downloaded // (1024 * 1024)
-                        total_mb = total_size // (1024 * 1024)
-                        yield {
-                            'stage': 'download',
-                            'percent': download_percent,
-                            'message': f'Downloading... {downloaded_mb}MB / ~{total_mb}MB'
-                        }
-
+        yield {'stage': 'download', 'percent': 0, 'message': f'Downloading commit {ATOMICS_COMMIT[:12]}...'}
+        last = 0
+        for downloaded, total in _download(zip_path):
+            if downloaded - last >= 512 * 1024:
+                last = downloaded
+                yield {'stage': 'download', 'percent': min(49, int(downloaded / total * 50)),
+                       'message': f'Downloading... {downloaded // (1024 * 1024)}MB / ~{total // (1024 * 1024)}MB'}
         yield {'stage': 'download', 'percent': 50, 'message': 'Download complete'}
 
-        # Stage 2: Extract (50-60%)
-        yield {'stage': 'extract', 'percent': 52, 'message': 'Extracting files...'}
-        atomics_path = extract_atomics_zip(zip_path)
-        yield {'stage': 'extract', 'percent': 60, 'message': 'Extraction complete'}
+        # Stage 2: Extract and verify (50-60%); nothing installed has changed yet
+        yield {'stage': 'extract', 'percent': 52, 'message': 'Extracting and verifying...'}
+        staged = _extract_atomics(zip_path, work)
+        if atomics_tree_sha256(staged) != ATOMICS_TREE_SHA256:
+            raise AtomicsDownloadError('the Atomics library does not match the pinned SHA-256')
+        atomics_path = _install(staged, work)
+        yield {'stage': 'extract', 'percent': 60, 'message': 'Verified and installed'}
 
         # Stage 3: Parse (60-95%)
         yield {'stage': 'parse', 'percent': 62, 'message': 'Parsing atomic tests...'}
-
         stats = None
         for progress in parse_all_atomics_with_progress(atomics_path, db_conn):
-            # Scale parsing progress from 60-95%
-            scaled_percent = 60 + int(progress['percent'] * 0.35)
-            yield {
-                'stage': 'parse',
-                'percent': scaled_percent,
-                'message': progress['message']
-            }
+            yield {'stage': 'parse', 'percent': 60 + int(progress['percent'] * 0.35),
+                   'message': progress['message']}
             if 'stats' in progress:
                 stats = progress['stats']
 
         # Stage 4: Finalize (95-100%)
         yield {'stage': 'finalize', 'percent': 96, 'message': 'Updating metadata...'}
         if stats:
-            update_atomics_metadata(db_conn, atomics_path, stats)
+            update_atomics_metadata(db_conn, atomics_path, stats, version=ATOMICS_COMMIT)
 
+        flagged = (stats or {}).get('plan_items_flagged', 0)
+        message = f'Complete! {stats["total_tests"]} tests from {stats["total_techniques"]} techniques'
+        if flagged:
+            message += f'; {flagged} test plan item(s) changed and need review'
         yield {
             'stage': 'complete',
             'percent': 100,
-            'message': f'Complete! {stats["total_tests"]} tests from {stats["total_techniques"]} techniques',
+            'message': message,
             'success': True,
             'total_techniques': stats['total_techniques'],
-            'total_tests': stats['total_tests']
+            'total_tests': stats['total_tests'],
+            'plan_items_flagged': flagged,
         }
 
     except requests.RequestException as e:
-        yield {'stage': 'error', 'percent': 0, 'error': f'Download failed: {str(e)}'}
+        yield {'stage': 'error', 'percent': 0, 'error': f'Download failed: {e}'}
+    except (AtomicsDownloadError, zipfile.BadZipFile) as e:
+        yield {'stage': 'error', 'percent': 0, 'error': f'Download rejected: {e}'}
     except Exception as e:
-        yield {'stage': 'error', 'percent': 0, 'error': f'Failed: {str(e)}'}
+        yield {'stage': 'error', 'percent': 0, 'error': f'Failed: {e}'}
+    finally:
+        if work:
+            shutil.rmtree(work, ignore_errors=True)
+        _download_lock.release()
 
 
-def get_atomics_path():
-    """Get the path to the atomics techniques folder."""
-    return os.path.join(ATOMICS_DIR, 'techniques')
-
-
-def is_atomics_installed():
-    """Check if atomics are installed."""
-    atomics_path = get_atomics_path()
-    return os.path.exists(atomics_path) and os.path.isdir(atomics_path)
+def download_and_parse_atomics(db_conn):
+    """Non-streaming wrapper: run the download and return the final result."""
+    last = None
+    for last in download_and_parse_atomics_with_progress(db_conn):
+        pass
+    if last and last.get('stage') == 'complete':
+        return {'success': True, 'message': last['message'], 'total_techniques': last['total_techniques'],
+                'total_tests': last['total_tests'], 'download_path': get_atomics_path()}
+    return {'success': False, 'error': (last or {}).get('error', 'unknown error')}

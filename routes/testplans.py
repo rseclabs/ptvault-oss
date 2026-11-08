@@ -146,7 +146,7 @@ def get_atomics_status():
 
 @testplans_bp.route('/atomics/download', methods=['POST'])
 @require_auth
-@require_role('admin', 'tester')
+@require_role('admin')
 def download_atomics():
     """
     Download and parse the Atomic Red Team repository with progress streaming.
@@ -982,6 +982,10 @@ def update_plan_item(plan_id, item_id):
             if isinstance(input_overrides, dict):
                 input_overrides = json.dumps(input_overrides)
 
+        # Marking an item reviewed after an Atomics refresh changed its test (M-6)
+        if data.get('reviewed') is True:
+            cursor.execute("UPDATE test_plan_items SET needs_review = 0 WHERE id = ?", (item_id,))
+
         cursor.execute("""
             UPDATE test_plan_items
             SET enabled = COALESCE(?, enabled),
@@ -1173,6 +1177,17 @@ def generate_script_endpoint(plan_id):
         item_rows = cursor.fetchall()
         item_columns = [desc[0] for desc in cursor.description]
         items = [dict(zip(item_columns, row)) for row in item_rows]
+
+        # An Atomics refresh changed what these tests run; a person has to look first (M-6)
+        changed = [item for item in items if item.get('needs_review')]
+        if changed:
+            names = ', '.join(item.get('custom_name') or item.get('atomic_test_name') or f"item {item['id']}"
+                              for item in changed[:5])
+            return jsonify({
+                "error": f"{len(changed)} test(s) changed in the last Atomics refresh and need review "
+                         f"before a script can be generated: {names}",
+                "needs_review": [item['id'] for item in changed],
+            }), 409
 
         if not items:
             cursor.execute("""

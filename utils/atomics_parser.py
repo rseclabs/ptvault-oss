@@ -477,10 +477,22 @@ _ATOMIC_FIELDS = (
 )
 
 
+# Fields that change what a test plan item runs. If a refresh changes any of
+# them, plan items using the test are flagged for re-review (M-6): a reviewed
+# plan must not start running different commands without anyone noticing.
+_EXECUTION_FIELDS = ('executor_name', 'executor_command', 'executor_cleanup', 'input_arguments',
+                     'dependencies', 'elevation_required')
+
+
+class _ImportState(set):
+    """The ids seen in this import, plus how many plan items were flagged for review."""
+    plan_items_flagged = 0
+
+
 def _begin_atomics_import(cursor):
     """Park existing rows' positions so incoming rows can't collide. Returns the 'seen' id set."""
     cursor.execute("UPDATE atomics SET atomic_test_index = -1 - atomic_test_index WHERE atomic_test_index >= 0")
-    return set()
+    return _ImportState()
 
 
 def _upsert_atomic(cursor, seen_ids, values):
@@ -502,6 +514,13 @@ def _upsert_atomic(cursor, seen_ids, values):
         row = None   # already claimed by another test in this import
 
     if row is not None:
+        cursor.execute(f"SELECT {', '.join(_EXECUTION_FIELDS)} FROM atomics WHERE id = ?", (row[0],))
+        before = cursor.fetchone()
+        if tuple(before) != tuple(values[field] for field in _EXECUTION_FIELDS):
+            cursor.execute("UPDATE test_plan_items SET needs_review = 1 WHERE atomic_id = ? AND needs_review = 0",
+                           (row[0],))
+            if isinstance(seen_ids, _ImportState):
+                seen_ids.plan_items_flagged += cursor.rowcount
         assignments = ', '.join(f"{field} = ?" for field in _ATOMIC_FIELDS)
         cursor.execute(
             f"UPDATE atomics SET {assignments} WHERE id = ?",
@@ -653,7 +672,8 @@ def parse_all_atomics(atomics_path, db_conn):
         'total_techniques': total_techniques,
         'total_tests': total_tests,
         'errors': errors,
-        'retired': retired
+        'retired': retired,
+        'plan_items_flagged': seen_ids.plan_items_flagged,
     }
 
 
@@ -763,12 +783,13 @@ def parse_all_atomics_with_progress(atomics_path, db_conn):
             'total_techniques': total_techniques,
             'total_tests': total_tests,
             'errors': errors,
-            'retired': retired
+            'retired': retired,
+            'plan_items_flagged': seen_ids.plan_items_flagged,
         }
     }
 
 
-def update_atomics_metadata(db_conn, atomics_path, stats):
+def update_atomics_metadata(db_conn, atomics_path, stats, version='unknown'):
     """
     Update the atomics_metadata table with current status.
 
@@ -785,7 +806,7 @@ def update_atomics_metadata(db_conn, atomics_path, stats):
             id, version, last_updated, total_techniques, total_tests, download_path
         ) VALUES (1, ?, ?, ?, ?, ?)
     """, (
-        'master',  # version (could extract git tag if available)
+        version,  # the pinned Atomic Red Team commit
         datetime.now().isoformat(),
         stats['total_techniques'],
         stats['total_tests'],

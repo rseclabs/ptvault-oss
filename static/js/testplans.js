@@ -353,6 +353,8 @@ const TestPlansManager = {
     renderAtomicsTab() {
         const status = this.atomicsStatus;
         const isInstalled = status && status.installed;
+        // Downloading replaces the shared library, so only admins can (M-6)
+        const isAdmin = AppState.currentUser?.role === 'admin';
 
         return `
             <div class="atomics-library">
@@ -371,19 +373,20 @@ const TestPlansManager = {
                             <span>Library installed</span>
                             <span class="status-meta">${status.total_tests || 0} tests | ${status.total_techniques || 0} techniques</span>
                             <span class="status-meta">Updated: ${status.last_updated ? new Date(status.last_updated).toLocaleDateString() : 'Unknown'}</span>
+                            ${status.version ? `<span class="status-meta" title="Pinned Atomic Red Team commit">Version: ${escapeHtml(String(status.version).slice(0, 12))}</span>` : ''}
                         </div>
-                        <button class="btn btn-secondary" onclick="TestPlansManager.downloadAtomics()">
+                        ${isAdmin ? `<button class="btn btn-secondary" onclick="TestPlansManager.downloadAtomics()">
                             Update Library
-                        </button>
+                        </button>` : ''}
                     ` : `
                         <div class="status-not-installed">
                             <span class="status-icon"><i data-lucide="triangle-alert"></i></span>
                             <span>Library not installed</span>
-                            <span class="status-meta">Download the Atomic Red Team tests to get started</span>
+                            <span class="status-meta">${isAdmin ? 'Download the Atomic Red Team tests to get started' : 'Ask an administrator to download the Atomic Red Team tests'}</span>
                         </div>
-                        <button class="btn btn-primary" onclick="TestPlansManager.downloadAtomics()">
-                            Download Library (~500MB)
-                        </button>
+                        ${isAdmin ? `<button class="btn btn-primary" onclick="TestPlansManager.downloadAtomics()">
+                            Download Library (~170 MB, pinned and verified)
+                        </button>` : ''}
                     `}
                 </div>
 
@@ -1895,20 +1898,22 @@ const TestPlansManager = {
         const isEnabled = item.enabled !== 0;
 
         return `
-            <div class="item-row ${!isEnabled ? 'item-disabled' : ''} ${item.atomic_missing ? 'item-missing' : ''}" data-item-id="${item.id}"
+            <div class="item-row ${!isEnabled ? 'item-disabled' : ''} ${item.atomic_missing ? 'item-missing' : ''} ${item.needs_review ? 'item-needs-review' : ''}" data-item-id="${item.id}"
                  data-search="${escapeHtml(`${techniqueId} ${name} ${item.executor_name || ''} ${platforms.join(' ')}`.toLowerCase())}">
                 <div class="item-row-order">${index + 1}</div>
                 <div class="item-row-info">
                     ${techniqueId ? `<span class="item-row-technique">${escapeHtml(techniqueId)}</span>` : ''}
                     <span class="item-row-name">${escapeHtml(name)}</span>
                     ${isCustom ? '<span class="item-row-custom">Custom</span>' : ''}
+                    ${item.needs_review ? '<span class="item-row-review" title="The Atomics refresh changed what this test runs. Check its command, then mark it reviewed.">Changed upstream &mdash; review</span>' : ''}
                 </div>
                 <div class="item-row-meta">
                     ${item.executor_name ? `<span class="item-row-executor">${escapeHtml(item.executor_name)}</span>` : ''}
-                    ${platforms.slice(0, 2).map(p => `<span class="item-row-platform">${p}</span>`).join('')}
+                    ${platforms.slice(0, 2).map(p => `<span class="item-row-platform">${escapeHtml(p)}</span>`).join('')}
                     ${item.notes ? `<span class="item-row-notes" role="img" aria-label="Has notes" title="${escapeHtml(item.notes)}"><i data-lucide="notebook-pen"></i></span>` : ''}
                 </div>
                 <div class="item-row-actions">
+                    ${item.needs_review ? `<button class="btn btn-secondary btn-xs" onclick="TestPlansManager.markItemReviewed(${planId}, ${item.id})" title="I have checked this test's current command">Mark reviewed</button>` : ''}
                     <button class="btn btn-icon btn-xs" onclick="TestPlansManager.editPlanItem(${planId}, ${item.id})" title="Edit" aria-label="Edit ${escapeHtml(name)}">
                         <i data-lucide="edit-2"></i>
                     </button>
@@ -2323,6 +2328,27 @@ const TestPlansManager = {
             showToast('Failed to update item', 'error');
             console.error(error);
         }
+    },
+
+    /**
+     * Clear the re-review flag an Atomics refresh set on this item (M-6).
+     */
+    async markItemReviewed(planId, itemId) {
+        try {
+            const result = await API.testPlans.updatePlanItem(planId, itemId, { reviewed: true });
+            if (result && result.error) throw new Error(result.error);
+        } catch (error) {
+            showToast(error.message || 'Failed to mark the test reviewed', 'error');
+            return;
+        }
+        const item = this.currentEditPlan?.items?.find(i => i.id === itemId);
+        if (item) item.needs_review = 0;
+        const row = document.querySelector(`#planItemsList .item-row[data-item-id="${itemId}"]`);
+        if (row && item) {
+            row.outerHTML = this.renderPlanItem(item, this.currentEditPlan.items.indexOf(item), planId);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+        showToast('Marked reviewed', 'success');
     },
 
     async toggleItemEnabled(planId, itemId, enabled, checkbox) {

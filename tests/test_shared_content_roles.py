@@ -1,7 +1,8 @@
 """H-4 (part 2): a global viewer cannot change shared content or test plans.
 
-Writeups, commands, ATT&CK layers and the Atomics library are shared by all
-users; a global viewer is read-only, so these writes need an admin or tester.
+Writeups, commands and ATT&CK layers are shared by all users; a global
+viewer is read-only, so these writes need an admin or tester. Downloading the
+Atomics library is admin-only (M-6, tests/test_atomics_download.py).
 A test plan belonging to an engagement needs the editor role on it; a global
 plan template needs an admin or tester.
 """
