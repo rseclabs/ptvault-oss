@@ -503,7 +503,13 @@ def encryption_disable():
             return jsonify({'error': 'An evidence file could not be decrypted, so encryption was not '
                                      'disabled. See the server log.'}), 500
 
-        disable_encryption()
+        try:
+            disable_encryption()
+        except Exception:
+            # The database is still encrypted: seal the files again so they are
+            # not left plaintext beside it (retest 2 note)
+            upload_store.encrypt_existing()
+            raise
 
         # Reopen connection (now plaintext) for audit logging
         from models.database import get_db_connection

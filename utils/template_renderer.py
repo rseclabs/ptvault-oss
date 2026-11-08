@@ -40,10 +40,13 @@ class TemplateRenderer:
         except (json.JSONDecodeError, TypeError):
             logger.error("Invalid template structure JSON")
             return []
+        if not isinstance(sections, list):
+            logger.error("Template structure is not a list of sections")
+            return []
 
         rendered = []
 
-        for section in sections:
+        for section in (s for s in sections if isinstance(s, dict)):
             try:
                 rendered_section = self._render_section(section)
                 rendered.append(rendered_section)

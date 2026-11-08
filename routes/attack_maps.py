@@ -13,6 +13,10 @@ from models.dao.attack_map_dao import AttackMapDAO, AttackMapNodeDAO, AttackMapE
 from utils.error_handler import handle_errors
 from models.engagement_cleanup import delete_attack_map
 
+# The attack_map_nodes CHECK constraint (migration 017): anything else was a 500
+NODE_TYPES = ('recon', 'tactic', 'exploit', 'connector', 'evidence_ref', 'finding_ref', 'host_ref',
+              'action', 'condition', 'infrastructure', 'and', 'or')
+
 logger = logging.getLogger(__name__)
 
 attack_maps_bp = Blueprint('attack_maps', __name__, url_prefix='/api/attack-maps')
@@ -174,6 +178,8 @@ def create_node(map_id):
     data = request.get_json()
     if not data or not data.get('node_type'):
         return jsonify({"error": "node_type is required"}), 400
+    if data['node_type'] not in NODE_TYPES:
+        return jsonify({"error": f"node_type must be one of: {', '.join(NODE_TYPES)}"}), 400
 
     node_dao = AttackMapNodeDAO()
     properties, error = _properties_json(data.get('properties'))
@@ -223,6 +229,8 @@ def update_node(map_id, node_id):
         return jsonify({"error": "Node not found"}), 404
 
     update_data = {}
+    if 'node_type' in data and data['node_type'] not in NODE_TYPES:
+        return jsonify({"error": f"node_type must be one of: {', '.join(NODE_TYPES)}"}), 400
     for field in ('x', 'y', 'width', 'height', 'label', 'node_type', 'ref_id', 'ref_type'):
         if field in data:
             update_data[field] = data[field]

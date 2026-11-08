@@ -232,3 +232,29 @@ def test_setup_encryption_never_replaces_the_salt_of_an_encrypted_database(fresh
     assert open(Config.ENCRYPTION_SALT_FILE).read() == salt
     encryption.lock()
     encryption.unlock(PASSWORD)                                       # still opens with the first passphrase
+
+
+def test_a_failed_disable_seals_the_evidence_files_again(fresh_app, monkeypatch):
+    """Retest 2 note: files were decrypted before disable_encryption(); if it then failed,
+    they stayed plaintext beside the still-encrypted database."""
+    import io
+    from config import Config
+    from models import upload_store
+    monkeypatch.setattr(Config, 'ENCRYPTION_REQUIRED', False)
+    client = fresh_app.test_client()
+    assert _setup(client).status_code == 201
+    headers = {'X-CSRF-Token': client.get_cookie('csrf_token').value}
+    engagement = client.post('/api/engagements', json={'name': 'E'}, headers=headers).get_json()
+    client.post('/api/engagements/active', json={'engagement_id': engagement['id']}, headers=headers)
+    ev = client.post('/api/evidence', data={'evidence_type': 'other', 'title': 't',
+                                            'file': (io.BytesIO(b'SECRET'), 'a.txt')},
+                     content_type='multipart/form-data', headers=headers).get_json()
+    conn = encryption.get_connection(Config.DATABASE_PATH)
+    rel = conn.execute('SELECT file_path FROM evidence WHERE id = ?', (ev['id'],)).fetchone()[0]
+    conn.close()
+
+    def broken():
+        raise OSError('disk full')
+    monkeypatch.setattr(encryption, 'disable_encryption', broken)
+    assert client.post('/api/admin/encryption/disable', json={}, headers=headers).status_code == 500
+    assert upload_store.is_sealed(os.path.join(Config.UPLOAD_FOLDER, rel))

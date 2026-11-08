@@ -252,7 +252,14 @@ def create_evidence():
         # folder. Scans are parsed from memory below, so the plaintext never
         # touches the disk.
         file_data = uploaded_file.read()
-        upload_store.write_file(full_path, relative_path, file_data)
+        try:
+            upload_store.write_file(full_path, relative_path, file_data)
+        except OSError:
+            # Don't keep a row that points at a file that was never written
+            logger.exception("Could not store the file for evidence %s", evidence_id)
+            delete_evidence_rows(cursor, [evidence_id])
+            g.db.commit()
+            return jsonify({"error": "could not store the file"}), 500
 
         # Update evidence record with file info
         file_path = relative_path
@@ -1114,11 +1121,10 @@ def bulk_evidence_operation():
 
         elif operation == 'export':
             # Export selected items as JSON
-            cursor.execute(
-                f"SELECT * FROM evidence WHERE id IN ({placeholders})",
-                valid_ids
-            )
-            rows = cursor.fetchall()
+            rows = []
+            if valid_ids:          # placeholders sized for the IDs that passed the scope check
+                cursor.execute(f"SELECT * FROM evidence WHERE id IN ({','.join('?' * len(valid_ids))})", valid_ids)
+                rows = cursor.fetchall()
 
             exported_items = [row_to_dict(row) for row in rows]
             success_count = len(exported_items)
