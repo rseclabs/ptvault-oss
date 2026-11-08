@@ -2011,7 +2011,7 @@ const TestPlansManager = {
 
         return Object.values(grouped).slice(0, 50).map(t => `
             <div class="library-technique">
-                <div class="library-technique-header" ${on('click', 'this.classList.toggle', 'expanded')}>
+                <div class="library-technique-header" ${on('click', 'toggleClass', ARG.el, 'expanded')}>
                     <span class="technique-id">${escapeHtml(t.technique_id)}</span>
                     <span class="technique-name">${escapeHtml(t.technique_name)}</span>
                     <span class="test-count">${t.tests.length} tests</span>

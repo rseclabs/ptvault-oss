@@ -63,16 +63,6 @@
 
     <script type="module" src="/static/js/api.js"></script>
     <script src="/static/js/auth.js"></script>
-    <script>
-        // Show idle timeout message if redirected with ?reason=idle
-        (function() {
-            const params = new URLSearchParams(window.location.search);
-            const reason = params.get('reason');
-            if (reason === 'idle') {
-                const msg = document.getElementById('idleMessage');
-                if (msg) msg.style.display = 'block';
-            }
-        })();
-    </script>
+    <script src="/static/js/pages/login.js"></script>
 </body>
 </html>

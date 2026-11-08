@@ -2173,7 +2173,7 @@ const CommandHubManager = {
         document.querySelectorAll('.commands-sidebar .category-item').forEach(item => {
             item.classList.remove('active');
         });
-        const activeItem = document.querySelector(`.commands-sidebar .category-item[onclick*="${key}"]`);
+        const activeItem = document.querySelector(`.commands-sidebar .category-item[data-on-click*='"${key}"']`);
         if (activeItem) activeItem.classList.add('active');
 
         // Re-render main content
@@ -2257,7 +2257,7 @@ const CalculatorsManager = {
         document.querySelectorAll('.commands-sidebar .category-item').forEach(item => {
             item.classList.remove('active');
         });
-        const activeItem = document.querySelector(`.commands-sidebar .category-item[onclick*="${key}"]`);
+        const activeItem = document.querySelector(`.commands-sidebar .category-item[data-on-click*='"${key}"']`);
         if (activeItem) activeItem.classList.add('active');
 
         // Re-render main content
@@ -2335,7 +2335,7 @@ const DecodersManager = {
         document.querySelectorAll('.commands-sidebar .category-item').forEach(item => {
             item.classList.remove('active');
         });
-        const activeItem = document.querySelector(`.commands-sidebar .category-item[onclick*="${key}"]`);
+        const activeItem = document.querySelector(`.commands-sidebar .category-item[data-on-click*='"${key}"']`);
         if (activeItem) activeItem.classList.add('active');
 
         // Re-render main content
@@ -3245,7 +3245,7 @@ const MarkdownCheatSheet = {
         document.querySelectorAll('.commands-sidebar .category-item').forEach(item => {
             item.classList.remove('active');
         });
-        const activeItem = document.querySelector(`.commands-sidebar .category-item[onclick*="${category}"]`);
+        const activeItem = document.querySelector(`.commands-sidebar .category-item[data-on-click*='"${category}"']`);
         if (activeItem) activeItem.classList.add('active');
 
         this.renderEntries();

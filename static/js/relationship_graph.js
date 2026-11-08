@@ -644,3 +644,5 @@ const RelationshipGraph = {
         }
     }
 };
+
+window.RelationshipGraph = RelationshipGraph;   // named in data-on-* attributes (L-21)

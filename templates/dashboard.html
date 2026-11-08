@@ -162,22 +162,22 @@
                         <div class="host-ribbon-section">
                             <span class="host-ribbon-section-label">Vulnerabilities</span>
                             <div id="evidenceStats" class="ribbon-stats">
-                                <button class="ribbon-stat" onclick="HostManager.filterBySeverity('critical')" title="Critical vulnerabilities">
+                                <button class="ribbon-stat" data-on-click='["HostManager.filterBySeverity", "critical"]' title="Critical vulnerabilities">
                                     <span class="stat-dot stat-dot-critical"></span>
                                     <span class="ribbon-stat-value" id="statCritical">0</span>
                                     <span class="ribbon-stat-label">Critical</span>
                                 </button>
-                                <button class="ribbon-stat" onclick="HostManager.filterBySeverity('high')" title="High vulnerabilities">
+                                <button class="ribbon-stat" data-on-click='["HostManager.filterBySeverity", "high"]' title="High vulnerabilities">
                                     <span class="stat-dot stat-dot-high"></span>
                                     <span class="ribbon-stat-value" id="statHigh">0</span>
                                     <span class="ribbon-stat-label">High</span>
                                 </button>
-                                <button class="ribbon-stat" onclick="HostManager.filterBySeverity('medium')" title="Medium vulnerabilities">
+                                <button class="ribbon-stat" data-on-click='["HostManager.filterBySeverity", "medium"]' title="Medium vulnerabilities">
                                     <span class="stat-dot stat-dot-medium"></span>
                                     <span class="ribbon-stat-value" id="statMedium">0</span>
                                     <span class="ribbon-stat-label">Medium</span>
                                 </button>
-                                <button class="ribbon-stat" onclick="HostManager.filterBySeverity('low')" title="Low vulnerabilities">
+                                <button class="ribbon-stat" data-on-click='["HostManager.filterBySeverity", "low"]' title="Low vulnerabilities">
                                     <span class="stat-dot stat-dot-low"></span>
                                     <span class="ribbon-stat-value" id="statLow">0</span>
                                     <span class="ribbon-stat-label">Low</span>
@@ -190,16 +190,16 @@
                         <div class="host-ribbon-section">
                             <span class="host-ribbon-section-label">Color</span>
                             <div class="color-selector ribbon-colors">
-                                <button class="color-option" data-color="white"  data-filter-color="white"  onclick="HostManager.toggleColorFilter('white')"  title="White"></button>
-                                <button class="color-option" data-color="yellow" data-filter-color="yellow" onclick="HostManager.toggleColorFilter('yellow')" title="Yellow"></button>
-                                <button class="color-option" data-color="green"  data-filter-color="green"  onclick="HostManager.toggleColorFilter('green')"  title="Green"></button>
-                                <button class="color-option" data-color="blue"   data-filter-color="blue"   onclick="HostManager.toggleColorFilter('blue')"   title="Blue"></button>
-                                <button class="color-option" data-color="red"    data-filter-color="red"    onclick="HostManager.toggleColorFilter('red')"    title="Red"></button>
-                                <button class="color-option" data-color="purple" data-filter-color="purple" onclick="HostManager.toggleColorFilter('purple')" title="Purple"></button>
-                                <button class="color-option" data-color="orange" data-filter-color="orange" onclick="HostManager.toggleColorFilter('orange')" title="Orange"></button>
-                                <button class="color-option" data-color="teal"   data-filter-color="teal"   onclick="HostManager.toggleColorFilter('teal')"   title="Teal"></button>
-                                <button class="color-option" data-color="cyan"   data-filter-color="cyan"   onclick="HostManager.toggleColorFilter('cyan')"   title="Cyan"></button>
-                                <button class="color-option" data-color="brown"  data-filter-color="brown"  onclick="HostManager.toggleColorFilter('brown')"  title="Brown"></button>
+                                <button class="color-option" data-color="white"  data-filter-color="white"  data-on-click='["HostManager.toggleColorFilter", "white"]'  title="White"></button>
+                                <button class="color-option" data-color="yellow" data-filter-color="yellow" data-on-click='["HostManager.toggleColorFilter", "yellow"]' title="Yellow"></button>
+                                <button class="color-option" data-color="green"  data-filter-color="green"  data-on-click='["HostManager.toggleColorFilter", "green"]'  title="Green"></button>
+                                <button class="color-option" data-color="blue"   data-filter-color="blue"   data-on-click='["HostManager.toggleColorFilter", "blue"]'   title="Blue"></button>
+                                <button class="color-option" data-color="red"    data-filter-color="red"    data-on-click='["HostManager.toggleColorFilter", "red"]'    title="Red"></button>
+                                <button class="color-option" data-color="purple" data-filter-color="purple" data-on-click='["HostManager.toggleColorFilter", "purple"]' title="Purple"></button>
+                                <button class="color-option" data-color="orange" data-filter-color="orange" data-on-click='["HostManager.toggleColorFilter", "orange"]' title="Orange"></button>
+                                <button class="color-option" data-color="teal"   data-filter-color="teal"   data-on-click='["HostManager.toggleColorFilter", "teal"]'   title="Teal"></button>
+                                <button class="color-option" data-color="cyan"   data-filter-color="cyan"   data-on-click='["HostManager.toggleColorFilter", "cyan"]'   title="Cyan"></button>
+                                <button class="color-option" data-color="brown"  data-filter-color="brown"  data-on-click='["HostManager.toggleColorFilter", "brown"]'  title="Brown"></button>
                             </div>
                         </div>
 
@@ -209,7 +209,7 @@
 
                         <button id="clearAllFiltersBtn"
                                 class="btn btn-sm btn-secondary ribbon-clear-all"
-                                onclick="HostManager.clearAllFilters()"
+                                data-on-click='["HostManager.clearAllFilters"]'
                                 title="Clear all search criteria"
                                 style="display: none;">
                             <i data-lucide="x"></i>
@@ -228,7 +228,7 @@
                                            id="search-keyword"
                                            placeholder="Search notes, findings, scan data..."
                                            class="ribbon-input ribbon-input-search"
-                                           oninput="HostManager.debounceKeywordSearch()">
+                                           data-on-input='["HostManager.debounceKeywordSearch"]'>
                                 </div>
                                 <div class="ribbon-input-wrap">
                                     <i data-lucide="grid" class="ribbon-input-icon"></i>
@@ -236,8 +236,8 @@
                                            id="filter-cidr"
                                            placeholder="IP / CIDR (e.g., 192.168.1.0/24)"
                                            class="ribbon-input ribbon-input-cidr"
-                                           oninput="HostManager.applyCIDRFilter()"
-                                           onkeypress="if(event.key === 'Enter') HostManager.applyFilters()">
+                                           data-on-input='["HostManager.applyCIDRFilter"]'
+                                           data-on-keydown='["HostManager.applyFiltersOnEnter", {"$": "event"}]'>
                                 </div>
                             </div>
                             <div id="cidr-error" class="filters-error-msg"></div>
@@ -249,47 +249,47 @@
                             <span class="host-ribbon-section-label">Indicators</span>
                             <div class="ribbon-indicators">
                                 <label class="ribbon-pill" title="Rooted">
-                                    <input type="checkbox" id="filter-rooted" onchange="HostManager.applyFilters()">
+                                    <input type="checkbox" id="filter-rooted" data-on-change='["HostManager.applyFilters"]'>
                                     <i data-lucide="hash"></i>
                                     <span>Rooted</span>
                                 </label>
                                 <label class="ribbon-pill" title="Shell">
-                                    <input type="checkbox" id="filter-shell" onchange="HostManager.applyFilters()">
+                                    <input type="checkbox" id="filter-shell" data-on-change='["HostManager.applyFilters"]'>
                                     <i data-lucide="terminal"></i>
                                     <span>Shell</span>
                                 </label>
                                 <label class="ribbon-pill" title="Interested">
-                                    <input type="checkbox" id="filter-interested" onchange="HostManager.applyFilters()">
+                                    <input type="checkbox" id="filter-interested" data-on-change='["HostManager.applyFilters"]'>
                                     <i data-lucide="star"></i>
                                     <span>Interested</span>
                                 </label>
                                 <label class="ribbon-pill" title="Not Interested">
-                                    <input type="checkbox" id="filter-not-interested" onchange="HostManager.applyFilters()">
+                                    <input type="checkbox" id="filter-not-interested" data-on-change='["HostManager.applyFilters"]'>
                                     <i data-lucide="x-circle"></i>
                                     <span>Not Interested</span>
                                 </label>
                                 <label class="ribbon-pill" title="Out of Scope">
-                                    <input type="checkbox" id="filter-out-of-scope" onchange="HostManager.applyFilters()">
+                                    <input type="checkbox" id="filter-out-of-scope" data-on-change='["HostManager.applyFilters"]'>
                                     <i data-lucide="ban"></i>
                                     <span>Out of Scope</span>
                                 </label>
                                 <label class="ribbon-pill" title="Flagged">
-                                    <input type="checkbox" id="filter-flagged" onchange="HostManager.applyFilters()">
+                                    <input type="checkbox" id="filter-flagged" data-on-change='["HostManager.applyFilters"]'>
                                     <i data-lucide="flag"></i>
                                     <span>Flagged</span>
                                 </label>
                                 <label class="ribbon-pill" title="Reviewed">
-                                    <input type="checkbox" id="filter-reviewed" onchange="HostManager.applyFilters()">
+                                    <input type="checkbox" id="filter-reviewed" data-on-change='["HostManager.applyFilters"]'>
                                     <i data-lucide="check-circle"></i>
                                     <span>Reviewed</span>
                                 </label>
                                 <label class="ribbon-pill" title="Has Notes">
-                                    <input type="checkbox" id="filter-has-notes" onchange="HostManager.applyFilters()">
+                                    <input type="checkbox" id="filter-has-notes" data-on-change='["HostManager.applyFilters"]'>
                                     <i data-lucide="file-text"></i>
                                     <span>Has Notes</span>
                                 </label>
                                 <label class="ribbon-pill" title="Has Findings">
-                                    <input type="checkbox" id="filter-has-findings" onchange="HostManager.applyFilters()">
+                                    <input type="checkbox" id="filter-has-findings" data-on-change='["HostManager.applyFilters"]'>
                                     <i data-lucide="bug"></i>
                                     <span>Has Findings</span>
                                 </label>
@@ -302,18 +302,18 @@
                             <span class="host-ribbon-section-label">Saved Searches</span>
                             <div class="ribbon-saved-row">
                                 <select id="savedFiltersDropdown"
-                                        onchange="HostManager.applySavedFilter(this.value)"
+                                        data-on-change='["HostManager.applySavedFilter", {"$": "value"}]'
                                         class="ribbon-input ribbon-saved-select">
                                     <option value="">Select a saved search...</option>
                                 </select>
                                 <button id="saveFilterBtn"
-                                        onclick="HostManager.showSaveFilterModal()"
+                                        data-on-click='["HostManager.showSaveFilterModal"]'
                                         class="btn btn-sm btn-secondary ribbon-icon-btn"
                                         title="Save current">
                                     <i data-lucide="save"></i>
                                 </button>
                                 <button id="clearSavedFilterBtn"
-                                        onclick="HostManager.clearActiveSavedFilter()"
+                                        data-on-click='["HostManager.clearActiveSavedFilter"]'
                                         class="btn btn-sm btn-secondary ribbon-icon-btn"
                                         title="Clear saved search">
                                     <i data-lucide="x"></i>
@@ -356,28 +356,28 @@
                         </span>
                     </div>
                     <div class="bulk-toolbar-actions">
-                        <button class="btn btn-sm btn-secondary" onclick="HostManager.selectAllEvidence()" title="Select all items">
+                        <button class="btn btn-sm btn-secondary" data-on-click='["HostManager.selectAllEvidence"]' title="Select all items">
                             <i data-lucide="check-square" class="w-4 h-4"></i>
                             Select All
                         </button>
-                        <button class="btn btn-sm btn-secondary" onclick="HostManager.clearEvidenceSelection()" title="Clear selection">
+                        <button class="btn btn-sm btn-secondary" data-on-click='["HostManager.clearEvidenceSelection"]' title="Clear selection">
                             <i data-lucide="x-square" class="w-4 h-4"></i>
                             Clear
                         </button>
                         <div class="bulk-actions-divider"></div>
-                        <button class="btn btn-sm btn-primary" onclick="HostManager.bulkTagEvidence()" title="Add tags to selected items">
+                        <button class="btn btn-sm btn-primary" data-on-click='["HostManager.bulkTagEvidence"]' title="Add tags to selected items">
                             <i data-lucide="tag" class="w-4 h-4"></i>
                             Tag
                         </button>
-                        <button class="btn btn-sm btn-secondary" onclick="HostManager.bulkMoveToHost()" title="Move to host">
+                        <button class="btn btn-sm btn-secondary" data-on-click='["HostManager.bulkMoveToHost"]' title="Move to host">
                             <i data-lucide="move" class="w-4 h-4"></i>
                             Move
                         </button>
-                        <button class="btn btn-sm btn-secondary" onclick="HostManager.bulkExportEvidence()" title="Export selected items">
+                        <button class="btn btn-sm btn-secondary" data-on-click='["HostManager.bulkExportEvidence"]' title="Export selected items">
                             <i data-lucide="download" class="w-4 h-4"></i>
                             Export
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="HostManager.bulkDeleteEvidence()" title="Delete selected items">
+                        <button class="btn btn-sm btn-danger" data-on-click='["HostManager.bulkDeleteEvidence"]' title="Delete selected items">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                             Delete
                         </button>
@@ -397,37 +397,37 @@
                             <span class="host-indicators-bar-label">Indicators</span>
                             <div class="host-indicators-bar-pills">
                                 <label class="ribbon-pill" title="Rooted">
-                                    <input type="checkbox" id="indicator-rooted" onchange="HostManager.updateIndicator('rooted', this.checked)">
+                                    <input type="checkbox" id="indicator-rooted" data-on-change='["HostManager.updateIndicator", "rooted", {"$": "checked"}]'>
                                     <i data-lucide="hash"></i>
                                     <span>Rooted</span>
                                 </label>
                                 <label class="ribbon-pill" title="Shell">
-                                    <input type="checkbox" id="indicator-shell" onchange="HostManager.updateIndicator('shell', this.checked)">
+                                    <input type="checkbox" id="indicator-shell" data-on-change='["HostManager.updateIndicator", "shell", {"$": "checked"}]'>
                                     <i data-lucide="terminal"></i>
                                     <span>Shell</span>
                                 </label>
                                 <label class="ribbon-pill" title="Interested">
-                                    <input type="checkbox" id="indicator-interested" onchange="HostManager.updateIndicator('interested', this.checked)">
+                                    <input type="checkbox" id="indicator-interested" data-on-change='["HostManager.updateIndicator", "interested", {"$": "checked"}]'>
                                     <i data-lucide="star"></i>
                                     <span>Interested</span>
                                 </label>
                                 <label class="ribbon-pill" title="Not Interested">
-                                    <input type="checkbox" id="indicator-not-interested" onchange="HostManager.updateIndicator('not_interested', this.checked)">
+                                    <input type="checkbox" id="indicator-not-interested" data-on-change='["HostManager.updateIndicator", "not_interested", {"$": "checked"}]'>
                                     <i data-lucide="x-circle"></i>
                                     <span>Not Interested</span>
                                 </label>
                                 <label class="ribbon-pill" title="Out of Scope">
-                                    <input type="checkbox" id="indicator-out-of-scope" onchange="HostManager.updateIndicator('out_of_scope', this.checked)">
+                                    <input type="checkbox" id="indicator-out-of-scope" data-on-change='["HostManager.updateIndicator", "out_of_scope", {"$": "checked"}]'>
                                     <i data-lucide="ban"></i>
                                     <span>Out of Scope</span>
                                 </label>
                                 <label class="ribbon-pill" title="Flagged">
-                                    <input type="checkbox" id="indicator-flagged" onchange="HostManager.updateIndicator('flagged', this.checked)">
+                                    <input type="checkbox" id="indicator-flagged" data-on-change='["HostManager.updateIndicator", "flagged", {"$": "checked"}]'>
                                     <i data-lucide="flag"></i>
                                     <span>Flagged</span>
                                 </label>
                                 <label class="ribbon-pill" title="Reviewed">
-                                    <input type="checkbox" id="indicator-reviewed" onchange="HostManager.updateIndicator('reviewed', this.checked)">
+                                    <input type="checkbox" id="indicator-reviewed" data-on-change='["HostManager.updateIndicator", "reviewed", {"$": "checked"}]'>
                                     <i data-lucide="check-circle"></i>
                                     <span>Reviewed</span>
                                 </label>
@@ -437,36 +437,36 @@
                         <div class="host-indicators-bar-section">
                             <span class="host-indicators-bar-label">Color</span>
                             <div class="color-selector host-indicators-bar-colors">
-                                <button class="color-option" data-color="white"  onclick="HostManager.updateColorCategory('white')"  title="White"></button>
-                                <button class="color-option" data-color="yellow" onclick="HostManager.updateColorCategory('yellow')" title="Yellow"></button>
-                                <button class="color-option" data-color="green"  onclick="HostManager.updateColorCategory('green')"  title="Green"></button>
-                                <button class="color-option" data-color="blue"   onclick="HostManager.updateColorCategory('blue')"   title="Blue"></button>
-                                <button class="color-option" data-color="red"    onclick="HostManager.updateColorCategory('red')"    title="Red"></button>
-                                <button class="color-option" data-color="purple" onclick="HostManager.updateColorCategory('purple')" title="Purple"></button>
-                                <button class="color-option" data-color="orange" onclick="HostManager.updateColorCategory('orange')" title="Orange"></button>
-                                <button class="color-option" data-color="teal"   onclick="HostManager.updateColorCategory('teal')"   title="Teal"></button>
-                                <button class="color-option" data-color="cyan"   onclick="HostManager.updateColorCategory('cyan')"   title="Cyan"></button>
-                                <button class="color-option" data-color="brown"  onclick="HostManager.updateColorCategory('brown')"  title="Brown"></button>
-                                <button class="color-option clear" data-color="null" onclick="HostManager.updateColorCategory(null)" title="Clear">✕</button>
+                                <button class="color-option" data-color="white"  data-on-click='["HostManager.updateColorCategory", "white"]'  title="White"></button>
+                                <button class="color-option" data-color="yellow" data-on-click='["HostManager.updateColorCategory", "yellow"]' title="Yellow"></button>
+                                <button class="color-option" data-color="green"  data-on-click='["HostManager.updateColorCategory", "green"]'  title="Green"></button>
+                                <button class="color-option" data-color="blue"   data-on-click='["HostManager.updateColorCategory", "blue"]'   title="Blue"></button>
+                                <button class="color-option" data-color="red"    data-on-click='["HostManager.updateColorCategory", "red"]'    title="Red"></button>
+                                <button class="color-option" data-color="purple" data-on-click='["HostManager.updateColorCategory", "purple"]' title="Purple"></button>
+                                <button class="color-option" data-color="orange" data-on-click='["HostManager.updateColorCategory", "orange"]' title="Orange"></button>
+                                <button class="color-option" data-color="teal"   data-on-click='["HostManager.updateColorCategory", "teal"]'   title="Teal"></button>
+                                <button class="color-option" data-color="cyan"   data-on-click='["HostManager.updateColorCategory", "cyan"]'   title="Cyan"></button>
+                                <button class="color-option" data-color="brown"  data-on-click='["HostManager.updateColorCategory", "brown"]'  title="Brown"></button>
+                                <button class="color-option clear" data-color="null" data-on-click='["HostManager.updateColorCategory", null]' title="Clear">✕</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Sub-navigation tabs (Indicators moved into the persistent bar above) -->
                     <div class="host-sub-nav">
-                        <button class="host-sub-tab active" data-subtab="notes" onclick="HostManager.switchHostTab('notes')">
+                        <button class="host-sub-tab active" data-subtab="notes" data-on-click='["HostManager.switchHostTab", "notes"]'>
                             <span class="sub-tab-icon"><i data-lucide="notebook-pen"></i></span>
                             <span class="sub-tab-label">Notes</span>
                         </button>
-                        <button class="host-sub-tab" data-subtab="ports" onclick="HostManager.switchHostTab('ports')">
+                        <button class="host-sub-tab" data-subtab="ports" data-on-click='["HostManager.switchHostTab", "ports"]'>
                             <span class="sub-tab-icon"><i data-lucide="plug"></i></span>
                             <span class="sub-tab-label">Ports</span>
                         </button>
-                        <button class="host-sub-tab" data-subtab="findings" onclick="HostManager.switchHostTab('findings')">
+                        <button class="host-sub-tab" data-subtab="findings" data-on-click='["HostManager.switchHostTab", "findings"]'>
                             <span class="sub-tab-icon"><i data-lucide="triangle-alert"></i></span>
                             <span class="sub-tab-label">Findings</span>
                         </button>
-                        <button class="host-sub-tab" data-subtab="credentials" onclick="HostManager.switchHostTab('credentials')">
+                        <button class="host-sub-tab" data-subtab="credentials" data-on-click='["HostManager.switchHostTab", "credentials"]'>
                             <span class="sub-tab-icon"><i data-lucide="key-round"></i></span>
                             <span class="sub-tab-label">Credentials</span>
                         </button>
@@ -512,7 +512,7 @@
                     <div id="portsSection" class="host-section">
                     <div class="section-header">
                         <h4>Open Ports</h4>
-                        <button class="btn btn-sm btn-primary" onclick="HostManager.showAddPort()">+ Add Port</button>
+                        <button class="btn btn-sm btn-primary" data-on-click='["HostManager.showAddPort"]'>+ Add Port</button>
                     </div>
                     <table class="data-table ports-table">
                         <thead>
@@ -537,14 +537,14 @@
                     <div class="section-header">
                         <h4>Findings</h4>
                         <div class="section-header-actions">
-                            <button class="btn btn-sm btn-primary" onclick="HostManager.showAddHostFinding()">+ Add Finding</button>
+                            <button class="btn btn-sm btn-primary" data-on-click='["HostManager.showAddHostFinding"]'>+ Add Finding</button>
                             <div class="vuln-filter-buttons">
-                                <button class="btn btn-sm vuln-filter active" data-severity="all" onclick="HostManager.filterVulnerabilities('all')">All</button>
-                                <button class="btn btn-sm vuln-filter" data-severity="critical" onclick="HostManager.filterVulnerabilities('critical')">Critical</button>
-                                <button class="btn btn-sm vuln-filter" data-severity="high" onclick="HostManager.filterVulnerabilities('high')">High</button>
-                                <button class="btn btn-sm vuln-filter" data-severity="medium" onclick="HostManager.filterVulnerabilities('medium')">Medium</button>
-                                <button class="btn btn-sm vuln-filter" data-severity="low" onclick="HostManager.filterVulnerabilities('low')">Low</button>
-                                <button class="btn btn-sm vuln-filter" data-severity="info" onclick="HostManager.filterVulnerabilities('info')">Info</button>
+                                <button class="btn btn-sm vuln-filter active" data-severity="all" data-on-click='["HostManager.filterVulnerabilities", "all"]'>All</button>
+                                <button class="btn btn-sm vuln-filter" data-severity="critical" data-on-click='["HostManager.filterVulnerabilities", "critical"]'>Critical</button>
+                                <button class="btn btn-sm vuln-filter" data-severity="high" data-on-click='["HostManager.filterVulnerabilities", "high"]'>High</button>
+                                <button class="btn btn-sm vuln-filter" data-severity="medium" data-on-click='["HostManager.filterVulnerabilities", "medium"]'>Medium</button>
+                                <button class="btn btn-sm vuln-filter" data-severity="low" data-on-click='["HostManager.filterVulnerabilities", "low"]'>Low</button>
+                                <button class="btn btn-sm vuln-filter" data-severity="info" data-on-click='["HostManager.filterVulnerabilities", "info"]'>Info</button>
                             </div>
                         </div>
                     </div>
@@ -557,7 +557,7 @@
                     <div id="credentialsSection" class="host-section">
                     <div class="section-header">
                         <h4>Credentials</h4>
-                        <button class="btn btn-sm btn-primary" onclick="HostManager.showAddCredential()">+ Add Credential</button>
+                        <button class="btn btn-sm btn-primary" data-on-click='["HostManager.showAddCredential"]'>+ Add Credential</button>
                     </div>
                     <table class="data-table credentials-table">
                         <thead>
@@ -583,19 +583,19 @@
                 <div id="generalSectionContainer" class="general-section-container" style="display: none;">
                     <!-- Sub-navigation tabs -->
                     <div class="general-sub-nav">
-                        <button class="general-sub-tab active" data-subtab="notes" onclick="HostManager.switchGeneralTab('notes')">
+                        <button class="general-sub-tab active" data-subtab="notes" data-on-click='["HostManager.switchGeneralTab", "notes"]'>
                             <span class="sub-tab-icon"><i data-lucide="notebook-pen"></i></span>
                             <span class="sub-tab-label">Notes</span>
                         </button>
-                        <button class="general-sub-tab" data-subtab="credentials" onclick="HostManager.switchGeneralTab('credentials')">
+                        <button class="general-sub-tab" data-subtab="credentials" data-on-click='["HostManager.switchGeneralTab", "credentials"]'>
                             <span class="sub-tab-icon"><i data-lucide="key-round"></i></span>
                             <span class="sub-tab-label">Credentials</span>
                         </button>
-                        <button class="general-sub-tab" data-subtab="terminal" onclick="HostManager.switchGeneralTab('terminal')">
+                        <button class="general-sub-tab" data-subtab="terminal" data-on-click='["HostManager.switchGeneralTab", "terminal"]'>
                             <span class="sub-tab-icon"><i data-lucide="terminal"></i></span>
                             <span class="sub-tab-label">Terminal Dumps</span>
                         </button>
-                        <button class="general-sub-tab" data-subtab="findings" onclick="HostManager.switchGeneralTab('findings')">
+                        <button class="general-sub-tab" data-subtab="findings" data-on-click='["HostManager.switchGeneralTab", "findings"]'>
                             <span class="sub-tab-icon"><i data-lucide="target"></i></span>
                             <span class="sub-tab-label">Findings</span>
                         </button>
@@ -641,7 +641,7 @@
                     <div id="generalSubCredentials" class="general-sub-page">
                         <div class="sub-page-header">
                             <h4>Credentials</h4>
-                            <button class="btn btn-sm btn-primary" onclick="HostManager.showAddEngagementCredential()">+ Add Credential</button>
+                            <button class="btn btn-sm btn-primary" data-on-click='["HostManager.showAddEngagementCredential"]'>+ Add Credential</button>
                         </div>
                         <table class="data-table credentials-table">
                             <thead>
@@ -663,7 +663,7 @@
                     <div id="generalSubTerminal" class="general-sub-page">
                         <div class="sub-page-header">
                             <h4>Terminal Dumps</h4>
-                            <button class="btn btn-sm btn-primary" onclick="HostManager.showAddTerminalDump()">+ Add Dump</button>
+                            <button class="btn btn-sm btn-primary" data-on-click='["HostManager.showAddTerminalDump"]'>+ Add Dump</button>
                         </div>
                         <div id="terminalDumpsList" class="terminal-dumps-list">
                             <div class="empty-state"><p>No terminal dumps yet</p></div>
@@ -674,7 +674,7 @@
                     <div id="generalSubFindings" class="general-sub-page">
                         <div class="sub-page-header">
                             <h4>Findings</h4>
-                            <button class="btn btn-sm btn-primary" onclick="HostManager.showAddEngagementFinding()">+ Add Finding</button>
+                            <button class="btn btn-sm btn-primary" data-on-click='["HostManager.showAddEngagementFinding"]'>+ Add Finding</button>
                         </div>
                         <div id="engagementFindingsList" class="findings-list">
                             <div class="empty-state"><p>No findings yet</p></div>
@@ -765,7 +765,7 @@
                     <div class="loading">Loading...</div>
                 </div>
                 <div class="commands-sidebar-footer">
-                    <button class="btn btn-primary btn-block" onclick="CommandManager.openAddModal()">
+                    <button class="btn btn-primary btn-block" data-on-click='["CommandManager.openAddModal"]'>
                         + Add Command
                     </button>
                 </div>
@@ -779,7 +779,7 @@
                         <input type="text" id="commandSearch" placeholder="Search commands..." autocomplete="off">
                     </div>
                     <div class="commands-header-actions">
-                        <button class="btn btn-icon" id="favoritesFilterBtn" onclick="CommandManager.toggleFavoritesFilter()" title="Show favorites only">
+                        <button class="btn btn-icon" id="favoritesFilterBtn" data-on-click='["CommandManager.toggleFavoritesFilter"]' title="Show favorites only">
                             <span id="favoritesFilterIcon">☆</span>
                         </button>
                         <span id="commandsCount" class="commands-count">0 commands</span>
@@ -801,7 +801,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="engagementModalTitle">New Engagement</h3>
-                <button class="modal-close" onclick="closeModal('engagementModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "engagementModal"]'>&times;</button>
             </div>
             <form id="engagementForm">
                 <input type="hidden" id="engEditId" value="">
@@ -812,7 +812,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="engClientSelect">Client</label>
-                        <select id="engClientSelect" onchange="onEngagementClientChange(this)">
+                        <select id="engClientSelect" data-on-change='["onEngagementClientChange", {"$": "el"}]'>
                             <option value="">Select client</option>
                             <option value="__new__">+ New Client…</option>
                         </select>
@@ -841,8 +841,8 @@
                         </div>
                     </div>
                     <div class="form-actions" style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;">
-                        <button type="button" class="btn btn-secondary" onclick="cancelEngagementNewClient()">Cancel</button>
-                        <button type="button" class="btn btn-primary" onclick="createEngagementNewClient()">Create &amp; Select</button>
+                        <button type="button" class="btn btn-secondary" data-on-click='["cancelEngagementNewClient"]'>Cancel</button>
+                        <button type="button" class="btn btn-primary" data-on-click='["createEngagementNewClient"]'>Create &amp; Select</button>
                     </div>
                 </div>
                 <div class="form-group">
@@ -881,7 +881,7 @@
                     <textarea id="engNotes" rows="3" placeholder="Additional notes..."></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('engagementModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "engagementModal"]'>Cancel</button>
                     <button type="submit" id="engagementSubmitBtn" class="btn btn-primary">Create Engagement</button>
                 </div>
             </form>
@@ -893,7 +893,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>New Evidence</h3>
-                <button class="modal-close" onclick="closeModal('evidenceModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "evidenceModal"]'>&times;</button>
             </div>
             <form id="evidenceForm">
                 <div class="form-group">
@@ -936,7 +936,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('evidenceModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "evidenceModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Evidence</button>
                 </div>
             </form>
@@ -948,30 +948,30 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Export Engagement</h3>
-                <button class="modal-close" onclick="closeModal('exportModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "exportModal"]'>&times;</button>
             </div>
             <div class="export-options">
-                <button class="export-option" onclick="exportData('json')">
+                <button class="export-option" data-on-click='["exportData", "json"]'>
                     <span class="export-icon"><i data-lucide="braces"></i></span>
                     <span class="export-label">JSON</span>
                     <small>Complete data dump</small>
                 </button>
-                <button class="export-option" onclick="exportData('markdown')">
+                <button class="export-option" data-on-click='["exportData", "markdown"]'>
                     <span class="export-icon"><i data-lucide="file-text"></i></span>
                     <span class="export-label">Markdown</span>
                     <small>Formatted report</small>
                 </button>
-                <button class="export-option" onclick="exportData('template', 'default')">
+                <button class="export-option" data-on-click='["exportData", "template", "default"]'>
                     <span class="export-icon"><i data-lucide="clipboard-list"></i></span>
                     <span class="export-label">Template: Default</span>
                     <small>Comprehensive report</small>
                 </button>
-                <button class="export-option" onclick="exportData('template', 'executive')">
+                <button class="export-option" data-on-click='["exportData", "template", "executive"]'>
                     <span class="export-icon"><i data-lucide="presentation"></i></span>
                     <span class="export-label">Template: Executive</span>
                     <small>Summary for leadership</small>
                 </button>
-                <button class="export-option" onclick="exportData('template', 'findings')">
+                <button class="export-option" data-on-click='["exportData", "template", "findings"]'>
                     <span class="export-icon"><i data-lucide="search"></i></span>
                     <span class="export-label">Template: Findings</span>
                     <small>Technical details</small>
@@ -985,7 +985,7 @@
         <div class="modal-content modal-lg">
             <div class="modal-header">
                 <h3><span data-lucide="download"></span> Import Tool Output</h3>
-                <button class="modal-close" onclick="closeModal('importToolModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "importToolModal"]'>&times;</button>
             </div>
             <form id="importToolForm">
                 <!-- Q3: Tool Type Selection -->
@@ -1041,7 +1041,7 @@
                             <span id="importFileName" class="file-name"></span>
                             <span id="importFileSize" class="file-size"></span>
                         </div>
-                        <button type="button" class="btn btn-icon btn-danger" onclick="clearImportFile()" title="Remove">×</button>
+                        <button type="button" class="btn btn-icon btn-danger" data-on-click='["clearImportFile"]' title="Remove">×</button>
                     </div>
                     <div id="importDetectedTool" class="detected-tool" style="display: none;">
                         <span class="detected-icon">✓</span>
@@ -1092,7 +1092,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('importToolModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "importToolModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary" id="importSubmitBtn" disabled>Import</button>
                 </div>
             </form>
@@ -1104,9 +1104,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add Host</h3>
-                <button class="modal-close" onclick="closeModal('addHostModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "addHostModal"]'>&times;</button>
             </div>
-            <form id="addHostForm" onsubmit="HostManager.handleAddHost(event)">
+            <form id="addHostForm" data-on-submit='["HostManager.handleAddHost", {"$": "event"}]'>
                 <div class="form-group">
                     <label for="newHostIp">IP Address / Hostname *</label>
                     <input type="text" id="newHostIp" required placeholder="e.g., 192.168.1.100 or server.local">
@@ -1124,7 +1124,7 @@
                     <textarea id="newHostNotes" rows="2" placeholder="Additional notes..."></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addHostModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "addHostModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Host</button>
                 </div>
             </form>
@@ -1136,9 +1136,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Edit Host</h3>
-                <button class="modal-close" onclick="closeModal('editHostModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "editHostModal"]'>&times;</button>
             </div>
-            <form id="editHostForm" onsubmit="HostManager.handleEditHost(event)">
+            <form id="editHostForm" data-on-submit='["HostManager.handleEditHost", {"$": "event"}]'>
                 <input type="hidden" id="editHostId">
                 <div class="form-group">
                     <label for="editHostIp">IP Address</label>
@@ -1158,7 +1158,7 @@
                     <textarea id="editHostNotes" rows="2" placeholder="Additional notes..."></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editHostModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "editHostModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
@@ -1170,9 +1170,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Save Current Search</h3>
-                <button class="modal-close" onclick="closeModal('saveFilterModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "saveFilterModal"]'>&times;</button>
             </div>
-            <form id="saveFilterForm" onsubmit="HostManager.handleSaveFilter(event)">
+            <form id="saveFilterForm" data-on-submit='["HostManager.handleSaveFilter", {"$": "event"}]'>
                 <div class="form-group">
                     <label for="filterName">Search Name *</label>
                     <input type="text" id="filterName" required placeholder="e.g., Critical Web Vulnerabilities">
@@ -1182,7 +1182,7 @@
                     <textarea id="filterDescription" rows="2" placeholder="Brief description of what this search shows..."></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('saveFilterModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "saveFilterModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Search</button>
                 </div>
             </form>
@@ -1191,14 +1191,14 @@
 
     <!-- Edit Evidence Modal -->
     <!-- Edit Evidence Slide-Over -->
-    <div id="editEvidenceBackdrop" class="slide-over-backdrop" onclick="SlideOver.close('editEvidence')"></div>
+    <div id="editEvidenceBackdrop" class="slide-over-backdrop" data-on-click='["SlideOver.close", "editEvidence"]'></div>
     <div id="editEvidenceDrawer" class="slide-over" role="dialog" aria-modal="true" aria-labelledby="editEvidenceDrawerTitle">
         <div class="slide-over-header">
             <h2 class="slide-over-title" id="editEvidenceDrawerTitle">Edit Evidence</h2>
-            <button class="slide-over-close" onclick="SlideOver.close('editEvidence')" aria-label="Close">&times;</button>
+            <button class="slide-over-close" data-on-click='["SlideOver.close", "editEvidence"]' aria-label="Close">&times;</button>
         </div>
         <div class="slide-over-body">
-            <form id="editEvidenceForm" onsubmit="HostManager.handleEditEvidence(event)">
+            <form id="editEvidenceForm" data-on-submit='["HostManager.handleEditEvidence", {"$": "event"}]'>
                 <input type="hidden" id="editEvId">
                 <div class="form-group">
                     <label for="editEvTitle">Title *</label>
@@ -1215,8 +1215,8 @@
             </form>
         </div>
         <div class="slide-over-footer">
-            <button type="button" class="btn btn-secondary" onclick="SlideOver.close('editEvidence')">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="document.getElementById('editEvidenceForm').requestSubmit()">Save Changes</button>
+            <button type="button" class="btn btn-secondary" data-on-click='["SlideOver.close", "editEvidence"]'>Cancel</button>
+            <button type="button" class="btn btn-primary" data-on-click='["submitForm", "editEvidenceForm"]'>Save Changes</button>
         </div>
     </div>
 
@@ -1225,22 +1225,22 @@
         <div class="modal-content modal-lg">
             <div class="modal-header">
                 <h3>Add Note</h3>
-                <button class="modal-close" onclick="closeModal('addNoteModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "addNoteModal"]'>&times;</button>
             </div>
-            <form id="addNoteForm" onsubmit="HostManager.handleAddNote(event)">
+            <form id="addNoteForm" data-on-submit='["HostManager.handleAddNote", {"$": "event"}]'>
                 <div class="note-editor">
                     <div class="editor-toolbar">
                         <label class="btn btn-sm btn-secondary">
-                            <input type="file" id="noteImageInput" accept="image/*" style="display:none" onchange="HostManager.handleNoteImage('noteImageInput', 'noteContent')">
+                            <input type="file" id="noteImageInput" accept="image/*" style="display:none" data-on-change='["HostManager.handleNoteImage", "noteImageInput", "noteContent"]'>
                             <i data-lucide="image"></i> Upload Image
                         </label>
                         <span class="toolbar-hint">Paste screenshots with Ctrl+V. Markdown is supported.</span>
-                        <button type="button" class="btn btn-sm btn-secondary" title="Markdown Reference" onclick="document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); switchSection('tools'); setTimeout(() => ToolsManager.switchTool('markdown'), 100);"><i data-lucide="book-open"></i> Markdown Reference</button>
+                        <button type="button" class="btn btn-sm btn-secondary" title="Markdown Reference" data-on-click='["openMarkdownReference"]'><i data-lucide="book-open"></i> Markdown Reference</button>
                     </div>
                     <div class="editor-split">
                         <div class="editor-pane">
                             <label for="noteContent">Content (Markdown)</label>
-                            <textarea id="noteContent" rows="12" placeholder="# My Note&#10;&#10;Add markdown content here...&#10;&#10;**Bold**, *italic*, `code`" oninput="HostManager.updateNotePreview('noteContent', 'notePreview')"></textarea>
+                            <textarea id="noteContent" rows="12" placeholder="# My Note&#10;&#10;Add markdown content here...&#10;&#10;**Bold**, *italic*, `code`" data-on-input='["HostManager.updateNotePreview", "noteContent", "notePreview"]'></textarea>
                         </div>
                         <div class="preview-pane">
                             <label>Preview</label>
@@ -1249,7 +1249,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addNoteModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "addNoteModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Note</button>
                 </div>
             </form>
@@ -1261,9 +1261,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add Port</h3>
-                <button class="modal-close" onclick="closeModal('addPortModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "addPortModal"]'>&times;</button>
             </div>
-            <form id="addPortForm" onsubmit="HostManager.handleAddPort(event)">
+            <form id="addPortForm" data-on-submit='["HostManager.handleAddPort", {"$": "event"}]'>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="newPortNumber">Port Number *</label>
@@ -1296,7 +1296,7 @@
                     <input type="text" id="newPortVersion" placeholder="e.g., Apache 2.4.41">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addPortModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "addPortModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Port</button>
                 </div>
             </form>
@@ -1308,9 +1308,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Edit Port</h3>
-                <button class="modal-close" onclick="closeModal('editPortModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "editPortModal"]'>&times;</button>
             </div>
-            <form id="editPortForm" onsubmit="HostManager.handleEditPort(event)">
+            <form id="editPortForm" data-on-submit='["HostManager.handleEditPort", {"$": "event"}]'>
                 <input type="hidden" id="editPortId">
                 <div class="form-row">
                     <div class="form-group">
@@ -1341,7 +1341,7 @@
                     <input type="text" id="editPortVersion" placeholder="e.g., Apache 2.4.41">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editPortModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "editPortModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
@@ -1353,9 +1353,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add Credential</h3>
-                <button class="modal-close" onclick="closeModal('addCredentialModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "addCredentialModal"]'>&times;</button>
             </div>
-            <form id="addCredentialForm" onsubmit="HostManager.handleAddCredential(event)">
+            <form id="addCredentialForm" data-on-submit='["HostManager.handleAddCredential", {"$": "event"}]'>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="newCredUsername">Username</label>
@@ -1373,7 +1373,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="newCredPasswordType">Type</label>
-                        <select id="newCredPasswordType" onchange="HostManager.toggleHashType('newCredPasswordType', 'newCredHashTypeGroup')">
+                        <select id="newCredPasswordType" data-on-change='["HostManager.toggleHashType", "newCredPasswordType", "newCredHashTypeGroup"]'>
                             <option value="cleartext">Cleartext</option>
                             <option value="hash">Hash</option>
                         </select>
@@ -1388,7 +1388,7 @@
                     <textarea id="newCredNotes" rows="2" placeholder="How was this credential discovered?"></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addCredentialModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "addCredentialModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Credential</button>
                 </div>
             </form>
@@ -1400,9 +1400,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Edit Credential</h3>
-                <button class="modal-close" onclick="closeModal('editCredentialModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "editCredentialModal"]'>&times;</button>
             </div>
-            <form id="editCredentialForm" onsubmit="HostManager.handleEditCredential(event)">
+            <form id="editCredentialForm" data-on-submit='["HostManager.handleEditCredential", {"$": "event"}]'>
                 <input type="hidden" id="editCredId">
                 <div class="form-row">
                     <div class="form-group">
@@ -1421,7 +1421,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="editCredPasswordType">Type</label>
-                        <select id="editCredPasswordType" onchange="HostManager.toggleHashType('editCredPasswordType', 'editCredHashTypeGroup')">
+                        <select id="editCredPasswordType" data-on-change='["HostManager.toggleHashType", "editCredPasswordType", "editCredHashTypeGroup"]'>
                             <option value="cleartext">Cleartext</option>
                             <option value="hash">Hash</option>
                         </select>
@@ -1436,7 +1436,7 @@
                     <textarea id="editCredNotes" rows="2" placeholder="How was this credential discovered?"></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editCredentialModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "editCredentialModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
@@ -1448,22 +1448,22 @@
         <div class="modal-content modal-lg">
             <div class="modal-header">
                 <h3>Add Note</h3>
-                <button class="modal-close" onclick="closeModal('addEngagementNoteModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "addEngagementNoteModal"]'>&times;</button>
             </div>
-            <form id="addEngagementNoteForm" onsubmit="HostManager.handleAddEngagementNote(event)">
+            <form id="addEngagementNoteForm" data-on-submit='["HostManager.handleAddEngagementNote", {"$": "event"}]'>
                 <div class="note-editor">
                     <div class="editor-toolbar">
                         <label class="btn btn-sm btn-secondary">
-                            <input type="file" id="engagementNoteImageInput" accept="image/*" style="display:none" onchange="HostManager.handleNoteImage('engagementNoteImageInput', 'engagementNoteContent')">
+                            <input type="file" id="engagementNoteImageInput" accept="image/*" style="display:none" data-on-change='["HostManager.handleNoteImage", "engagementNoteImageInput", "engagementNoteContent"]'>
                             <i data-lucide="image"></i> Upload Image
                         </label>
                         <span class="toolbar-hint">Paste screenshots with Ctrl+V. Markdown is supported.</span>
-                        <button type="button" class="btn btn-sm btn-secondary" title="Markdown Reference" onclick="document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); switchSection('tools'); setTimeout(() => ToolsManager.switchTool('markdown'), 100);"><i data-lucide="book-open"></i> Markdown Reference</button>
+                        <button type="button" class="btn btn-sm btn-secondary" title="Markdown Reference" data-on-click='["openMarkdownReference"]'><i data-lucide="book-open"></i> Markdown Reference</button>
                     </div>
                     <div class="editor-split">
                         <div class="editor-pane">
                             <label for="engagementNoteContent">Content (Markdown)</label>
-                            <textarea id="engagementNoteContent" rows="12" placeholder="# My Note&#10;&#10;Add markdown content here...&#10;&#10;**Bold**, *italic*, `code`" oninput="HostManager.updateNotePreview('engagementNoteContent', 'engagementNotePreview')"></textarea>
+                            <textarea id="engagementNoteContent" rows="12" placeholder="# My Note&#10;&#10;Add markdown content here...&#10;&#10;**Bold**, *italic*, `code`" data-on-input='["HostManager.updateNotePreview", "engagementNoteContent", "engagementNotePreview"]'></textarea>
                         </div>
                         <div class="preview-pane">
                             <label>Preview</label>
@@ -1472,7 +1472,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addEngagementNoteModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "addEngagementNoteModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Note</button>
                 </div>
             </form>
@@ -1484,9 +1484,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add Credential</h3>
-                <button class="modal-close" onclick="closeModal('addEngagementCredentialModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "addEngagementCredentialModal"]'>&times;</button>
             </div>
-            <form id="addEngagementCredentialForm" onsubmit="HostManager.handleAddEngagementCredential(event)">
+            <form id="addEngagementCredentialForm" data-on-submit='["HostManager.handleAddEngagementCredential", {"$": "event"}]'>
                 <div class="form-group">
                     <label for="engCredUsername">Username</label>
                     <input type="text" id="engCredUsername" placeholder="e.g., administrator">
@@ -1511,7 +1511,7 @@
                     <textarea id="engCredDescription" rows="2" placeholder="How was this credential discovered?"></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addEngagementCredentialModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "addEngagementCredentialModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Credential</button>
                 </div>
             </form>
@@ -1523,9 +1523,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Edit Credential</h3>
-                <button class="modal-close" onclick="closeModal('editEngagementCredentialModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "editEngagementCredentialModal"]'>&times;</button>
             </div>
-            <form id="editEngagementCredentialForm" onsubmit="HostManager.handleEditEngagementCredential(event)">
+            <form id="editEngagementCredentialForm" data-on-submit='["HostManager.handleEditEngagementCredential", {"$": "event"}]'>
                 <input type="hidden" id="editEngCredId">
                 <div class="form-group">
                     <label for="editEngCredUsername">Username</label>
@@ -1551,7 +1551,7 @@
                     <textarea id="editEngCredDescription" rows="2" placeholder="How was this credential discovered?"></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editEngagementCredentialModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "editEngagementCredentialModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
@@ -1563,9 +1563,9 @@
         <div class="modal-content modal-lg">
             <div class="modal-header">
                 <h3>Add Terminal Dump</h3>
-                <button class="modal-close" onclick="closeModal('addTerminalDumpModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "addTerminalDumpModal"]'>&times;</button>
             </div>
-            <form id="addTerminalDumpForm" onsubmit="HostManager.handleAddTerminalDump(event)">
+            <form id="addTerminalDumpForm" data-on-submit='["HostManager.handleAddTerminalDump", {"$": "event"}]'>
                 <div class="form-group">
                     <label for="dumpTitle">Title *</label>
                     <input type="text" id="dumpTitle" required placeholder="e.g., Initial Recon Session">
@@ -1580,7 +1580,7 @@
                     <textarea id="dumpContent" rows="15" required placeholder="Paste terminal output here..." class="monospace-textarea"></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addTerminalDumpModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "addTerminalDumpModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Terminal Dump</button>
                 </div>
             </form>
@@ -1592,9 +1592,9 @@
         <div class="modal-content modal-lg">
             <div class="modal-header">
                 <h3>Edit Terminal Dump</h3>
-                <button class="modal-close" onclick="closeModal('editTerminalDumpModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "editTerminalDumpModal"]'>&times;</button>
             </div>
-            <form id="editTerminalDumpForm" onsubmit="HostManager.handleEditTerminalDump(event)">
+            <form id="editTerminalDumpForm" data-on-submit='["HostManager.handleEditTerminalDump", {"$": "event"}]'>
                 <input type="hidden" id="editDumpId">
                 <div class="form-group">
                     <label for="editDumpTitle">Title *</label>
@@ -1610,77 +1610,7 @@
                     <textarea id="editDumpContent" rows="15" required placeholder="Paste terminal output here..." class="monospace-textarea"></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editTerminalDumpModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Finding Modal (for General section) -->
-    <div id="editFindingModal" class="modal" style="display: none;">
-        <div class="modal-content modal-lg">
-            <div class="modal-header">
-                <h3>Edit Finding</h3>
-                <button class="modal-close" onclick="closeModal('editFindingModal')">&times;</button>
-            </div>
-            <form id="editFindingForm" onsubmit="HostManager.handleEditEngagementFinding(event)">
-                <input type="hidden" id="editFindingId">
-                <div class="form-row">
-                    <div class="form-group flex-2">
-                        <label for="editFindingTitle">Title *</label>
-                        <input type="text" id="editFindingTitle" required placeholder="e.g., SQL Injection in Login Form">
-                    </div>
-                    <div class="form-group flex-1">
-                        <label for="editFindingCriticality">Criticality *</label>
-                        <select id="editFindingCriticality" required>
-                            <option value="critical">Critical</option>
-                            <option value="high">High</option>
-                            <option value="medium">Medium</option>
-                            <option value="low">Low</option>
-                        </select>
-                    </div>
-                    <div class="form-group flex-1">
-                        <label for="editFindingCvss">CVSS Score</label>
-                        <input type="number" id="editFindingCvss" min="0" max="10" step="0.1" placeholder="0-10">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group flex-1">
-                        <label for="editFindingIpAddress">IP Address</label>
-                        <input type="text" id="editFindingIpAddress" placeholder="e.g., 192.168.1.100">
-                    </div>
-                    <div class="form-group flex-1">
-                        <label for="editFindingHostname">Hostname</label>
-                        <input type="text" id="editFindingHostname" placeholder="e.g., dc01.domain.local">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="editFindingContent">Finding Details (Markdown supported)</label>
-                    <div class="markdown-editor">
-                        <textarea id="editFindingContent" rows="8" placeholder="Describe the vulnerability, impact, and proof of concept..." oninput="HostManager.updateFindingPreview('editFindingContent', 'editFindingContentPreview')"></textarea>
-                        <div class="markdown-preview" id="editFindingContentPreview">
-                            <p class="preview-placeholder">Preview will appear here...</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="editRemediationContent">Remediation Notes (Markdown supported)</label>
-                    <div class="markdown-editor">
-                        <textarea id="editRemediationContent" rows="6" placeholder="Describe recommended fixes and mitigations..." oninput="HostManager.updateFindingPreview('editRemediationContent', 'editRemediationContentPreview')"></textarea>
-                        <div class="markdown-preview" id="editRemediationContentPreview">
-                            <p class="preview-placeholder">Preview will appear here...</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group checkbox-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="editFindingIncludeReport">
-                        <span>Include in final report</span>
-                    </label>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editFindingModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "editTerminalDumpModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
@@ -1694,7 +1624,7 @@
         <div class="modal-content modal-sm">
             <div class="modal-header">
                 <h3>Save to Writeups Database</h3>
-                <button class="modal-close" onclick="closeModal('sensitiveWarningModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "sensitiveWarningModal"]'>&times;</button>
             </div>
             <div class="modal-body">
                 <div class="warning-content">
@@ -1710,8 +1640,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('sensitiveWarningModal')">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="ReportingManager.confirmSaveToWriteups()">Continue</button>
+                <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "sensitiveWarningModal"]'>Cancel</button>
+                <button type="button" class="btn btn-primary" data-on-click='["ReportingManager.confirmSaveToWriteups"]'>Continue</button>
             </div>
         </div>
     </div>
@@ -1721,7 +1651,7 @@
         <div class="modal-content modal-sm">
             <div class="modal-header">
                 <h3>Switch Engagement</h3>
-                <button class="modal-close" onclick="closeModal('switchEngagementModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "switchEngagementModal"]'>&times;</button>
             </div>
             <div class="modal-body">
                 <p>Switch to engagement:</p>
@@ -1729,7 +1659,7 @@
                 <p class="text-muted">This will change the active engagement context.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('switchEngagementModal')">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "switchEngagementModal"]'>Cancel</button>
                 <button type="button" class="btn btn-primary" id="confirmSwitchBtn">Switch</button>
             </div>
         </div>
@@ -1740,7 +1670,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="commandModalTitle">New Command</h3>
-                <button class="modal-close" onclick="closeModal('commandModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "commandModal"]'>&times;</button>
             </div>
             <form id="commandForm">
                 <input type="hidden" id="cmdId">
@@ -1770,7 +1700,7 @@
                     <textarea id="cmdDescription" rows="2" placeholder="Brief description of what this command does..."></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('commandModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "commandModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Command</button>
                 </div>
             </form>
@@ -1782,7 +1712,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Fill in Variables</h3>
-                <button class="modal-close" onclick="closeModal('variableModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "variableModal"]'>&times;</button>
             </div>
             <form id="variableForm">
                 <div id="variableInputs" class="variable-inputs">
@@ -1793,7 +1723,7 @@
                     <pre id="commandPreview" class="command-preview"></pre>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('variableModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "variableModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Copy to Clipboard</button>
                 </div>
             </form>
@@ -1806,7 +1736,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add Team Member</h3>
-                <button class="modal-close" onclick="closeModal('memberModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "memberModal"]'>&times;</button>
             </div>
             <form id="memberForm" class="modal-body">
                 <div class="form-group">
@@ -1831,7 +1761,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('memberModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-on-click='["closeModal", "memberModal"]'>Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Member</button>
                 </div>
             </form>
@@ -1844,7 +1774,7 @@
         <div class="modal-content modal-xl">
             <div class="modal-header">
                 <h3>Multi-Engagement Comparison</h3>
-                <button class="modal-close" onclick="closeModal('comparisonModal')">&times;</button>
+                <button class="modal-close" data-on-click='["closeModal", "comparisonModal"]'>&times;</button>
             </div>
             <div class="modal-body">
                 <!-- Engagement Selection -->
@@ -1903,8 +1833,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('comparisonModal')">Close</button>
-                <button class="btn btn-primary" id="runComparisonBtn" onclick="ReportingManager.runComparison()">
+                <button class="btn btn-secondary" data-on-click='["closeModal", "comparisonModal"]'>Close</button>
+                <button class="btn btn-primary" id="runComparisonBtn" data-on-click='["ReportingManager.runComparison"]'>
                     <i data-lucide="play"></i>
                     Run Comparison
                 </button>
@@ -1915,39 +1845,7 @@
     <!-- Attack Maps modal is rendered dynamically by attack_map_editor.js -->
 
     <!-- Slide-Over Controller -->
-    <script>
-        const SlideOver = {
-            open(name) {
-                const backdrop = document.getElementById(name + 'Backdrop');
-                const drawer = document.getElementById(name + 'Drawer');
-                if (backdrop) backdrop.classList.add('is-open');
-                if (drawer) {
-                    drawer.classList.add('is-open');
-                    // Focus first focusable element
-                    const focusable = drawer.querySelector('input, textarea, select, button');
-                    if (focusable) setTimeout(() => focusable.focus(), 50);
-                }
-                document.body.classList.add('slide-over-open');
-            },
-            close(name) {
-                const backdrop = document.getElementById(name + 'Backdrop');
-                const drawer = document.getElementById(name + 'Drawer');
-                if (backdrop) backdrop.classList.remove('is-open');
-                if (drawer) drawer.classList.remove('is-open');
-                document.body.classList.remove('slide-over-open');
-            }
-        };
-
-        // Close active slide-over on Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.slide-over.is-open').forEach(drawer => {
-                    const name = drawer.id.replace('Drawer', '');
-                    SlideOver.close(name);
-                });
-            }
-        });
-    </script>
+    <script src="/static/js/lib/slide_over.js"></script>
 
     <!-- D3.js for graph visualization -->
     <script src="/static/vendor/d3-7.9.0/d3.min.js"></script>
@@ -1974,21 +1872,6 @@
     <script type="module" src="/static/js/lib/idle-timeout.js"></script>
     <script src="/static/js/app.js"></script>
     <!-- Initialize Lucide Icons -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof lucide === 'undefined') return;
-            lucide.createIcons();
-            // Icons rendered later by the section scripts are drawn on the next frame.
-            let pending = false;
-            new MutationObserver(function() {
-                if (pending || !document.querySelector('[data-lucide]:not(svg)')) return;
-                pending = true;
-                requestAnimationFrame(function() {
-                    pending = false;
-                    lucide.createIcons();
-                });
-            }).observe(document.body, { childList: true, subtree: true });
-        });
-    </script>
+    <script src="/static/js/lib/icons.js"></script>
 </body>
 </html>

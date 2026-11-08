@@ -232,6 +232,22 @@ DELEGATED_EVENTS.forEach(type => document.addEventListener(type, _dispatchDeclar
  *   on('click', 'stopAndCall', ARG.event, 'HostManager.editEngagementFinding', id)
  * The method is looked up the same way as in data-on-* attributes.
  */
+/** Stop a click from reaching the handlers of enclosing elements. */
+function stopEvent(event) {
+    event.stopPropagation();
+}
+
+/** Toggle a class on the element itself (expand/collapse headers). */
+function toggleClass(el, className) {
+    el.classList.toggle(className);
+}
+
+/** A button outside a form submits it, with validation, as a submit button would. */
+function submitForm(formId) {
+    const form = document.getElementById(formId);
+    if (form) form.requestSubmit();
+}
+
 function stopAndCall(event, path, ...args) {
     event.stopPropagation();
     const handler = _resolveHandler(path);
@@ -510,6 +526,9 @@ window.registerAction = registerAction;
 window.on = on;
 window.ARG = ARG;
 window.stopAndCall = stopAndCall;
+window.submitForm = submitForm;
+window.stopEvent = stopEvent;
+window.toggleClass = toggleClass;
 window.showToast = showToast;
 window.ThemeManager = ThemeManager;
 window.openModal = openModal;

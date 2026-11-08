@@ -578,18 +578,19 @@ const AttackMapEditor = {
         let propsChanged = false;
 
         inputs.forEach(input => {
-            const onchange = input.getAttribute('onchange') || '';
-            // Parse the property key from the onchange handler
-            const labelMatch = onchange.match(/updateNodeProp\(\d+,\s*'label'/);
-            const propMatch = onchange.match(/updateNodeProp\(\d+,\s*'(\w+)'/);
+            // The property key is the second argument of the declared change handler:
+            // data-on-change='["AttackMapEditor.updateNodeProp", nodeId, key, ...]' (L-21)
+            let spec = null;
+            try { spec = JSON.parse(input.getAttribute('data-on-change') || 'null'); } catch (e) { spec = null; }
+            const key = Array.isArray(spec) && spec[0] === 'AttackMapEditor.updateNodeProp'
+                && typeof spec[2] === 'string' && /^\w+$/.test(spec[2]) ? spec[2] : null;
 
-            if (labelMatch) {
+            if (key === 'label') {
                 if (input.value !== (node.label || '')) {
                     node.label = input.value;
                     labelChanged = true;
                 }
-            } else if (propMatch) {
-                const key = propMatch[1];
+            } else if (key) {
                 if (!node.properties) node.properties = {};
                 if (input.value !== (node.properties[key] || '')) {
                     node.properties[key] = input.value;

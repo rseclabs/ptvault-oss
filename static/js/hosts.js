@@ -3222,6 +3222,11 @@ const HostManager = {
     /**
      * Apply filters to host list
      */
+    /** Enter in the CIDR box applies the filters (L-21). */
+    applyFiltersOnEnter(event) {
+        if (event.key === 'Enter') this.applyFilters();
+    },
+
     applyFilters() {
         const activeFilters = [];
         const filterCheckboxes = {
@@ -3369,7 +3374,7 @@ const HostManager = {
     updateStatActiveStates() {
         const severities = ['critical', 'high', 'medium', 'low'];
         for (const sev of severities) {
-            const statItem = document.querySelector(`.ribbon-stat[onclick*="'${sev}'"], .stat-item[onclick*="'${sev}'"]`);
+            const statItem = document.querySelector(`.ribbon-stat[data-on-click*='"${sev}"'], .stat-item[data-on-click*='"${sev}"']`);
             if (statItem) {
                 if (this.severityFilter === sev) {
                     statItem.classList.add('stat-active');

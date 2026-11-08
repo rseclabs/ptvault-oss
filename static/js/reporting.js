@@ -300,7 +300,7 @@ const ReportingManager = {
                     ${writeup.tags ? `<span class="writeup-tags">${escapeHtml(writeup.tags)}</span>` : ''}
                 </div>
 
-                <div class="writeup-actions" ${on('click', 'event.stopPropagation')}>
+                <div class="writeup-actions" ${on('click', 'stopEvent', ARG.event)}>
                     <button class="btn btn-icon btn-sm" ${on('click', 'ReportingManager.showEditWriteupModal', writeup.id)} title="Edit">
                         <i data-lucide="edit-2"></i>
                     </button>
@@ -1075,12 +1075,12 @@ const ReportingManager = {
         this.sourceCollapsed[section] = !this.sourceCollapsed[section];
         const isCollapsed = this.sourceCollapsed[section];
 
-        // Find the section element by looking at the onclick handler
+        // Find the section element by its declared click handler's argument
         const sectionHeaders = document.querySelectorAll('.source-section .section-header');
         let sectionEl = null;
         sectionHeaders.forEach(header => {
-            const onclick = header.getAttribute('onclick');
-            if (onclick && onclick.includes(`'${section}'`)) {
+            const handler = header.getAttribute('data-on-click');
+            if (handler && handler.includes(`"${section}"`)) {
                 sectionEl = header.closest('.source-section');
             }
         });

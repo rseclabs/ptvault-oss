@@ -1446,6 +1446,13 @@ document.addEventListener('DOMContentLoaded', () => {
 /**
  * Switch between main app sections
  */
+/** Close any open modal and show the Markdown reference in Tools (editor toolbar button, L-21). */
+function openMarkdownReference() {
+    document.querySelectorAll('.modal').forEach(m => { m.style.display = 'none'; });
+    switchSection('tools');
+    setTimeout(() => ToolsManager.switchTool('markdown'), 100);
+}
+
 function switchSection(sectionId) {
     // Sections that require an active engagement
     const engagementSections = ['hosts', 'general', 'portgrid', 'reporting', 'testplans'];
@@ -1676,4 +1683,5 @@ window.confirmEngagementSwitch = confirmEngagementSwitch;
 window.exportData = exportData;
 window.clearImportFile = clearImportFile;
 window.switchSection = switchSection;
+window.openMarkdownReference = openMarkdownReference;
 window.handleRestoreEngagement = handleRestoreEngagement;
