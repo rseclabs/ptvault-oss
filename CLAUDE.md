@@ -212,6 +212,7 @@ A selection; `models/schema.sql` plus the migrations are the full schema.
 - Variables/Functions: `camelCase` (e.g., `loadHosts`, `activeEngagement`)
 - Constants: `SCREAMING_SNAKE` when applicable
 - Global objects: `PascalCase` (e.g., `API`, `Utils`)
+- No inline script: the CSP is `script-src 'self'`, so `onclick="..."` and `<script>` blocks do not run. Declare handlers with `on('click', 'Manager.method', arg, ARG.value)` in JS templates or `data-on-click='["Manager.method", arg]'` in HTML (`static/js/utils.js`); the named object or function must be on `window`. `tests/test_inline_handlers.py` and the browser tests enforce this
 
 **CSS and icons:**
 - Every colour and font goes through a custom property in `static/css/main.css` (`:root` and `[data-theme="dark"]`); no literal values in rules
