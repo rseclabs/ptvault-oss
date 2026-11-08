@@ -870,3 +870,18 @@ def test_declared_handlers_reach_only_the_apps_own_handlers(ui):
         return calls.length;
     }""")
     assert calls == 0
+
+
+def test_layer_colours_cannot_inject_css(ui):
+    """Retest 2 L-26: a layer technique colour was rendered into style="background-color: ...",
+    where escaping stops attribute breakout but not extra declarations."""
+    evil = 'red;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483647;background:rgb(1,2,3)'
+    got = ui.page.evaluate("""evil => {
+        TestPlansManager.showMatchFilterDialog({ id: 1, name: 'l', layer_data: { techniques: [
+            { techniqueID: 'T1', color: evil, score: 1 }, { techniqueID: 'T2', color: '#ff6666', score: 2 }] } });
+        const swatches = [...document.querySelectorAll('.color-swatch')];
+        return swatches.map(s => [getComputedStyle(s).position, s.getAttribute('style')]);
+    }""", evil)
+    assert [pos for pos, _ in got] == ['static', 'static']
+    assert all('position' not in (style or '') for _, style in got)
+    assert any('#ff6666' in (style or '') for _, style in got)

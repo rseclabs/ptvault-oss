@@ -3153,7 +3153,7 @@ Stop-Transcript
         const colorOptions = Array.from(colors).map(c => `
             <label class="filter-checkbox">
                 <input type="checkbox" name="matchColor" value="${escapeHtml(c)}" checked>
-                <span class="color-swatch" style="background-color: ${escapeHtml(c)}"></span>
+                <span class="color-swatch" style="background-color: ${safeCssColor(c)}"></span>
                 <span>${escapeHtml(c)}</span>
             </label>
         `).join('');

@@ -114,6 +114,16 @@ function escapeHtml(text) {
 }
 
 /**
+ * A colour safe to put in a style attribute: #rgb, #rgba, #rrggbb or #rrggbbaa,
+ * else ''. Escaping stops a value leaving the attribute, not adding declarations
+ * such as ;position:fixed (style-src allows inline styles; retest 2 L-26).
+ */
+function safeCssColor(value) {
+    return typeof value === 'string' && /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value.trim())
+        ? value.trim() : '';
+}
+
+/**
  * Return url if it is relative or uses http(s)/mailto, else '#'.
  * Use for any stored URL placed in href or src.
  * @param {string} url
@@ -545,6 +555,7 @@ window.escapeHtml = escapeHtml;
 window.safeUrl = safeUrl;
 window.registerAction = registerAction;
 window.on = on;
+window.safeCssColor = safeCssColor;
 window.allowHandlerRoot = allowHandlerRoot;
 window.ARG = ARG;
 window.stopAndCall = stopAndCall;
