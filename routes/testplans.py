@@ -10,6 +10,7 @@ import logging
 import os
 
 from utils.request_limits import InvalidJSONFile, JSONFileTooLarge, load_json_upload
+from models.engagement_cleanup import delete_test_plan
 
 testplans_bp = Blueprint('testplans', __name__, url_prefix='/api/testplans')
 
@@ -812,7 +813,7 @@ def delete_plan(plan_id):
         denied = _plan_write_denied(plan)
         if denied:
             return denied
-        cursor.execute("DELETE FROM test_plans WHERE id = ?", (plan_id,))
+        delete_test_plan(cursor, plan_id)          # items and executions too (L-24)
         g.db.commit()
 
         return jsonify({"message": "Test plan deleted"}), 200

@@ -73,5 +73,21 @@ def unlock_database():
         upload_store.encrypt_existing()
     except Exception:
         logger.exception('Could not encrypt existing evidence files; they stay unencrypted for now')
+    _remove_orphan_upload_folders()
     logger.info('Database unlocked from %s', request.remote_addr)
     return jsonify({'status': 'unlocked'}), 200
+
+
+def _remove_orphan_upload_folders():
+    """Upload folders of engagements deleted before M-13 are removed once readable (L-24)."""
+    try:
+        from config import Config
+        from models.database import get_db_connection
+        from models.engagement_cleanup import remove_orphan_upload_folders
+        conn = get_db_connection()
+        try:
+            remove_orphan_upload_folders(conn, Config.UPLOAD_FOLDER)
+        finally:
+            conn.close()
+    except Exception:
+        logger.exception('Could not remove upload folders of deleted engagements')

@@ -11,6 +11,7 @@ from flask import Blueprint, request, jsonify, g
 from middleware.auth import require_auth, require_engagement_access
 from models.dao.attack_map_dao import AttackMapDAO, AttackMapNodeDAO, AttackMapEdgeDAO
 from utils.error_handler import handle_errors
+from models.engagement_cleanup import delete_attack_map
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +124,9 @@ def delete_map(map_id):
     if not existing:
         return jsonify({"error": "Map not found"}), 404
 
-    dao.delete(map_id)
+    # Nodes and edges go too: foreign keys are not enforced, nothing cascades (L-24)
+    delete_attack_map(g.db.cursor(), map_id)
+    g.db.commit()
     return jsonify({"message": "Map deleted"}), 200
 
 

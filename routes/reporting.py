@@ -9,6 +9,7 @@ from html.parser import HTMLParser
 from flask import Blueprint, request, jsonify, g, Response
 from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role, can_edit_shared
 from utils.error_handler import handle_errors, internal_error
+from models.engagement_cleanup import delete_report as delete_report_rows
 from utils.pdf_generator import generate_pdf_from_html, generate_pdf_with_cover, HAS_WEASYPRINT
 from utils.security_headers import attachment_disposition, untrusted_response_headers
 
@@ -608,7 +609,7 @@ def delete_report(report_id):
     if not row:
         return jsonify({"error": "Report not found"}), 404
 
-    cursor.execute("DELETE FROM reports WHERE id = ?", (report_id,))
+    delete_report_rows(cursor, report_id)         # sections too (L-24)
     g.db.commit()
 
     return jsonify({"success": True}), 200

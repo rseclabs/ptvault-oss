@@ -202,3 +202,37 @@ def test_migration_stops_id_reuse_and_removes_leftovers_of_deleted_engagements(t
     indexes = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='evidence'")}
     assert {'idx_evidence_engagement', 'idx_evidence_tool_name', 'idx_evidence_engagement_created'} <= indexes
     assert conn.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
+
+
+# ------------------------------------------------------------------ single deletes (retest 2: L-24)
+
+def test_deleting_a_map_plan_or_report_removes_its_children(live_app):
+    conn = live_app.db()
+    ids = _fill(conn, ENGAGEMENT_A, live_app.user_ids['viewer'])
+    conn.commit()
+    conn.close()
+    owner = live_app.client_for('owner', active_engagement=ENGAGEMENT_A)
+    assert owner.delete(f"/api/attack-maps/{ids['m']}").status_code == 200
+    assert owner.delete(f"/api/testplans/plans/{ids['p']}").status_code == 200
+    assert owner.delete(f"/api/reporting/reports/{ids['r']}").status_code == 200
+    conn = live_app.db()
+    left = {t: _count(conn, t, ids) for t in ('attack_map_nodes', 'attack_map_edges', 'test_plan_items',
+                                              'test_executions', 'report_sections')}
+    conn.close()
+    assert left == dict.fromkeys(left, 0)
+
+
+def test_upload_folders_of_deleted_engagements_are_removed_but_not_others(live_app, tmp_path):
+    from models.engagement_cleanup import remove_orphan_upload_folders
+    conn = live_app.db()
+    gone = conn.execute("INSERT INTO engagements (name) VALUES ('gone')").lastrowid
+    conn.execute('DELETE FROM engagements WHERE id = ?', (gone,))          # deleted before the fix
+    conn.commit()
+    folders = {name: tmp_path / name for name in (str(ENGAGEMENT_A), str(gone), str(gone + 100), 'not-a-number')}
+    for folder in folders.values():
+        folder.mkdir()
+        (folder / 'f.txt').write_text('x')
+    assert remove_orphan_upload_folders(conn, str(tmp_path)) == [gone]
+    conn.close()
+    assert not folders[str(gone)].exists()
+    assert all(folders[n].exists() for n in (str(ENGAGEMENT_A), str(gone + 100), 'not-a-number'))   # never issued here

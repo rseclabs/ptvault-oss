@@ -160,3 +160,47 @@ def purge_orphans(cursor):
     if gone or removed:
         logger.info('Removed %d row(s) left by deleted engagements %s', removed, gone)
     return removed
+
+
+# Single-item deletes (retest 2: L-24): the routes used to remove only the parent row.
+
+def delete_report(cursor, report_id):
+    """Delete a report and its sections (not committed)."""
+    _delete_reports(cursor, [report_id])
+
+
+def delete_attack_map(cursor, map_id):
+    """Delete an attack map with its nodes and edges (not committed)."""
+    _delete_maps(cursor, [map_id])
+
+
+def delete_test_plan(cursor, plan_id):
+    """Delete a test plan with its items and its executions (not committed)."""
+    _delete_plans(cursor, [plan_id])
+
+
+def remove_orphan_upload_folders(conn, upload_folder):
+    """Remove upload folders of engagements this database issued and later deleted.
+
+    Engagement deletes before M-13 left uploads/<id>/ behind. Only a folder whose
+    number this database has handed out (at or below the engagements sequence)
+    and that no longer exists as an engagement is removed, so a folder that
+    belongs to some other database is never touched. Returns the IDs removed.
+    """
+    if not os.path.isdir(upload_folder):
+        return []
+    row = conn.execute("SELECT seq FROM sqlite_sequence WHERE name = 'engagements'").fetchone()
+    issued = row[0] if row else 0
+    existing = {r[0] for r in conn.execute('SELECT id FROM engagements')}
+    removed = []
+    for name in sorted(os.listdir(upload_folder)):
+        if not name.isdigit():
+            continue
+        engagement_id = int(name)
+        if engagement_id <= issued and engagement_id not in existing:
+            remove_upload_folder(upload_folder, engagement_id)
+            if not os.path.exists(os.path.join(upload_folder, name)):
+                removed.append(engagement_id)
+    if removed:
+        logger.info('Removed upload folders of deleted engagements %s', removed)
+    return removed

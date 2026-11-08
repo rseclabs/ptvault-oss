@@ -109,6 +109,9 @@ if is_encryption_enabled() and not is_locked():
         upload_store.encrypt_existing()
     except Exception:
         logger.exception("Could not encrypt existing evidence files; they stay unencrypted for now")
+if not is_locked() and os.path.exists(Config.DATABASE_PATH):
+    from utils.unlock import _remove_orphan_upload_folders
+    _remove_orphan_upload_folders()     # folders of engagements deleted before M-13 (L-24)
 _moved = upload_store.legacy_upload_folder_warning()
 if _moved:
     logger.warning(_moved)
