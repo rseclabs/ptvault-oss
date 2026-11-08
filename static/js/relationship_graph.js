@@ -332,7 +332,7 @@ const RelationshipGraph = {
             <h4 class="text-lg font-semibold mb-2">${escapeHtml(node.title)}</h4>
             <p class="text-sm text-gray-600 mb-2">Type: ${node.evidence_type}</p>
             ${node.tags ? `<p class="text-sm mb-2">Tags: ${escapeHtml(node.tags)}</p>` : ''}
-            <button class="btn btn-sm btn-primary" onclick="RelationshipGraph.showRelationshipsFor(${node.id})">
+            <button class="btn btn-sm btn-primary" ${on('click', 'RelationshipGraph.showRelationshipsFor', node.id)}>
                 View Relationships
             </button>
         `;
@@ -360,7 +360,7 @@ const RelationshipGraph = {
                     <div class="flex justify-between">
                         <span class="font-medium">${this.formatRelationType(rel.relationship_type)}</span>
                         <button class="text-red-600 hover:text-red-800"
-                                onclick="RelationshipGraph.deleteRelationship(${rel.id})">
+                                ${on('click', 'RelationshipGraph.deleteRelationship', rel.id)}>
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -495,7 +495,7 @@ const RelationshipGraph = {
                     </div>
                 `).join('')}
             </div>
-            <button class="btn btn-sm btn-primary mt-3" onclick="RelationshipGraph.saveCurrentPath()">
+            <button class="btn btn-sm btn-primary mt-3" ${on('click', 'RelationshipGraph.saveCurrentPath')}>
                 Save Path
             </button>
         `;

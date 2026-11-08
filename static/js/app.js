@@ -340,8 +340,8 @@ async function renderEngagementsGrid(engagements) {
             <div class="engagement-card ${AppState.activeEngagement?.id === eng.id ? 'active' : ''}"
                  data-id="${eng.id}" role="button" tabindex="0"
                  aria-current="${AppState.activeEngagement?.id === eng.id ? 'true' : 'false'}"
-                 onclick="handleEngagementCardClick(${eng.id})"
-                 onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleEngagementCardClick(${eng.id}); }">
+                 ${on('click', 'handleEngagementCardClick', eng.id)}
+                 ${on('keydown', 'handleEngagementCardKey', ARG.event, eng.id)}>
                 <div class="engagement-card-header">
                     <h3>${escapeHtml(eng.name)}</h3>
                     <div style="display:flex;gap:4px;align-items:center;">
@@ -390,6 +390,14 @@ async function renderEngagementsGrid(engagements) {
 /**
  * Handle engagement card click - switch immediately without confirmation
  */
+/** Enter or Space on a focused engagement card opens it, as a click does. */
+function handleEngagementCardKey(event, engagementId) {
+    if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        handleEngagementCardClick(engagementId);
+    }
+}
+
 async function handleEngagementCardClick(engagementId) {
     const engagement = AppState.engagements.find(e => e.id === engagementId);
     if (!engagement) return;
@@ -923,7 +931,8 @@ async function createEngagementNewClient() {
     }
 }
 
-// Expose handlers used by inline onclick="" attributes
+// Handlers named in data-on-* attributes (utils.js on(), L-21)
+window.handleEngagementCardKey = handleEngagementCardKey;
 window.onEngagementClientChange = onEngagementClientChange;
 window.cancelEngagementNewClient = cancelEngagementNewClient;
 window.createEngagementNewClient = createEngagementNewClient;

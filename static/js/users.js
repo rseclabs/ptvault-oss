@@ -82,15 +82,15 @@ const UserManager = {
                             <td>${user.last_login ? formatDate(user.last_login) : 'Never'}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="btn btn-icon btn-sm" onclick="UserManager.editUser(${user.id})" title="Edit">
+                                    <button class="btn btn-icon btn-sm" ${on('click', 'UserManager.editUser', user.id)} title="Edit">
                                         <i data-lucide="edit-2" class="icon-sm"></i>
                                     </button>
                                     ${user.is_active ? `
-                                        <button class="btn btn-icon btn-sm btn-danger" onclick="UserManager.deleteUser(${user.id})" title="Delete">
+                                        <button class="btn btn-icon btn-sm btn-danger" ${on('click', 'UserManager.deleteUser', user.id)} title="Delete">
                                             <i data-lucide="trash-2" class="icon-sm"></i>
                                         </button>
                                     ` : `
-                                        <button class="btn btn-icon btn-sm btn-success" onclick="UserManager.reactivateUser(${user.id})" title="Reactivate">
+                                        <button class="btn btn-icon btn-sm btn-success" ${on('click', 'UserManager.reactivateUser', user.id)} title="Reactivate">
                                             <i data-lucide="user-check" class="icon-sm"></i>
                                         </button>
                                     `}
@@ -335,7 +335,7 @@ const UserManager = {
                             <td>${escapeHtml(member.email || 'N/A')}</td>
                             <td>
                                 <select class="form-input form-input-sm"
-                                        onchange="UserManager.updateMemberRoleInline(${member.member_id}, this.value)"
+                                        ${on('change', 'UserManager.updateMemberRoleInline', member.member_id, ARG.value)}
                                         style="width: auto;">
                                     <option value="owner" ${member.member_role === 'owner' ? 'selected' : ''}>Owner</option>
                                     <option value="editor" ${member.member_role === 'editor' ? 'selected' : ''}>Editor</option>
@@ -344,7 +344,7 @@ const UserManager = {
                             </td>
                             <td>
                                 <button class="btn btn-icon btn-sm btn-danger"
-                                        onclick="UserManager.removeMember(${member.member_id})"
+                                        ${on('click', 'UserManager.removeMember', member.member_id)}
                                         title="Remove from team">
                                     <i data-lucide="user-minus" class="icon-sm"></i>
                                 </button>

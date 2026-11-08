@@ -107,7 +107,7 @@ const CommandManager = {
 
         let html = `
             <div class="category-item ${this.selectedCategory === 'all' ? 'active' : ''}"
-                 onclick="CommandManager.filterByCategory('all')">
+                 ${on('click', 'CommandManager.filterByCategory', 'all')}>
                 <span class="category-icon"><i data-lucide="library"></i></span>
                 <span class="category-name">All Commands</span>
                 <span class="category-count">${this.totalCount || 0}</span>
@@ -184,19 +184,19 @@ const CommandManager = {
                 <div class="command-row-cmd">${displayCommand}</div>
                 <div class="command-row-actions">
                     <button class="btn btn-icon btn-xs ${isFavorite ? 'favorite-active' : ''}"
-                            onclick="CommandManager.toggleFavorite(${cmd.id})"
+                            ${on('click', 'CommandManager.toggleFavorite', cmd.id)}
                             title="${isFavorite ? 'Remove from favorites' : 'Add to favorites'}">
                         <i data-lucide="star" class="${isFavorite ? 'filled' : ''}"></i>
                     </button>
-                    <button class="btn btn-icon btn-xs" onclick="CommandManager.editCommand(${cmd.id})" title="Edit">
+                    <button class="btn btn-icon btn-xs" ${on('click', 'CommandManager.editCommand', cmd.id)} title="Edit">
                         <i data-lucide="edit-2"></i>
                     </button>
                     ${isCustom ? `
-                        <button class="btn btn-icon btn-xs btn-danger" onclick="CommandManager.deleteCommand(${cmd.id})" title="Delete">
+                        <button class="btn btn-icon btn-xs btn-danger" ${on('click', 'CommandManager.deleteCommand', cmd.id)} title="Delete">
                             <i data-lucide="trash-2"></i>
                         </button>
                     ` : ''}
-                    <button class="btn btn-xs btn-primary" onclick="CommandManager.copyCommand(${cmd.id})" title="Copy command">
+                    <button class="btn btn-xs btn-primary" ${on('click', 'CommandManager.copyCommand', cmd.id)} title="Copy command">
                         <i data-lucide="copy"></i>
                     </button>
                 </div>
@@ -280,7 +280,7 @@ const CommandManager = {
                     <input type="text" id="var_${varName}" data-variable="${varName}"
                            value="${escapeHtml(defaultValue)}"
                            placeholder="${escapeHtml(def.description || `Enter ${varName}`)}"
-                           oninput="CommandManager.updatePreview()">
+                           ${on('input', 'CommandManager.updatePreview')}>
                     ${def.description ? `<small>${escapeHtml(def.description)}</small>` : ''}
                 </div>
             `;

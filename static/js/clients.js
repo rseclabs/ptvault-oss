@@ -47,10 +47,10 @@ const ClientManager = {
                             <td>${client.website ? `<a href="${escapeHtml(safeUrl(client.website))}" target="_blank" rel="noopener noreferrer">${escapeHtml(client.website)}</a>` : '<span class="text-muted">—</span>'}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="btn btn-icon btn-sm" onclick="ClientManager.editClient(${client.id})" title="Edit">
+                                    <button class="btn btn-icon btn-sm" ${on('click', 'ClientManager.editClient', client.id)} title="Edit">
                                         <i data-lucide="edit-2" class="icon-sm"></i>
                                     </button>
-                                    <button class="btn btn-icon btn-sm btn-danger" onclick="ClientManager.deleteClient(${client.id})" title="Delete">
+                                    <button class="btn btn-icon btn-sm btn-danger" ${on('click', 'ClientManager.deleteClient', client.id)} title="Delete">
                                         <i data-lucide="trash-2" class="icon-sm"></i>
                                     </button>
                                 </div>

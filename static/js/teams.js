@@ -66,7 +66,7 @@ const TeamManager = {
                         <tr>
                             <td>
                                 <button class="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                                        onclick="TeamManager.showTeamMembers(${team.id})">
+                                        ${on('click', 'TeamManager.showTeamMembers', team.id)}>
                                     ${escapeHtml(team.name)}
                                 </button>
                             </td>
@@ -74,13 +74,13 @@ const TeamManager = {
                             <td>${team.created_at ? formatDate(team.created_at) : ''}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="btn btn-icon btn-sm" onclick="TeamManager.editTeam(${team.id})" title="Edit">
+                                    <button class="btn btn-icon btn-sm" ${on('click', 'TeamManager.editTeam', team.id)} title="Edit">
                                         <i data-lucide="edit-2" class="icon-sm"></i>
                                     </button>
-                                    <button class="btn btn-icon btn-sm" onclick="TeamManager.showTeamMembers(${team.id})" title="Members">
+                                    <button class="btn btn-icon btn-sm" ${on('click', 'TeamManager.showTeamMembers', team.id)} title="Members">
                                         <i data-lucide="users" class="icon-sm"></i>
                                     </button>
-                                    <button class="btn btn-icon btn-sm btn-danger" onclick="TeamManager.deleteTeam(${team.id})" title="Delete">
+                                    <button class="btn btn-icon btn-sm btn-danger" ${on('click', 'TeamManager.deleteTeam', team.id)} title="Delete">
                                         <i data-lucide="trash-2" class="icon-sm"></i>
                                     </button>
                                 </div>
@@ -259,7 +259,7 @@ const TeamManager = {
                             <td>${escapeHtml(member.email || 'N/A')}</td>
                             <td>
                                 <select class="form-input form-input-sm"
-                                        onchange="TeamManager.updateMemberRole(${member.id}, this.value)"
+                                        ${on('change', 'TeamManager.updateMemberRole', member.id, ARG.value)}
                                         style="width: auto;">
                                     <option value="lead" ${member.role === 'lead' ? 'selected' : ''}>Lead</option>
                                     <option value="member" ${member.role === 'member' ? 'selected' : ''}>Member</option>
@@ -267,7 +267,7 @@ const TeamManager = {
                             </td>
                             <td>
                                 <button class="btn btn-icon btn-sm btn-danger"
-                                        onclick="TeamManager.removeMember(${member.id})"
+                                        ${on('click', 'TeamManager.removeMember', member.id)}
                                         title="Remove from team">
                                     <i data-lucide="user-minus" class="icon-sm"></i>
                                 </button>

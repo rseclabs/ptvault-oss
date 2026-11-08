@@ -398,7 +398,7 @@ const RelationshipsUI = {
                                     ${escapeHtml(rel.label || rel.relationship_type)}
                                 </span>
                                 <button class="btn btn-icon btn-sm btn-danger"
-                                        onclick="RelationshipGraph.deleteRelationship(${rel.id})"
+                                        ${on('click', 'RelationshipGraph.deleteRelationship', rel.id)}
                                         title="Delete">
                                     <i data-lucide="trash-2" class="icon-sm"></i>
                                 </button>
