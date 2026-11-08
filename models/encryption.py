@@ -578,3 +578,29 @@ def check_and_migrate_if_needed(db_path):
     if _is_plaintext_db(db_path):
         logger.info("Encryption enabled but DB is plaintext — migrating...")
         migrate_to_encrypted(db_path)
+
+
+def plaintext_database_refusal(db_path):
+    """Return why startup must stop, or None (M-11).
+
+    While encryption is required, a plaintext database that already holds an
+    account is refused: setup has run, so the data on disk is unprotected. A
+    plaintext database with no account is the normal state before setup, and
+    an encrypted (or locked) one is fine.
+    """
+    if not getattr(Config, 'ENCRYPTION_REQUIRED', False) or not _is_plaintext_db(db_path):
+        return None
+    try:
+        conn = sqlite3.connect(f'file:{db_path}?mode=ro', uri=True)
+        try:
+            users = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return None          # no users table yet: not set up
+    if not users:
+        return None
+    return (f"The database {db_path} is not encrypted, but encryption is required "
+            "(PTVAULT_ENCRYPTION_REQUIRED, on by default). To encrypt it, start once with "
+            "PTVAULT_ENCRYPTION_REQUIRED=0, enable encryption in Admin > Settings, then restart "
+            "without it. To keep it unencrypted, set PTVAULT_ENCRYPTION_REQUIRED=0.")

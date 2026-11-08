@@ -123,7 +123,7 @@ See [DEPLOYMENT.md](../../DEPLOYMENT.md) for production deployment guidance.
 | `SECRET_KEY` | Flask session cookie signing — must be secret and random in production |
 | `JWT_SECRET_KEY` | JWT token signing — must be secret and random in production |
 | `ENVIRONMENT=production` | Enables `Secure` flag on cookies (requires HTTPS) |
-| `PTVAULT_ENCRYPTION_REQUIRED` | On by default: PTVault refuses to start without SQLCipher and encryption cannot be disabled. `0`, `false` or `no` turns it off |
+| `PTVAULT_ENCRYPTION_REQUIRED` | On by default: PTVault refuses to start without SQLCipher or with an unencrypted database that has an account, setup always encrypts, and encryption cannot be disabled. `0`, `false` or `no` turns it off |
 
 Generate strong keys for production:
 

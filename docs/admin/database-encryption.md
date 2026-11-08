@@ -86,6 +86,8 @@ If the salt file is lost, or the passphrase is forgotten, the database **cannot 
 Encryption is required by default (`PTVAULT_ENCRYPTION_REQUIRED` is on unless set to `0`, `false` or `no`):
 - The "Disable Encryption" button is hidden and the API endpoint returns an error
 - Encryption cannot be disabled without modifying the environment variable
+- First-time setup always encrypts the database; if encryption fails, setup stops with an error and can be run again
+- PTVault refuses to start with an unencrypted database that already has an account. To encrypt one, start once with `PTVAULT_ENCRYPTION_REQUIRED=0`, enable encryption in **Admin > Settings**, then restart without it
 - Recommended for production deployments on shared systems
 
 ## Backup Recommendations

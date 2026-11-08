@@ -126,7 +126,7 @@ python3 -c "import secrets, base64; print(base64.b64encode(secrets.token_bytes(3
 | `JWT_SECRET_KEY` | Auto-generated | JWT token signing key |
 | `JWT_EXPIRY_HOURS` | `24` | How long login sessions last |
 | `ENVIRONMENT` | `development` | Set to `production` for secure cookies |
-| `PTVAULT_ENCRYPTION_REQUIRED` | on | Refuse to start without SQLCipher and prevent disabling DB encryption; `0` turns it off |
+| `PTVAULT_ENCRYPTION_REQUIRED` | on | Refuse to start without SQLCipher or with an unencrypted database in use, always encrypt at setup, and prevent disabling DB encryption; `0` turns it off |
 | `PTVAULT_DB_PASSPHRASE` | *(not set)* | Unlock the encrypted database at startup (unattended servers) |
 | `PTVAULT_STORE_KEY_FILE` | *(not set)* | `1` writes the key to a file as older versions did (weaker) |
 

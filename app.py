@@ -33,7 +33,7 @@ except InsecureSecretError as e:
 
 from models.database import init_db, get_db_connection, run_migrations, setup_required
 from models.encryption import (auto_unlock_from_env, check_and_migrate_if_needed, is_encryption_available,
-                               is_encryption_enabled, is_locked)
+                               is_encryption_enabled, is_locked, plaintext_database_refusal)
 from features import register_blueprints
 from middleware.auth import require_auth, require_role
 from utils.csrf import csrf_protect
@@ -73,6 +73,13 @@ else:
 if Config.ENCRYPTION_REQUIRED and not is_encryption_available():
     logger.critical("Encryption is required (PTVAULT_ENCRYPTION_REQUIRED, on by default) but sqlcipher3 "
                     "is not installed. Install requirements, or set PTVAULT_ENCRYPTION_REQUIRED=0.")
+    sys.exit(1)
+
+# A plaintext database that setup has already used is refused while encryption
+# is required: the data on disk would be unprotected (M-11).
+_refusal = plaintext_database_refusal(Config.DATABASE_PATH)
+if _refusal:
+    logger.critical(_refusal)
     sys.exit(1)
 
 # Initialize database on first run

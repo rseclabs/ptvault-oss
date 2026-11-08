@@ -95,17 +95,28 @@ def setup():
         except Exception:
             pass  # Don't fail setup if audit logging fails
 
-        # Set up database encryption if pysqlcipher3 is available. Encryption
-        # replaces the database file, so this plaintext connection must not be
-        # used afterwards (L-13): close it now and reopen the encrypted copy.
+        # Encrypt the database. Encryption replaces the database file, so this
+        # plaintext connection must not be used afterwards (L-13): close it now
+        # and reopen the encrypted copy. While encryption is required (the
+        # default) the request cannot opt out, and a failure fails setup (M-11).
         conn.close()
-        enable_encryption = data.get('enable_encryption', True)
-        if enable_encryption and is_encryption_available():
+        conn = None
+        required = Config.ENCRYPTION_REQUIRED
+        if (required or data.get('enable_encryption', True)) and is_encryption_available():
             try:
                 setup_encryption(password)
-            except Exception as e:
+            except Exception:
                 import logging
-                logging.getLogger(__name__).warning(f"Encryption setup skipped: {e}")
+                logging.getLogger(__name__).exception("Database encryption failed during setup")
+                if required:
+                    _undo_setup(user_id)
+                    return jsonify({"error": "Could not encrypt the database, so setup was not completed. "
+                                             "Check free disk space and permissions on the data folder, "
+                                             "then run setup again."}), 500
+        elif required:
+            _undo_setup(user_id)
+            return jsonify({"error": "Encryption is required but SQLCipher is not available, "
+                                     "so setup was not completed."}), 500
         conn = get_db_connection()
 
         # Create JWT token and set session cookie (auto-login after setup)
@@ -144,6 +155,21 @@ def setup():
         raise
     except Exception as e:
         raise DatabaseError("Failed to create user", details={'original_error': str(e)})
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def _undo_setup(user_id):
+    """Remove the admin a failed setup created, so setup can be run again (M-11).
+
+    Encryption failed before replacing the database, so the plaintext file is
+    still the live one."""
+    conn = get_db_connection()
+    try:
+        conn.execute('DELETE FROM audit_log WHERE user_id = ?', (user_id,))
+        conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        conn.commit()
     finally:
         conn.close()
 

@@ -72,3 +72,81 @@ def test_setup_cookie_works_on_an_encrypted_install(fresh_app):
 
     resp = client.get('/api/engagements')
     assert resp.status_code == 200, resp.get_json()
+
+
+# ------------------------------------------------------------------ M-11
+# While encryption is required (the default), setup cannot leave the database
+# plaintext: the request cannot opt out, and a failed encryption fails setup and
+# removes the admin it created, so setup can simply be run again.
+
+def _is_encrypted():
+    from config import Config
+    with open(Config.DATABASE_PATH, 'rb') as f:
+        return not f.read(16).startswith(b'SQLite format 3')
+
+
+def _user_count():
+    from config import Config
+    conn = encryption.get_connection(Config.DATABASE_PATH)
+    try:
+        return conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+    finally:
+        conn.close()
+
+
+def test_required_encryption_ignores_the_opt_out(fresh_app, monkeypatch):
+    from config import Config
+    monkeypatch.setattr(Config, 'ENCRYPTION_REQUIRED', True)
+    resp = _setup(fresh_app.test_client(), enable_encryption=False)
+    assert resp.status_code == 201, resp.get_json()
+    assert _is_encrypted()
+
+
+def test_a_failed_encryption_fails_setup_and_removes_the_admin(fresh_app, monkeypatch):
+    from config import Config
+    import routes.auth
+    monkeypatch.setattr(Config, 'ENCRYPTION_REQUIRED', True)
+
+    def broken(password):
+        raise OSError('disk full')
+    monkeypatch.setattr(routes.auth, 'setup_encryption', broken)
+    client = fresh_app.test_client()
+    resp = _setup(client)
+    assert resp.status_code == 500
+    assert 'encrypt' in resp.get_json()['error'].lower()
+    assert 'auth_token' not in resp.headers.get('Set-Cookie', '')
+    assert not _is_encrypted() and _user_count() == 0
+
+    monkeypatch.setattr(routes.auth, 'setup_encryption', encryption.setup_encryption)
+    assert _setup(client).status_code == 201                    # setup can be run again
+    assert _is_encrypted() and _user_count() == 1
+
+
+def test_opt_out_still_works_when_encryption_is_not_required(fresh_app, monkeypatch):
+    from config import Config
+    monkeypatch.setattr(Config, 'ENCRYPTION_REQUIRED', False)
+    assert _setup(fresh_app.test_client(), enable_encryption=False).status_code == 201
+    assert not _is_encrypted()
+
+
+def test_startup_refuses_a_plaintext_database_in_use_while_required(fresh_app, monkeypatch):
+    from config import Config
+    monkeypatch.setattr(Config, 'ENCRYPTION_REQUIRED', True)
+    assert encryption.plaintext_database_refusal(Config.DATABASE_PATH) is None      # before setup: fine
+
+    monkeypatch.setattr(Config, 'ENCRYPTION_REQUIRED', False)
+    assert _setup(fresh_app.test_client(), enable_encryption=False).status_code == 201
+    assert encryption.plaintext_database_refusal(Config.DATABASE_PATH) is None      # not required: fine
+
+    monkeypatch.setattr(Config, 'ENCRYPTION_REQUIRED', True)
+    message = encryption.plaintext_database_refusal(Config.DATABASE_PATH)
+    assert message and 'PTVAULT_ENCRYPTION_REQUIRED' in message
+
+
+def test_startup_accepts_an_encrypted_database(fresh_app, monkeypatch):
+    from config import Config
+    monkeypatch.setattr(Config, 'ENCRYPTION_REQUIRED', True)
+    assert _setup(fresh_app.test_client()).status_code == 201
+    assert encryption.plaintext_database_refusal(Config.DATABASE_PATH) is None
+    encryption.lock()
+    assert encryption.plaintext_database_refusal(Config.DATABASE_PATH) is None      # locked is not plaintext

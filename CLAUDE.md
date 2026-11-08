@@ -293,7 +293,7 @@ Never load a script, stylesheet or font from a CDN: PTVault must run air-gapped,
 | `ENVIRONMENT` | `development` | `development` or `production` (production: Secure cookies, HSTS, no debugger) |
 | `PTVAULT_DEBUG` | unset | `1` adds exception details and tracebacks to API errors and allows the Werkzeug debugger (also `python app.py --debug`; loopback, non-production only) |
 | `PTVAULT_ENCRYPTION_SALT_FILE` | `encryption.salt` beside the database | Key derivation salt |
-| `PTVAULT_ENCRYPTION_REQUIRED` | on | Refuse to start without SQLCipher; `0`, `false` or `no` turns it off |
+| `PTVAULT_ENCRYPTION_REQUIRED` | on | Refuse to start without SQLCipher or with an unencrypted database that has an account, and make setup encrypt; `0`, `false` or `no` turns it off |
 | `PTVAULT_DB_PASSPHRASE` | unset | Unlock the encrypted database at startup (the key is otherwise held in memory and unlocked at `/unlock`) |
 | `PTVAULT_STORE_KEY_FILE` | unset | `1` writes the derived key to `PTVAULT_ENCRYPTION_KEY_FILE` (default `encryption.key` beside the database), as older versions did |
 

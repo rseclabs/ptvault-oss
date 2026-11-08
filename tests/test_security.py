@@ -53,6 +53,10 @@ def app():
     from models import encryption as _enc_module
     _original_sqlcipher_flag = _enc_module._SQLCIPHER_AVAILABLE
     _enc_module._SQLCIPHER_AVAILABLE = False
+    # Without SQLCipher a real install must turn the requirement off (app.py
+    # exits otherwise), and setup refuses to run unencrypted while it is on (M-11).
+    _original_required = Config.ENCRYPTION_REQUIRED
+    Config.ENCRYPTION_REQUIRED = False
 
     # Also stash and override the encryption key file path so is_encryption_enabled()
     # stays False even if a real key file exists on disk.
@@ -150,6 +154,7 @@ def app():
     Config.DATABASE_PATH = original_db_path
     Config.ENCRYPTION_KEY_FILE = _original_key_file
     _enc_module._SQLCIPHER_AVAILABLE = _original_sqlcipher_flag
+    Config.ENCRYPTION_REQUIRED = _original_required
 
     # Clean up temp files
     import shutil
