@@ -113,9 +113,9 @@
             const childrenHtml = this._renderChildren(childrenByParent, note.id, depth + 1);
             return `
                 <li class="notes-tree-item ${isSelected ? 'is-selected' : ''}"
-                    data-note-id="${note.id}"
-                    data-parent-id="${note.parent_id == null ? '' : note.parent_id}"
-                    data-sort-order="${note.sort_order}"
+                    data-note-id="${escapeHtml(note.id)}"
+                    data-parent-id="${note.parent_id == null ? '' : escapeHtml(note.parent_id)}"
+                    data-sort-order="${escapeHtml(note.sort_order)}"
                     data-depth="${depth}"
                     draggable="true"
                     tabindex="0">

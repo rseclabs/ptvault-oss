@@ -29,6 +29,17 @@ logger = logging.getLogger(__name__)
 PREVIEW_CHARS = 500
 
 
+def optional_int(value, name: str) -> Optional[int]:
+    """Return value if it is an integer or None; raise ValueError otherwise.
+
+    The tree renders sort_order and parent_id into the page, so only real
+    integers are stored (H-15). bool is an int subclass and is refused too.
+    """
+    if value is None or (isinstance(value, int) and not isinstance(value, bool)):
+        return value
+    raise ValueError(f"{name} must be an integer or null")
+
+
 class NoteTreeDAO:
     """Tree DAO for a notes-style table with a single scope FK."""
 
@@ -101,6 +112,8 @@ class NoteTreeDAO:
         bucket (siblings of the same parent_id, including roots when
         parent_id is None).
         """
+        parent_id = optional_int(parent_id, 'parent_id')
+        sort_order = optional_int(sort_order, 'sort_order')
         cursor = self.db.cursor()
 
         if sort_order is None:
@@ -192,6 +205,8 @@ class NoteTreeDAO:
 
         Returns True on success.
         """
+        new_parent_id = optional_int(new_parent_id, 'parent_id')
+        new_sort_order = optional_int(new_sort_order, 'sort_order')
         if new_parent_id is not None:
             if new_parent_id == note_id:
                 raise ValueError("Cannot make a note its own parent")

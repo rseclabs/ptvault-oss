@@ -10,6 +10,7 @@ from datetime import datetime
 from utils.markdown_export import generate_markdown_report
 from utils.audit_logger import audit_create, audit_update, audit_delete, audit_export, audit_view
 from utils.helpers import normalize_tags, parse_port_fields
+from models.dao.note_tree_dao import NoteTreeDAO, optional_int
 
 
 # Engagement imports: each collection must be a list of objects, and no
@@ -834,7 +835,6 @@ def clear_active_engagement():
 
 def _engagement_note_dao():
     """Build a NoteTreeDAO bound to engagement_notes for a request."""
-    from models.dao.note_tree_dao import NoteTreeDAO
     return NoteTreeDAO('engagement_notes', 'engagement_id')
 
 
@@ -890,6 +890,11 @@ def create_engagement_note(engagement_id):
     sort_order = data.get('sort_order')
 
     dao = _engagement_note_dao()
+    try:
+        parent_id = optional_int(parent_id, 'parent_id')
+        sort_order = optional_int(sort_order, 'sort_order')
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     if not dao.parent_belongs_to_scope(parent_id, engagement_id):
         return jsonify({"error": "parent note not found in this engagement"}), 400
 

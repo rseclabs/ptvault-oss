@@ -4,6 +4,7 @@ import logging
 
 from flask import Blueprint, request, jsonify, g, session
 from middleware.auth import require_auth, require_engagement_access
+from models.dao.note_tree_dao import NoteTreeDAO, optional_int
 from models.database import run_migrations
 from utils.audit_logger import audit_view
 from utils.error_handler import handle_errors, internal_error
@@ -502,7 +503,6 @@ def unlink_evidence(host_id, evidence_id):
 
 def _host_note_dao():
     """Build a NoteTreeDAO bound to host_notes."""
-    from models.dao.note_tree_dao import NoteTreeDAO
     return NoteTreeDAO('host_notes', 'host_id')
 
 
@@ -572,6 +572,11 @@ def create_note(host_id):
     sort_order = data.get('sort_order')
 
     dao = _host_note_dao()
+    try:
+        parent_id = optional_int(parent_id, 'parent_id')
+        sort_order = optional_int(sort_order, 'sort_order')
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     if not dao.parent_belongs_to_scope(parent_id, host_id):
         return jsonify({"error": "parent note not found for this host"}), 400
 

@@ -350,3 +350,36 @@ def test_host_credentials_table_escapes_password_type(ui):
         HostManager.renderCredentials();
     }""", P)
     _assert_clean(ui.page)
+
+
+def test_note_trees_escape_stored_ordering_fields(ui):
+    """H-15: rows stored before validation (or written directly) keep a text sort_order."""
+    conn = ui.db()
+    host_id = conn.execute("INSERT INTO hosts (engagement_id, ip) VALUES (?, '10.0.0.15')", (ENGAGEMENT_A,)).lastrowid
+    for table, scope in (('host_notes', host_id), ('engagement_notes', ENGAGEMENT_A)):
+        column = 'host_id' if table == 'host_notes' else 'engagement_id'
+        root = conn.execute(f'INSERT INTO {table} ({column}, content, title, sort_order) VALUES (?, ?, ?, ?)',
+                            (scope, P, P, P)).lastrowid
+        conn.execute(f'INSERT INTO {table} ({column}, content, title, parent_id, sort_order) VALUES (?, ?, ?, ?, ?)',
+                     (scope, P, P, root, P))
+    conn.commit()
+    conn.close()
+    count = ui.page.evaluate("""async ([hostId, engagementId]) => {
+        const views = [
+            ['xssHostTree', API.hosts, 'host', hostId],
+            ['xssEngagementTree', API.engagements, 'engagement', engagementId],
+        ];
+        let items = 0;
+        for (const [id, api, noun, scope] of views) {
+            const div = document.createElement('div');
+            div.id = id;
+            document.body.appendChild(div);
+            const view = new NotesTreeView({ containerId: id, toolbarId: id + 'Toolbar', editorPaneId: id + 'Pane',
+                                             api, apiNoun: noun, scopeId: () => scope });
+            await view.refresh();
+            items += div.querySelectorAll('.notes-tree-item').length;
+        }
+        return items;
+    }""", [host_id, ENGAGEMENT_A])
+    assert count == 4
+    _assert_clean(ui.page)
