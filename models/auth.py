@@ -1,6 +1,7 @@
 """Authentication module for master password and session management."""
 
 import hashlib
+import secrets
 from typing import Optional
 from argon2 import PasswordHasher
 from argon2.low_level import Type
@@ -101,7 +102,10 @@ def create_session_token(user_id: int, role: str = 'tester', username: str = Non
         'user_id': user_id,
         'role': role,
         'username': username,
-        'exp': expiry
+        'exp': expiry,
+        # Unique per login, so two sessions never share a token (or its
+        # session row) and each can be revoked on its own.
+        'jti': secrets.token_hex(16),
     }
     token = jwt.encode(payload, Config.JWT_SECRET_KEY, algorithm='HS256')
     return token

@@ -260,8 +260,15 @@ const AdminPanel = {
                     </div>
                     <div class="form-group" id="passwordGroup" style="flex:1;">
                         <label for="password">Password *</label>
-                        <input type="password" id="password" class="form-input">
-                        <small class="text-muted">Minimum 8 characters</small>
+                        <input type="password" id="password" class="form-input" autocomplete="new-password">
+                        <small class="text-muted">At least 12 characters, with upper and lower case letters and a digit</small>
+                    </div>
+                </div>
+                <div class="form-row" id="currentPasswordGroup" style="display:none;">
+                    <div class="form-group" style="flex:1;">
+                        <label for="currentPassword">Current password</label>
+                        <input type="password" id="currentPassword" class="form-input" autocomplete="current-password">
+                        <small class="text-muted">Needed to change your own password</small>
                     </div>
                 </div>
                 <div class="form-actions" style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;margin-top:var(--spacing-md);">

@@ -141,6 +141,17 @@ def setup():
         conn.close()
 
 
+_DUMMY_HASH = []
+
+
+def _dummy_password_hash():
+    """An Argon2id hash of a random value, used to equalise login timing."""
+    if not _DUMMY_HASH:
+        import secrets
+        _DUMMY_HASH.append(hash_password(secrets.token_hex(16)))
+    return _DUMMY_HASH[0]
+
+
 @auth_bp.route('/login', methods=['POST'])
 @handle_errors
 def login():
@@ -200,17 +211,17 @@ def login():
 
         user = cursor.fetchone()
 
+        # One generic error for every failure. Unknown accounts still pay for a
+        # hash check, and the active flag is checked after the password, so
+        # neither the response nor its timing reveals which accounts exist.
         if not user:
+            verify_password(password, _dummy_password_hash())
             raise AuthenticationError("Invalid credentials")
 
         user_id, db_username, password_hash, role, is_active = user
 
-        # Check if user is active
-        if not is_active:
-            raise AuthenticationError("Account is deactivated")
-
-        # Verify password hash
-        if not verify_password(password, password_hash):
+        password_ok = verify_password(password, password_hash)
+        if not password_ok or not is_active:
             raise AuthenticationError("Invalid credentials")
 
         # Update last login timestamp

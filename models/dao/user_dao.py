@@ -41,7 +41,9 @@ class UserDAO(BaseDAO):
         Returns:
             User dictionary or None if not found
         """
-        return self.find_one({'email': email})
+        cursor = self.db.cursor()
+        cursor.execute('SELECT * FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1', ((email or '').strip(),))
+        return self._row_to_dict(cursor.fetchone())
 
     def get_primary_user(self) -> Optional[Dict[str, Any]]:
         """Get the primary (first) user.

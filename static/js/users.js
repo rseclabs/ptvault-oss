@@ -150,6 +150,7 @@ const UserManager = {
             document.getElementById('email').value = user.email || '';
             document.getElementById('userRole').value = user.role;
             document.getElementById('password').value = '';
+            this.setCurrentPasswordVisible(user.id === AppState.currentUser?.id);
 
             const passwordLabel = document.querySelector('#passwordGroup label');
             if (passwordLabel) {
@@ -164,6 +165,7 @@ const UserManager = {
             document.getElementById('email').value = '';
             document.getElementById('userRole').value = 'tester';
             document.getElementById('password').value = '';
+            this.setCurrentPasswordVisible(false);
 
             const passwordLabel = document.querySelector('#passwordGroup label');
             if (passwordLabel) {
@@ -172,6 +174,16 @@ const UserManager = {
         }
 
         formCard.style.display = 'block';
+    },
+
+    /**
+     * Show the current-password field only when editing your own account
+     */
+    setCurrentPasswordVisible(visible) {
+        const group = document.getElementById('currentPasswordGroup');
+        const input = document.getElementById('currentPassword');
+        if (group) group.style.display = visible ? 'flex' : 'none';
+        if (input) input.value = '';
     },
 
     /**
@@ -213,6 +225,14 @@ const UserManager = {
 
         if (password) {
             data.password = password;
+            if (userId && parseInt(userId) === AppState.currentUser?.id) {
+                const currentPassword = document.getElementById('currentPassword')?.value || '';
+                if (!currentPassword) {
+                    showToast('Enter your current password to change it', 'error');
+                    return;
+                }
+                data.current_password = currentPassword;
+            }
         } else if (!userId) {
             showToast('Password is required for new users', 'error');
             return;

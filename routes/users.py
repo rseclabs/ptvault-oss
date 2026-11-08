@@ -4,7 +4,9 @@ from flask import Blueprint, request, jsonify, g
 from middleware.auth import require_auth, require_role
 
 from models.dao.user_dao import UserDAO
-from models.auth import hash_password
+import hashlib
+
+from models.auth import hash_password, verify_password
 from utils.error_handler import (
     handle_errors,
     ValidationError,
@@ -22,6 +24,15 @@ logger = logging.getLogger(__name__)
 
 users_bp = Blueprint('users', __name__, url_prefix='/api/users')
 user_dao = UserDAO()
+
+
+def _normalise_email(email):
+    """Emails are stored and compared in lower case without surrounding spaces."""
+    return (email or '').strip().lower()
+
+
+def _active_admin_count():
+    return user_dao.count({'role': 'admin', 'is_active': 1})
 
 
 @users_bp.route('', methods=['GET'])
@@ -86,7 +97,7 @@ def create_user():
         raise ValidationError("username, email, and password are required")
 
     username = data['username']
-    email = data['email']
+    email = _normalise_email(data['email'])
     password = data['password']
     role = data.get('role', 'tester')
     full_name = data.get('full_name')
@@ -172,16 +183,25 @@ def update_user(user_id):
         update_data['full_name'] = data['full_name']
 
     if 'email' in data:
-        # Check email uniqueness
-        existing = user_dao.find_by_email(data['email'])
+        email = _normalise_email(data['email'])
+        existing = user_dao.find_by_email(email)
         if existing and existing['id'] != user_id:
-            raise ConflictError(f"Email '{data['email']}' already exists")
-        update_data['email'] = data['email']
+            raise ConflictError(f"Email '{email}' already exists")
+        update_data['email'] = email
 
+    password_changed = False
     if 'password' in data:
-        # Validate password strength
         validate_password_strength(data['password'])
+        if user_id == g.current_user:
+            # Changing your own password needs the current one, so a stolen
+            # session alone cannot take over the account.
+            current = data.get('current_password')
+            if not current:
+                raise ValidationError("current_password is required to change your own password")
+            if not verify_password(current, user['password_hash']):
+                raise ForbiddenError("Current password is incorrect")
         update_data['password_hash'] = hash_password(data['password'])
+        password_changed = True
 
     # Only admins can change roles
     if 'role' in data:
@@ -190,6 +210,10 @@ def update_user(user_id):
 
         if data['role'] not in ['admin', 'tester', 'viewer']:
             raise ValidationError("Invalid role")
+
+        if user.get('role') == 'admin' and data['role'] != 'admin' and user.get('is_active') \
+                and _active_admin_count() <= 1:
+            raise ValidationError("Cannot demote the last admin user")
 
         update_data['role'] = data['role']
 
@@ -201,8 +225,18 @@ def update_user(user_id):
     if not success:
         raise NotFoundError("User not found")
 
+    if password_changed:
+        # Sign the user out everywhere else; keep the session making this
+        # request when users change their own password.
+        keep = ''
+        if user_id == g.current_user and request.cookies.get('auth_token'):
+            keep = hashlib.sha256(request.cookies['auth_token'].encode()).hexdigest()
+        g.db.execute('UPDATE user_sessions SET is_active = 0 WHERE user_id = ? AND token_hash != ?',
+                     (user_id, keep))
+        g.db.commit()
+
     logger.info(f"User updated: {user_id} by user {g.current_user}")
-    audit_update('user', user_id, updated_by=g.current_user)
+    audit_update('user', user_id, updated_by=g.current_user, password_changed=password_changed)
 
     return jsonify({"status": "updated"}), 200
 
