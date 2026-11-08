@@ -51,6 +51,16 @@ REFERENCE_FIELDS = {
 }
 
 
+# Host credential password_type spellings older versions stored (before H-14 any
+# string was accepted; the engagement credential types were the common ones).
+LEGACY_PASSWORD_TYPES = {
+    'cleartext': 'cleartext', 'clear_text': 'cleartext', 'clear text': 'cleartext', 'plaintext': 'cleartext',
+    'plain': 'cleartext', 'password': 'cleartext',
+    'hash': 'hash', 'ntlm': 'hash', 'ntlmv2': 'hash', 'krbtgt': 'hash', 'md5': 'hash', 'sha': 'hash',
+    'sha1': 'hash', 'sha256': 'hash', 'lm': 'hash', 'netntlm': 'hash', 'netntlmv2': 'hash',
+}
+
+
 class ImportValidationError(ValueError):
     """An import file value failed validation; the message names the record."""
 
@@ -92,6 +102,9 @@ def _metadata(value, where):
 
 def _engagement(eng):
     where = 'engagement'
+    for field in TEXT_FIELDS['engagement']:                    # retest 2 L-31: was never checked
+        if eng.get(field) is not None and not isinstance(eng[field], str):
+            _fail(where, f'{field} must be text')
     name = eng.get('name', 'Imported Engagement')
     if not isinstance(name, str) or not name.strip():
         _fail(where, 'name must be non-empty text')
@@ -138,6 +151,10 @@ def _record(name, index, record):
         record['tags'] = tags
         record['metadata'] = _metadata(record.get('metadata'), where)
     elif name == 'host_credentials':
+        # Exports from before H-14 can hold other spellings; known ones are mapped (L-31)
+        legacy = record.get('password_type')
+        if isinstance(legacy, str):
+            record['password_type'] = LEGACY_PASSWORD_TYPES.get(legacy.strip().lower(), legacy)
         _choice(record, 'password_type', tuple(sorted(PASSWORD_TYPES)), 'cleartext', where)
     elif name == 'engagement_credentials':
         _choice(record, 'credential_type', ENGAGEMENT_CREDENTIAL_TYPES, 'clear_text', where)

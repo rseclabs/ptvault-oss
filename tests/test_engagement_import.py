@@ -149,3 +149,25 @@ def test_an_export_from_the_app_imports_again(live_app):
     assert data['engagement_findings'] and data['host_credentials'] and data['evidence']
     resp = _import(owner, data)
     assert resp.status_code == 201, resp.get_json()
+
+
+# ------------------------------------------------------------------ retest 2: L-31
+
+@pytest.mark.parametrize('field', ['client_name', 'short_name', 'description', 'contact_name', 'contact_phone'])
+def test_engagement_text_fields_must_be_text(live_app, field):
+    resp = _import(live_app.client_for('outsider'), _payload(engagement={field: {'a': 1}}))
+    assert resp.status_code == 400, resp.get_json()
+
+
+@pytest.mark.parametrize('legacy, stored', [('clear_text', 'cleartext'), ('Cleartext', 'cleartext'),
+                                            ('plaintext', 'cleartext'), ('ntlm', 'hash'), ('NTLMv2', 'hash'),
+                                            ('md5', 'hash'), ('sha', 'hash'), ('krbtgt', 'hash')])
+def test_older_password_type_spellings_are_restored(live_app, legacy, stored):
+    payload = _payload(hosts=[HOST], host_credentials=[{'host_id': 7, 'username': 'u', 'password_type': legacy}])
+    resp = _import(live_app.client_for('outsider'), payload)
+    assert resp.status_code == 201, resp.get_json()
+    conn = live_app.db()
+    got = conn.execute('SELECT hc.password_type FROM host_credentials hc JOIN hosts h ON h.id = hc.host_id '
+                       'WHERE h.engagement_id = ?', (resp.get_json()['engagement_id'],)).fetchone()[0]
+    conn.close()
+    assert got == stored
