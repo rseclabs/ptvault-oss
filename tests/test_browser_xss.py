@@ -747,6 +747,7 @@ def test_encrypt_database_form_applies_the_passphrase_policy(ui):
 def test_declared_handlers_call_the_named_method_with_their_arguments(ui):
     got = ui.page.evaluate("""p => {
         const calls = [];
+        allowHandlerRoot('__T');
         window.__T = {
             name: 'T',
             m(...args) { calls.push([this.name, ...args.map(a => a instanceof Element ? a.id : a)]); },
@@ -845,3 +846,27 @@ def test_notes_tree_move_up_and_down_reorder_the_notes(ui):
         return seen;
     }""", [ENGAGEMENT_A, ids])
     assert order == [['one', 'two', 'three'], ['one', 'three', 'two'], ['three', 'one', 'two'], True]
+
+
+def test_declared_handlers_reach_only_the_apps_own_handlers(ui):
+    """Retest 2 L-25: the dispatcher walked any own property from window, so an injected
+    data-on-click could call location.assign, fetch or the authenticated API."""
+    refused = ui.page.evaluate("""() => ['location.assign', 'location.replace', 'open', 'fetch', 'eval', 'Function',
+        'setTimeout', 'Reflect.set', 'Object.assign', 'API.users.update', 'API.engagements.delete',
+        'API.admin.enableEncryption', 'document.write', 'HostManager.constructor', 'HostManager.selectHost.call',
+        'window.HostManager.selectHost', 'toString', 'HostManager.__proto__'].filter(p => _resolveHandler(p))""")
+    assert refused == []
+    assert ui.page.evaluate("() => !!_resolveHandler('HostManager.selectHost') && !!_resolveHandler('closeModal')")
+    calls = ui.page.evaluate("""() => {
+        const calls = [];
+        const update = API.users.update;
+        API.users.update = (...a) => { calls.push(a); return Promise.resolve({}); };
+        const s = document.getElementById('xssScratch');
+        s.innerHTML = '<div id="inj" data-on-click=\\'["API.users.update", 1, {"role": "admin"}]\\'>x</div>';
+        const err = console.error; console.error = () => {};
+        document.getElementById('inj').click();
+        console.error = err;
+        API.users.update = update;
+        return calls.length;
+    }""")
+    assert calls == 0

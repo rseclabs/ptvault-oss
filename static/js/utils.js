@@ -182,16 +182,37 @@ function on(eventName, path, ...args) {
     return `data-on-${eventName}="${escapeHtml(JSON.stringify([path, ...args]))}"`;
 }
 
+/**
+ * What declared handlers may call (retest 2: L-25): the app's own managers and
+ * handler functions, by name, never anything else on window (location, fetch,
+ * open, the API module, Reflect...). Otherwise any markup injection, which the
+ * CSP makes harmless, would become a one-click gadget. A path is "fn" or
+ * "Root.method"; the method must be the root's own function, not inherited.
+ */
+const HANDLER_ROOTS = new Set([
+    'AdminPanel', 'AttackMapEditor', 'CVSSCalculator', 'CalculatorsManager', 'ClientManager', 'CommandHubManager',
+    'CommandManager', 'DecodersManager', 'HostManager', 'JWTDecoder', 'MSFVenomBuilder', 'MarkdownCheatSheet',
+    'PowerShellEncoder', 'RelationshipGraph', 'ReportingManager', 'ShellOneLinersManager', 'SlideOver',
+    'SubnetCalculator', 'TeamManager', 'TestPlansManager', 'ToolsManager', 'UserManager',
+    'cancelEngagementNewClient', 'cancelFinding', 'cancelNote', 'clearImportFile', 'closeModal',
+    'createEngagementNewClient', 'dataExportClicked', 'dataImportClicked', 'dataRestoreClicked', 'exportData',
+    'handleEngagementCardClick', 'handleEngagementCardKey', 'handleNoteImage', 'onEngagementClientChange',
+    'openMarkdownReference', 'saveFinding', 'saveNote', 'stopAndCall', 'stopEvent', 'submitForm', 'toggleClass',
+]);
+
+/** Allow another handler root (for pages or tests that add their own handler object). */
+function allowHandlerRoot(name) {
+    if (typeof name === 'string' && /^[A-Za-z_$][\w$]*$/.test(name)) HANDLER_ROOTS.add(name);
+}
+
 function _resolveHandler(path) {
-    if (typeof path !== 'string' || !/^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(path)) return null;
-    let owner = null;
-    let value = window;
-    for (const part of path.split('.')) {
-        if (value == null || !Object.prototype.hasOwnProperty.call(value, part)) return null;
-        owner = value;
-        value = value[part];
-    }
-    return typeof value === 'function' ? { owner, fn: value } : null;
+    if (typeof path !== 'string' || !/^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)?$/.test(path)) return null;
+    const [rootName, method] = path.split('.');
+    if (!HANDLER_ROOTS.has(rootName) || !Object.prototype.hasOwnProperty.call(window, rootName)) return null;
+    const root = window[rootName];
+    if (!method) return typeof root === 'function' ? { owner: window, fn: root } : null;
+    if (root == null || typeof root !== 'object' || !Object.prototype.hasOwnProperty.call(root, method)) return null;
+    return typeof root[method] === 'function' ? { owner: root, fn: root[method] } : null;
 }
 
 function _handlerArg(arg, el, event) {
@@ -524,6 +545,7 @@ window.escapeHtml = escapeHtml;
 window.safeUrl = safeUrl;
 window.registerAction = registerAction;
 window.on = on;
+window.allowHandlerRoot = allowHandlerRoot;
 window.ARG = ARG;
 window.stopAndCall = stopAndCall;
 window.submitForm = submitForm;
