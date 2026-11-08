@@ -28,6 +28,11 @@ BASE_DIR = get_base_dir()
 RUNTIME_DIR = get_runtime_dir()
 
 
+def env_flag(name):
+    """True if the environment variable is set to 1, true or yes."""
+    return os.environ.get(name, '').strip().lower() in ('1', 'true', 'yes')
+
+
 class Config:
     """Application configuration."""
 
@@ -48,6 +53,9 @@ class Config:
 
     # Environment
     ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
+    # Exception details and tracebacks in API errors, and the Werkzeug debugger,
+    # only when asked for: ENVIRONMENT defaults to development (L-2, L-10).
+    DEBUG = env_flag('PTVAULT_DEBUG')
 
     # Encryption configuration. The key and salt are bound to one database,
     # so by default they live next to it: pointing DATABASE_PATH at another
@@ -82,6 +90,14 @@ PLACEHOLDER_SECRETS = frozenset({
 MIN_SECRET_BYTES = 32
 
 # Generated secrets live beside the database, like the encryption key.
+def debugger_allowed(requested, interface, environment, frozen):
+    """The Werkzeug debugger runs code typed into the browser: only when asked for
+    (--debug or PTVAULT_DEBUG), on a loopback interface, outside production and
+    frozen builds (L-10)."""
+    return bool(requested and not frozen and environment != 'production'
+                and interface in ('localhost', '127.0.0.1', '::1'))
+
+
 SECRET_FILES = {
     'SECRET_KEY': 'flask_secret.key',
     'JWT_SECRET_KEY': 'jwt_secret.key',

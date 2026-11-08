@@ -24,7 +24,7 @@ logger = logging.getLogger('ptvault')
 
 # Validate or load the signing secrets before anything else: a placeholder
 # key lets anyone forge a session, so refuse to start.
-from config import InsecureSecretError, load_secrets
+from config import InsecureSecretError, debugger_allowed, load_secrets
 try:
     load_secrets()
 except InsecureSecretError as e:
@@ -34,6 +34,7 @@ except InsecureSecretError as e:
 from models.database import init_db, get_db_connection, run_migrations, setup_required
 from models.encryption import is_encryption_available, is_encryption_enabled, check_and_migrate_if_needed
 from features import register_blueprints
+from middleware.auth import require_auth, require_role
 from config import BASE_DIR
 
 app = Flask(__name__,
@@ -204,8 +205,10 @@ def health_check():
     return jsonify({"status": "ok"})
 
 @app.route('/db-status', methods=['GET'])
+@require_auth
+@require_role('admin')
 def db_status():
-    """Database status endpoint."""
+    """Database status endpoint (admins only, L-3)."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -213,8 +216,9 @@ def db_status():
         count = cursor.fetchone()[0]
         conn.close()
         return jsonify({"status": "ok", "engagements_count": count})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+    except Exception:
+        logger.exception("Database status check failed")
+        return jsonify({"status": "error", "message": "database unavailable"}), 500
 
 if __name__ == '__main__':
     import argparse
@@ -224,15 +228,15 @@ if __name__ == '__main__':
                         help='IP address or hostname to bind to (default: localhost)')
     parser.add_argument('-p', '--port', type=int, default=5001,
                         help='Port to listen on (default: 5001)')
+    parser.add_argument('--debug', action='store_true',
+                        help='Werkzeug debugger and auto-reload (loopback, non-production only; '
+                             'or set PTVAULT_DEBUG=1)')
     args = parser.parse_args()
-    # The Werkzeug debugger executes code typed into the browser, so only
-    # enable it for local development, never in production or when the
-    # server is reachable from other machines.
-    debug = (not is_frozen
-             and Config.ENVIRONMENT != 'production'
-             and args.interface in ('localhost', '127.0.0.1', '::1'))
-    if not debug and not is_frozen:
-        logger.info("Debug mode off (production or non-loopback interface)")
+    # The Werkzeug debugger executes code typed into the browser, so it is off
+    # unless asked for, and never in production or on a reachable interface (L-10).
+    debug = debugger_allowed(args.debug or Config.DEBUG, args.interface, Config.ENVIRONMENT, is_frozen)
+    if (args.debug or Config.DEBUG) and not debug:
+        logger.warning("Debug mode refused (production, frozen build or non-loopback interface)")
     app.run(
         host=args.interface,
         port=args.port,

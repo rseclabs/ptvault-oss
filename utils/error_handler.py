@@ -8,6 +8,7 @@ This module provides:
 """
 
 import logging
+import sys
 import traceback
 from functools import wraps
 from flask import jsonify, request, g
@@ -269,23 +270,33 @@ def handle_errors(f):
             context = get_error_context()
             log_exception(e, context)
 
-            # In development, include exception details
-            from config import Config
-            if Config.ENVIRONMENT == 'development':
-                return jsonify({
-                    'error': 'Internal server error',
-                    'type': e.__class__.__name__,
-                    'message': str(e),
-                    'traceback': traceback.format_exc()
-                }), 500
-
-            # In production, return generic error
-            return jsonify({
-                'error': 'Internal server error',
-                'type': 'InternalError'
-            }), 500
+            return _internal_error_response()
 
     return decorated_function
+
+
+def _internal_error_response(message='Internal server error'):
+    """500 body: generic unless PTVAULT_DEBUG is set (L-2). Call inside an except block."""
+    from config import Config
+    if Config.DEBUG:
+        exc_type, exc, _ = sys.exc_info()
+        return jsonify({
+            'error': message,
+            'type': exc_type.__name__ if exc_type else 'InternalError',
+            'message': str(exc) if exc else '',
+            'traceback': traceback.format_exc(),
+        }), 500
+    return jsonify({'error': message, 'type': 'InternalError'}), 500
+
+
+def internal_error(e, message='Internal server error'):
+    """Log an unexpected exception and return a 500 that does not reveal it (L-2).
+
+    Use in an except block instead of jsonify({"error": str(e)}): exception text
+    can carry SQL, file paths and data. The log keeps the full details.
+    """
+    log_exception(e, get_error_context())
+    return _internal_error_response(message)
 
 
 # ============================================

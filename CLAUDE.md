@@ -291,6 +291,7 @@ Never load a script, stylesheet or font from a CDN: PTVault must run air-gapped,
 | `JWT_SECRET_KEY` | Generated once into `jwt_secret.key` beside the database | JWT signing key (HS256); same checks |
 | `JWT_EXPIRY_HOURS` | `24` | Session token lifetime |
 | `ENVIRONMENT` | `development` | `development` or `production` (production: Secure cookies, HSTS, no debugger) |
+| `PTVAULT_DEBUG` | unset | `1` adds exception details and tracebacks to API errors and allows the Werkzeug debugger (also `python app.py --debug`; loopback, non-production only) |
 | `PTVAULT_ENCRYPTION_KEY_FILE` | `encryption.key` beside the database | SQLCipher key file |
 | `PTVAULT_ENCRYPTION_SALT_FILE` | `encryption.salt` beside the database | Key derivation salt |
 | `PTVAULT_ENCRYPTION_REQUIRED` | unset | `true` refuses to start without SQLCipher |

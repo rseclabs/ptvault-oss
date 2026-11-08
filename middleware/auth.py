@@ -108,7 +108,8 @@ def require_auth(f):
         try:
             g.db = get_db_connection()
         except Exception as e:
-            return jsonify({"error": f"database connection failed: {str(e)}"}), 500
+            logger.exception("Database connection failed")
+            return jsonify({"error": "database connection failed"}), 500
 
         # Every JWT must match an active, unexpired, non-idle session row.
         # Fail closed: an error here refuses the request.

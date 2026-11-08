@@ -8,7 +8,7 @@ import uuid
 from html.parser import HTMLParser
 from flask import Blueprint, request, jsonify, g, Response
 from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role, can_edit_shared
-from utils.error_handler import handle_errors
+from utils.error_handler import handle_errors, internal_error
 from utils.pdf_generator import generate_pdf_from_html, generate_pdf_with_cover, HAS_WEASYPRINT
 from utils.security_headers import untrusted_response_headers
 
@@ -674,8 +674,7 @@ def export_report(report_id):
                           headers={'Content-Disposition': f'attachment; filename="{report["name"]}.pdf"'})
 
         except Exception as e:
-            logger.error(f"PDF generation failed: {str(e)}")
-            return jsonify({"error": f"PDF generation failed: {str(e)}"}), 500
+            return internal_error(e, 'PDF generation failed')
 
     elif export_format == 'docx':
         try:

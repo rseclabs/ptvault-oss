@@ -6,7 +6,7 @@ from flask import Blueprint, request, jsonify, g, session
 from middleware.auth import require_auth, require_engagement_access
 from models.database import run_migrations
 from utils.audit_logger import audit_view
-from utils.error_handler import handle_errors
+from utils.error_handler import handle_errors, internal_error
 from utils.helpers import HOST_COLORS, PORT_STATES, parse_port_choice, parse_port_fields
 from utils.host_extractor import (
     get_hosts_for_engagement,
@@ -81,7 +81,7 @@ def list_hosts():
                 logger.error("Migration failed: %s", migration_error)
                 return jsonify({"error": f"Migration failed: {str(migration_error)}"}), 500
 
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @hosts_bp.route('/search', methods=['GET'])

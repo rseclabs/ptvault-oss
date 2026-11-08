@@ -3,7 +3,9 @@
 from flask import Blueprint, request, jsonify, g, Response
 from middleware.auth import engagement_role, require_auth, require_engagement_access, require_role, can_edit_shared
 from routes.engagements import require_active_engagement
+from utils.error_handler import internal_error
 import json
+import logging
 import os
 
 testplans_bp = Blueprint('testplans', __name__, url_prefix='/api/testplans')
@@ -141,7 +143,7 @@ def get_atomics_status():
         return jsonify(metadata), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/atomics/download', methods=['POST'])
@@ -165,7 +167,8 @@ def download_atomics():
                 data = json.dumps(progress) + '\n'
                 yield data
         except Exception as e:
-            yield json.dumps({'stage': 'error', 'error': str(e)}) + '\n'
+            logging.getLogger(__name__).exception('Atomics download failed')
+            yield json.dumps({'stage': 'error', 'error': 'Atomics download failed; see the server log'}) + '\n'
         finally:
             db_conn.close()
 
@@ -274,7 +277,7 @@ def list_atomics():
         }), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/atomics/<int:atomic_id>', methods=['GET'])
@@ -303,7 +306,7 @@ def get_atomic(atomic_id):
         return jsonify(atomic), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/atomics/techniques', methods=['GET'])
@@ -333,7 +336,7 @@ def list_techniques():
         return jsonify(techniques), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/atomics/tactics', methods=['GET'])
@@ -359,7 +362,7 @@ def list_tactics():
         return jsonify(tactics), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 # ============================================
@@ -385,7 +388,7 @@ def list_layers():
         return jsonify(layers), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/layers/import', methods=['POST'])
@@ -439,7 +442,7 @@ def import_layer():
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/layers/<int:layer_id>', methods=['GET'])
@@ -468,7 +471,7 @@ def get_layer(layer_id):
         return jsonify(layer), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/layers/<int:layer_id>', methods=['DELETE'])
@@ -492,7 +495,7 @@ def delete_layer(layer_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/layers/<int:layer_id>/match', methods=['POST'])
@@ -582,7 +585,7 @@ def match_layer_to_atomics(layer_id):
         }), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 # ============================================
@@ -643,7 +646,7 @@ def list_plans():
         return jsonify(plans), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/plans', methods=['POST'])
@@ -696,7 +699,7 @@ def create_plan():
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/plans/<int:plan_id>', methods=['GET'])
@@ -747,7 +750,7 @@ def get_plan(plan_id):
         return jsonify(plan), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/plans/<int:plan_id>', methods=['PUT'])
@@ -787,7 +790,7 @@ def update_plan(plan_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/plans/<int:plan_id>', methods=['DELETE'])
@@ -809,7 +812,7 @@ def delete_plan(plan_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/plans/<int:plan_id>/duplicate', methods=['POST'])
@@ -862,7 +865,7 @@ def duplicate_plan(plan_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 # ============================================
@@ -951,7 +954,7 @@ def add_plan_item(plan_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/plans/<int:plan_id>/items/<int:item_id>', methods=['PUT'])
@@ -1011,7 +1014,7 @@ def update_plan_item(plan_id, item_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/plans/<int:plan_id>/items/<int:item_id>', methods=['DELETE'])
@@ -1041,7 +1044,7 @@ def delete_plan_item(plan_id, item_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/plans/<int:plan_id>/items/reorder', methods=['POST'])
@@ -1083,7 +1086,7 @@ def reorder_plan_items(plan_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/plans/<int:plan_id>/items/bulk', methods=['POST'])
@@ -1133,7 +1136,7 @@ def add_bulk_items(plan_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 # ============================================
@@ -1252,7 +1255,7 @@ def generate_script_endpoint(plan_id):
             )
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 def _generate_basic_script(plan, items, platform):
@@ -1360,7 +1363,7 @@ def list_executions():
         return jsonify(executions), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/executions/start', methods=['POST'])
@@ -1453,7 +1456,7 @@ def start_execution():
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/executions/<int:execution_id>', methods=['GET'])
@@ -1496,7 +1499,7 @@ def get_execution(execution_id):
         return jsonify(execution), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/executions/<int:execution_id>', methods=['PUT'])
@@ -1592,7 +1595,7 @@ def update_execution(execution_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 def _match_log_results(cursor, plan_id, results):
@@ -1799,7 +1802,7 @@ def import_session_log():
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/executions/<int:execution_id>/link-evidence', methods=['POST'])
@@ -1845,7 +1848,7 @@ def link_evidence(execution_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/executions/<int:execution_id>', methods=['DELETE'])
@@ -1868,7 +1871,7 @@ def delete_execution(execution_id):
 
     except Exception as e:
         g.db.rollback()
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)
 
 
 @testplans_bp.route('/executions/plan/<int:plan_id>/progress', methods=['GET'])
@@ -1903,4 +1906,4 @@ def get_plan_progress(plan_id):
         }), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return internal_error(e)

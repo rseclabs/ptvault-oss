@@ -144,7 +144,7 @@ def list_filters():
         return jsonify(filters), 200
 
     except Exception as e:
-        raise DatabaseError(f"Failed to fetch saved filters: {str(e)}")
+        raise DatabaseError("Failed to fetch saved filters", details={'original_error': str(e)})
 
 
 @filters_bp.route('', methods=['POST'])
@@ -209,7 +209,7 @@ def create_filter():
 
     except Exception as e:
         g.db.rollback()
-        raise DatabaseError(f"Failed to create saved filter: {str(e)}")
+        raise DatabaseError("Failed to create saved filter", details={'original_error': str(e)})
 
 
 @filters_bp.route('/<int:filter_id>', methods=['PUT'])
@@ -298,7 +298,7 @@ def update_filter(filter_id):
         raise
     except Exception as e:
         g.db.rollback()
-        raise DatabaseError(f"Failed to update saved filter: {str(e)}")
+        raise DatabaseError("Failed to update saved filter", details={'original_error': str(e)})
 
 
 @filters_bp.route('/<int:filter_id>', methods=['DELETE'])
@@ -338,7 +338,7 @@ def delete_filter(filter_id):
         raise
     except Exception as e:
         g.db.rollback()
-        raise DatabaseError(f"Failed to delete saved filter: {str(e)}")
+        raise DatabaseError("Failed to delete saved filter", details={'original_error': str(e)})
 
 
 @filters_bp.route('/<int:filter_id>/apply', methods=['POST'])
@@ -467,4 +467,4 @@ def apply_filter(filter_id):
     except (NotFoundError, ValidationError):
         raise
     except Exception as e:
-        raise DatabaseError(f"Failed to apply saved filter: {str(e)}")
+        raise DatabaseError("Failed to apply saved filter", details={'original_error': str(e)})

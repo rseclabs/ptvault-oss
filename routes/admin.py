@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify, g, send_from_directory, redirect
 from middleware.auth import require_auth, require_role
 from models.auth import revoke_all_sessions
 from utils.audit_logger import AuditLogger
-from utils.error_handler import handle_errors
+from utils.error_handler import handle_errors, internal_error
 from utils.security_headers import CYBERCHEF_CSP
 import logging
 import os
@@ -412,7 +412,7 @@ def encryption_recover():
             'message': 'Encryption key recovered and saved'
         }), 200
     except Exception as e:
-        return jsonify({'error': f'Key recovery failed: {str(e)}'}), 500
+        return internal_error(e, 'Key recovery failed')
 
 
 @admin_bp.route('/encryption/enable', methods=['POST'])
@@ -472,7 +472,7 @@ def encryption_enable():
             'salt_file': Config.ENCRYPTION_SALT_FILE
         }), 200
     except Exception as e:
-        return jsonify({'error': f'Failed to enable encryption: {str(e)}'}), 500
+        return internal_error(e, 'Failed to enable encryption')
 
 
 @admin_bp.route('/revoke-sessions', methods=['POST'])
@@ -528,4 +528,4 @@ def encryption_disable():
             'message': 'Encryption disabled — database has been decrypted'
         }), 200
     except Exception as e:
-        return jsonify({'error': f'Failed to disable encryption: {str(e)}'}), 500
+        return internal_error(e, 'Failed to disable encryption')

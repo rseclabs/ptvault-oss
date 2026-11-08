@@ -1137,4 +1137,4 @@ def bulk_evidence_operation():
         raise
     except Exception as e:
         g.db.rollback()
-        raise DatabaseError(f"Bulk operation failed: {str(e)}")
+        raise DatabaseError("Bulk operation failed", details={'original_error': str(e)})
