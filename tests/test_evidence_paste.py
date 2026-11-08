@@ -62,6 +62,11 @@ def evidence_app(test_db, monkeypatch, tmp_path):
         _make_passthrough_engagement(),
     )
     monkeypatch.setattr(Config, 'UPLOAD_FOLDER', str(tmp_path))
+    # The database is the in-memory test_db; keep the encryption state checks
+    # (models.upload_store, M-14) away from the real data/ folder too.
+    monkeypatch.setattr(Config, 'DATABASE_PATH', str(tmp_path / 'unused.db'))
+    monkeypatch.setattr(Config, 'ENCRYPTION_KEY_FILE', str(tmp_path / 'unused.key'))
+    monkeypatch.setattr(Config, 'ENCRYPTION_SALT_FILE', str(tmp_path / 'unused.salt'))
 
     import routes.evidence as evidence_module
     importlib.reload(evidence_module)
@@ -221,6 +226,11 @@ def test_get_evidence_file_isolates_engagement(test_db, monkeypatch, tmp_path):
         _make_passthrough_engagement(),
     )
     monkeypatch.setattr(Config, 'UPLOAD_FOLDER', str(tmp_path))
+    # The database is the in-memory test_db; keep the encryption state checks
+    # (models.upload_store, M-14) away from the real data/ folder too.
+    monkeypatch.setattr(Config, 'DATABASE_PATH', str(tmp_path / 'unused.db'))
+    monkeypatch.setattr(Config, 'ENCRYPTION_KEY_FILE', str(tmp_path / 'unused.key'))
+    monkeypatch.setattr(Config, 'ENCRYPTION_SALT_FILE', str(tmp_path / 'unused.salt'))
 
     import routes.evidence as evidence_module
     importlib.reload(evidence_module)

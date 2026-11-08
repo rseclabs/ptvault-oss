@@ -75,6 +75,17 @@ If the salt file is lost, or the passphrase is forgotten, the database **cannot 
 | Key storage | Memory only (the `PTVAULT_STORE_KEY_FILE=1` opt-in writes `encryption.key`) |
 | Salt storage | `encryption.salt` beside the database |
 | Database format | SQLCipher-encrypted SQLite |
+| Evidence files | Each file a PyNaCl SecretBox (XSalsa20-Poly1305) under its own key, derived with BLAKE2b from the database key and the file's path |
+| Permissions | Database, salt and evidence files `0600`, upload folders `0700` |
+
+### Evidence files
+
+Uploaded evidence (screenshots, scans, pcaps, pasted files) is encrypted with the database key, so it is as locked as the database after a restart: nothing can read it until the passphrase is entered. Scans are parsed in memory before they are stored, so no plaintext copy is written.
+
+- Files uploaded before this was added are encrypted the next time the database is unlocked (or at start, when `PTVAULT_DB_PASSPHRASE` or the key file opt-in provides the key).
+- Disabling encryption decrypts the files first; if one cannot be decrypted, encryption stays on.
+- Uploads are kept in `uploads/` beside the database (`PTVAULT_UPLOAD_FOLDER` overrides). Older versions kept them in `data/uploads` under the application folder even when `DATABASE_PATH` pointed elsewhere; PTVault logs a warning at start if files are left there. Move the folder beside the database and restart.
+- Back up the `uploads/` folder with the database and salt: the files can only be opened with that database's key.
 
 ## Policy Enforcement
 

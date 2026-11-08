@@ -437,6 +437,10 @@ def encryption_enable():
         from models.database import get_db_connection
         g.db = get_db_connection()
 
+        # Evidence files are encrypted with the database key too (M-14)
+        from models import upload_store
+        upload_store.encrypt_existing()
+
         # Say where the key really is (L-16): a key file is named only when one
         # was written, so nobody backs up a file that does not exist.
         key_storage = 'file' if Config.STORE_KEY_FILE else 'memory'
@@ -488,6 +492,16 @@ def encryption_disable():
         db = g.pop('db', None)
         if db is not None:
             db.close()
+
+        # Decrypt evidence files while the key is still known (M-14); if one does
+        # not open, stop before the database is decrypted and the key forgotten.
+        from models import upload_store
+        try:
+            upload_store.decrypt_existing()
+        except upload_store.UploadDecryptError as e:
+            logging.getLogger(__name__).error('Encryption not disabled: %s', e)
+            return jsonify({'error': 'An evidence file could not be decrypted, so encryption was not '
+                                     'disabled. See the server log.'}), 500
 
         disable_encryption()
 

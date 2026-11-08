@@ -48,6 +48,22 @@ def real_data_dir_untouched():
     assert not changed, f'tests modified the real data/ folder: {changed}'
 
 
+@pytest.fixture(autouse=True)
+def isolated_upload_folder(tmp_path_factory, monkeypatch):
+    """Point the upload folders away from the real data/ for every test.
+
+    Unlock, setup and enabling encryption encrypt every file under
+    Config.UPLOAD_FOLDER (M-14); a test that reached them without its own
+    override would rewrite real evidence with a test key. real_data_dir_untouched
+    only notices afterwards, so this prevents it. Fixtures that set their own
+    UPLOAD_FOLDER still do, since they run later.
+    """
+    from config import Config
+    folder = tmp_path_factory.mktemp('uploads')
+    monkeypatch.setattr(Config, 'UPLOAD_FOLDER', str(folder))
+    monkeypatch.setattr(Config, 'LEGACY_UPLOAD_FOLDER', str(folder))
+
+
 def _split_schema_statements(schema_sql: str):
     """Split schema.sql into executable statements.
 

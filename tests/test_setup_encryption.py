@@ -150,3 +150,57 @@ def test_startup_accepts_an_encrypted_database(fresh_app, monkeypatch):
     assert encryption.plaintext_database_refusal(Config.DATABASE_PATH) is None
     encryption.lock()
     assert encryption.plaintext_database_refusal(Config.DATABASE_PATH) is None      # locked is not plaintext
+
+
+# ------------------------------------------------------------------ M-14
+
+def test_evidence_files_follow_the_database_encryption(fresh_app, monkeypatch):
+    """Uploads are encrypted with the database key, survive a restart and unlock, are
+    decrypted when encryption is disabled and encrypted again when it is enabled."""
+    import io
+    import stat
+    from config import Config
+    from models import upload_store
+    monkeypatch.setattr(Config, 'ENCRYPTION_REQUIRED', False)       # so it can be disabled below
+    client = fresh_app.test_client()
+    assert _setup(client).status_code == 201
+    token = client.get_cookie('csrf_token').value
+    headers = {'X-CSRF-Token': token}
+
+    engagement = client.post('/api/engagements', json={'name': 'E'}, headers=headers).get_json()
+    assert client.post('/api/engagements/active', json={'engagement_id': engagement['id']},
+                       headers=headers).status_code == 200
+    secret = b'Hunter2-ACME loot'
+    ev = client.post('/api/evidence', data={'evidence_type': 'other', 'title': 't',
+                                            'file': (io.BytesIO(secret), 'loot.txt')},
+                     content_type='multipart/form-data', headers=headers).get_json()
+    conn = encryption.get_connection(Config.DATABASE_PATH)
+    rel = conn.execute('SELECT file_path FROM evidence WHERE id = ?', (ev['id'],)).fetchone()[0]
+    conn.close()
+    path = os.path.join(Config.UPLOAD_FOLDER, rel)
+
+    def on_disk():
+        with open(path, 'rb') as f:
+            return f.read()
+
+    def downloaded():
+        resp = client.get(f"/api/evidence/{ev['id']}/download")
+        assert resp.status_code == 200, resp.get_json()
+        return resp.data
+
+    assert secret not in on_disk() and on_disk().startswith(upload_store.MAGIC)
+    assert stat.S_IMODE(os.stat(path).st_mode) == 0o600
+    assert downloaded() == secret
+
+    encryption.lock()                                                  # a restart
+    with pytest.raises(encryption.DatabaseLocked):
+        upload_store.read_file(path, rel)
+    encryption.unlock(PASSWORD)
+    assert downloaded() == secret
+
+    assert client.post('/api/admin/encryption/disable', json={}, headers=headers).status_code == 200
+    assert on_disk() == secret and downloaded() == secret
+
+    resp = client.post('/api/admin/encryption/enable', json={'password': PASSWORD}, headers=headers)
+    assert resp.status_code == 200, resp.get_json()
+    assert on_disk().startswith(upload_store.MAGIC) and downloaded() == secret

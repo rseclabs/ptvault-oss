@@ -26,6 +26,8 @@ from utils.error_handler import (
 from utils.audit_logger import audit_create, audit_delete
 from utils.helpers import EVIDENCE_TYPES, normalize_tags
 from config import Config
+from models import encryption, upload_store
+import io
 import os
 import json
 import defusedxml.ElementTree as safe_ET
@@ -64,18 +66,19 @@ def row_to_dict(row):
     }
 
 
-def detect_tool_type(file_path):
+def detect_tool_type(file_data):
     """
     Detect tool type from XML root element.
 
     Args:
-        file_path: Path to the file to detect
+        file_data: The file's contents (bytes). Evidence is encrypted at rest
+            (M-14), so scans are parsed from memory, never from the stored file.
 
     Returns:
         str: Tool type ('nmap', 'burp', 'nessus') or None if unknown
     """
     try:
-        tree = safe_ET.parse(file_path)
+        tree = safe_ET.parse(io.BytesIO(file_data))
         root = tree.getroot()
 
         if root.tag == 'nmaprun':
@@ -90,12 +93,12 @@ def detect_tool_type(file_path):
         return None
 
 
-def parse_tool_output(file_path, tool_type):
+def parse_tool_output(file_data, tool_type):
     """
-    Parse tool output file based on detected type.
+    Parse tool output based on detected type.
 
     Args:
-        file_path: Path to the file to parse
+        file_data: The file's contents (bytes), parsed from memory (M-14)
         tool_type: Type of tool ('nmap', 'burp', 'nessus')
 
     Returns:
@@ -115,7 +118,7 @@ def parse_tool_output(file_path, tool_type):
         raise ParsingError(f"No parser available for tool type: {tool_type}", tool_type=tool_type)
 
     try:
-        return parser.parse(file_path)
+        return parser.parse(io.BytesIO(file_data))
     except ParsingError:
         raise
     except Exception as e:
@@ -228,11 +231,7 @@ def create_evidence():
             g.db.commit()
             return jsonify({"error": f"file type not allowed. Allowed extensions: {', '.join(Config.ALLOWED_EXTENSIONS)}"}), 400
 
-        # Create upload directory if doesn't exist
-        engagement_upload_dir = os.path.join(Config.UPLOAD_FOLDER, str(g.active_engagement_id))
-        os.makedirs(engagement_upload_dir, exist_ok=True)
-
-        # Generate safe file path
+        # Generate safe file path (upload_store creates the folder 0700)
         relative_path, _ = create_safe_filepath(
             g.active_engagement_id,
             evidence_id,
@@ -251,8 +250,11 @@ def create_evidence():
             g.db.commit()
             return jsonify({"error": f"file size exceeds maximum of {Config.MAX_FILE_SIZE / (1024*1024):.0f} MB"}), 400
 
-        # Save file
-        uploaded_file.save(full_path)
+        # Store the file encrypted with the database key (M-14), 0600 in a 0700
+        # folder. Scans are parsed from memory below, so the plaintext never
+        # touches the disk.
+        file_data = uploaded_file.read()
+        upload_store.write_file(full_path, relative_path, file_data)
 
         # Update evidence record with file info
         file_path = relative_path
@@ -265,11 +267,11 @@ def create_evidence():
 
         if file_ext in ['.xml', '.nessus']:
             # Detect tool type
-            tool_type = detect_tool_type(full_path)
+            tool_type = detect_tool_type(file_data)
             logger.debug("File ext: %s, Detected tool: %s", file_ext, tool_type)
             if tool_type:
                 # Parse the file
-                parsed_metadata = parse_tool_output(full_path, tool_type)
+                parsed_metadata = parse_tool_output(file_data, tool_type)
                 logger.debug("Parsed metadata: %s", parsed_metadata is not None)
                 if parsed_metadata:
                     logger.debug("Tool: %s, Hosts: %d", parsed_metadata.get('tool'), len(parsed_metadata.get('hosts', [])))
@@ -557,6 +559,22 @@ def update_evidence(evidence_id):
     return jsonify(evidence), 200
 
 
+def _read_evidence_file(full_path, file_path):
+    """Return (contents, None), or (None, error response) when the file cannot be opened.
+
+    Evidence is encrypted with the database key (M-14): while the database is
+    locked nothing is served, and a file that does not decrypt is an error,
+    never served as ciphertext.
+    """
+    try:
+        return upload_store.read_file(full_path, file_path), None
+    except encryption.DatabaseLocked:
+        return None, (jsonify({"error": "database_locked"}), 503)
+    except upload_store.UploadDecryptError:
+        logger.error("Evidence file %s could not be decrypted", file_path)
+        return None, (jsonify({"error": "the evidence file could not be decrypted"}), 500)
+
+
 @evidence_bp.route('/<int:evidence_id>', methods=['DELETE'])
 @require_auth
 @require_engagement_access('editor')
@@ -638,11 +656,16 @@ def download_evidence(evidence_id):
     if not os.path.exists(full_path):
         return jsonify({"error": "file not found on disk"}), 404
 
+    data, error = _read_evidence_file(full_path, file_path)
+    if error:
+        return error
+
     # Send file with original filename; sandboxed in case a browser renders it (M-4)
     return untrusted_response_headers(send_file(
-        full_path,
+        io.BytesIO(data),
         as_attachment=True,
-        download_name=file_name or "evidence_file"
+        download_name=file_name or "evidence_file",
+        etag=False,
     ))
 
 
@@ -677,12 +700,18 @@ def view_evidence_file(evidence_id):
     if not os.path.exists(full_path):
         return jsonify({"error": "file not found on disk"}), 404
 
+    data, error = _read_evidence_file(full_path, file_path)
+    if error:
+        return error
+
     image_type = INLINE_IMAGE_TYPES.get(os.path.splitext(full_path)[1].lower())
     if image_type:
-        response = send_file(full_path, mimetype=image_type, as_attachment=False, conditional=True)
+        response = send_file(io.BytesIO(data), mimetype=image_type, as_attachment=False,
+                             conditional=True, etag=False)
     else:
-        response = send_file(full_path, mimetype='application/octet-stream', as_attachment=True,
-                             download_name=file_name or os.path.basename(full_path), conditional=True)
+        response = send_file(io.BytesIO(data), mimetype='application/octet-stream', as_attachment=True,
+                             download_name=file_name or os.path.basename(full_path),
+                             conditional=True, etag=False)
     return untrusted_response_headers(response)
 
 
@@ -725,13 +754,17 @@ def parse_evidence(evidence_id):
     if not os.path.exists(full_path):
         return jsonify({"error": "file not found on disk"}), 404
 
+    file_data, error = _read_evidence_file(full_path, file_path)
+    if error:
+        return error
+
     # Detect tool type
-    tool_type = detect_tool_type(full_path)
+    tool_type = detect_tool_type(file_data)
     if not tool_type:
         return jsonify({"error": "unable to detect tool type - file may not be a supported tool output"}), 400
 
     # Parse the file
-    parsed_metadata = parse_tool_output(full_path, tool_type)
+    parsed_metadata = parse_tool_output(file_data, tool_type)
     if not parsed_metadata:
         return jsonify({"error": f"failed to parse {tool_type} output - file may be malformed"}), 400
 

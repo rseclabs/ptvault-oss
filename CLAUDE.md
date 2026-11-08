@@ -132,7 +132,7 @@ ptvault/
 └── data/                  # Runtime (gitignored)
     ├── ptvault.db         # SQLite database (SQLCipher-encrypted after setup)
     ├── encryption.salt     # the key itself is held in memory (unlock at /unlock)
-    ├── uploads/           # Evidence files
+    ├── uploads/           # Evidence files, encrypted with the database key (models/upload_store.py)
     └── atomics/           # Atomic Red Team library
 ```
 
@@ -296,6 +296,7 @@ Never load a script, stylesheet or font from a CDN: PTVault must run air-gapped,
 | `PTVAULT_ENCRYPTION_REQUIRED` | on | Refuse to start without SQLCipher or with an unencrypted database that has an account, and make setup encrypt; `0`, `false` or `no` turns it off |
 | `PTVAULT_DB_PASSPHRASE` | unset | Unlock the encrypted database at startup (the key is otherwise held in memory and unlocked at `/unlock`) |
 | `PTVAULT_STORE_KEY_FILE` | unset | `1` writes the derived key to `PTVAULT_ENCRYPTION_KEY_FILE` (default `encryption.key` beside the database), as older versions did |
+| `PTVAULT_UPLOAD_FOLDER` | `uploads` beside the database | Evidence files, encrypted with the database key |
 
 Copy `.env.example` to `.env` and customize for production. When running a second instance or a smoke test, point every data path (database, key, salt, uploads) somewhere else, or the instance can overwrite the real key.
 
@@ -318,6 +319,7 @@ Tests cannot import `app.py` (it opens the configured database on import); put l
 
 - Argon2id: time_cost=3, memory_cost=65536 KiB (64 MiB), parallelism=4, hash_len=32
 - Database encrypted at rest with SQLCipher once setup runs; key and salt live beside the database
+- Evidence files encrypted with a key derived from the database key (`models/upload_store.py`); files `0600`, folders `0700`
 - JWT (HS256) in httpOnly cookies (XSS protection); double-submit CSRF token on mutating API calls
 - RBAC: admin, editor, viewer roles with engagement-level access control
 - Audit logging for security-sensitive actions

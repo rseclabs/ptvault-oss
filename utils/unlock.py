@@ -65,5 +65,13 @@ def unlock_database():
         return jsonify({'error': 'migration_failed',
                         'message': 'The passphrase is correct, but the database could not be upgraded to this '
                                    'version of PTVault, so it stays locked. See the server log for details.'}), 500
+    # Evidence stored before encryption covered uploads is encrypted now that the
+    # key is available (M-14). A failure leaves those files readable as they
+    # were, so it is logged rather than locking the database again.
+    try:
+        from models import upload_store
+        upload_store.encrypt_existing()
+    except Exception:
+        logger.exception('Could not encrypt existing evidence files; they stay unencrypted for now')
     logger.info('Database unlocked from %s', request.remote_addr)
     return jsonify({'status': 'unlocked'}), 200

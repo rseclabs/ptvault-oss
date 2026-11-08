@@ -203,3 +203,25 @@ def test_a_migration_reported_as_failed_also_keeps_it_locked(gated_app, monkeypa
     resp = _post_unlock(gated_app, PASSPHRASE)
     assert resp.status_code == 500 and resp.get_json()['error'] == 'migration_failed'
     assert encryption.is_locked()
+
+
+# ------------------------------------------------------------------ M-14
+
+def test_unlocking_encrypts_evidence_stored_before(gated_app):
+    from models import upload_store
+    folder = os.path.join(Config.UPLOAD_FOLDER, '1')
+    os.makedirs(folder)
+    with open(os.path.join(folder, '3_loot.txt'), 'wb') as f:
+        f.write(b'Hunter2-ACME')
+    assert _post_unlock(gated_app, PASSPHRASE).status_code == 200
+    stored = os.path.join(folder, '3_loot.txt')
+    assert upload_store.is_sealed(stored)
+    assert upload_store.read_file(stored, '1/3_loot.txt') == b'Hunter2-ACME'
+
+
+def test_the_encrypted_database_and_salt_are_private(data_dir):
+    import stat
+    os.chmod(Config.DATABASE_PATH, 0o644)
+    encryption.setup_encryption(PASSPHRASE)
+    for path in (Config.DATABASE_PATH, Config.ENCRYPTION_SALT_FILE):
+        assert stat.S_IMODE(os.stat(path).st_mode) == 0o600, path

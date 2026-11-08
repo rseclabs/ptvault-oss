@@ -33,6 +33,12 @@ def env_flag(name):
     return os.environ.get(name, '').strip().lower() in ('1', 'true', 'yes')
 
 
+def default_upload_folder(database_path):
+    """PTVAULT_UPLOAD_FOLDER, or 'uploads' beside the database (M-14)."""
+    return os.environ.get('PTVAULT_UPLOAD_FOLDER') or \
+        os.path.join(os.path.dirname(os.path.abspath(database_path)), 'uploads')
+
+
 def encryption_required():
     """PTVAULT_ENCRYPTION_REQUIRED: on by default; 0, false or no turns it off."""
     return os.environ.get('PTVAULT_ENCRYPTION_REQUIRED', '').strip().lower() not in ('0', 'false', 'no')
@@ -75,8 +81,11 @@ class Config:
     # passphrase. Weaker: anyone who can read that file can open the database.
     STORE_KEY_FILE = env_flag('PTVAULT_STORE_KEY_FILE')
 
-    # File upload configuration
-    UPLOAD_FOLDER = os.path.join(RUNTIME_DIR, 'data', 'uploads')
+    # File upload configuration. Evidence lives beside the database it belongs to
+    # (M-14); PTVAULT_UPLOAD_FOLDER overrides. LEGACY_UPLOAD_FOLDER is where older
+    # versions kept it, checked at startup in case files need moving.
+    UPLOAD_FOLDER = default_upload_folder(DATABASE_PATH)
+    LEGACY_UPLOAD_FOLDER = os.path.join(RUNTIME_DIR, 'data', 'uploads')
     MAX_FILE_SIZE = 250 * 1024 * 1024  # 250 MB limit
     ALLOWED_EXTENSIONS = {'.txt', '.xml', '.json', '.png', '.jpg', '.jpeg', '.pdf', '.html', '.log', '.pcap', '.nessus'}
 

@@ -226,6 +226,23 @@ def generate_salt():
     return salt
 
 
+def harden_database_permissions(db_path=None):
+    """Make the database, its WAL/SHM files, the salt and any key file 0600 (M-14).
+
+    SQLite creates files with the process umask (usually 0644), so another
+    local user could copy the database. Errors are logged, not raised: a file
+    owned by someone else should not stop the app.
+    """
+    db_path = db_path or Config.DATABASE_PATH
+    for path in (db_path, db_path + '-wal', db_path + '-shm', db_path + '-journal',
+                 Config.ENCRYPTION_SALT_FILE, Config.ENCRYPTION_KEY_FILE):
+        try:
+            if os.path.exists(path):
+                os.chmod(path, 0o600)
+        except OSError as e:
+            logger.warning("Could not restrict permissions on %s: %s", path, e)
+
+
 def read_salt():
     """
     Read the salt from the salt file.
@@ -471,6 +488,7 @@ def _migrate_to_encrypted_with_key(db_path, key):
 
         # Atomically replace the original with the encrypted version
         os.replace(encrypted_tmp, db_path)
+        harden_database_permissions(db_path)
         logger.info("Database successfully migrated to encrypted format")
 
         # The backup is a full plaintext copy of the data. Once the encrypted

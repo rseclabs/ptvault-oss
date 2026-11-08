@@ -33,8 +33,9 @@ except InsecureSecretError as e:
 
 from models.database import init_db, get_db_connection, run_migrations, setup_required
 from models.encryption import (auto_unlock_from_env, check_and_migrate_if_needed, is_encryption_available,
-                               is_encryption_enabled, is_locked, plaintext_database_refusal,
-                               retire_stray_key_file)
+                               harden_database_permissions, is_encryption_enabled, is_locked,
+                               plaintext_database_refusal, retire_stray_key_file)
+from models import upload_store
 from features import register_blueprints
 from middleware.auth import require_auth, require_role
 from utils.csrf import csrf_protect
@@ -96,6 +97,20 @@ else:
         logger.info("Database migrations completed")
     except Exception as e:
         logger.warning("Migration check completed - %s", e)
+
+# Evidence and the database are readable by their owner only (M-14). While the
+# key is available at start (PTVAULT_DB_PASSPHRASE, key file opt-in), evidence
+# stored unencrypted is encrypted now; otherwise that happens at /unlock.
+harden_database_permissions()
+upload_store.harden_permissions()
+if is_encryption_enabled() and not is_locked():
+    try:
+        upload_store.encrypt_existing()
+    except Exception:
+        logger.exception("Could not encrypt existing evidence files; they stay unencrypted for now")
+_moved = upload_store.legacy_upload_folder_warning()
+if _moved:
+    logger.warning(_moved)
 
 # Teardown: close database connection after each request
 @app.teardown_appcontext

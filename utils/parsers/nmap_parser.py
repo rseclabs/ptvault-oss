@@ -51,8 +51,15 @@ class NmapToolParser(BaseToolParser):
         """
         path = file_path if file_path is not None else self.file_path
         try:
-            # Parse using libnmap for clean API access
-            nmap_report = NmapParser.parse_fromfile(path)
+            # Parse using libnmap for clean API access. A file-like object is read
+            # from memory: evidence is encrypted at rest, so uploads are parsed
+            # before they are stored (M-14).
+            if hasattr(path, 'read'):
+                data = path.read()
+                nmap_report = NmapParser.parse_fromstring(
+                    data.decode('utf-8', errors='replace') if isinstance(data, bytes) else data)
+            else:
+                nmap_report = NmapParser.parse_fromfile(path)
 
             # Extract scan metadata
             metadata = {
