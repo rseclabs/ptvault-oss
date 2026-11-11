@@ -20,7 +20,7 @@ def limit_request_body():
 
 
 class JSONFileTooLarge(ValueError):
-    """An uploaded JSON file is larger than Config.MAX_JSON_SIZE."""
+    """An uploaded JSON file is larger than Config.MAX_IMPORT_SIZE."""
 
 
 class InvalidJSONFile(ValueError):
@@ -28,16 +28,20 @@ class InvalidJSONFile(ValueError):
 
 
 def load_json_upload(file_storage):
-    """Parse an uploaded JSON file under the JSON body limit (M-18).
+    """Parse an uploaded JSON file under the import limit (M-18).
 
-    Multipart requests keep the 250 MB upload limit, so a JSON document sent as
-    a file used to be read and parsed whole (about 25x its size in memory). At
-    most MAX_JSON_SIZE + 1 bytes are read here, before anything is parsed.
+    A JSON document sent as a file is parsed whole (several times its size in
+    memory), so it gets its own limit, Config.MAX_IMPORT_SIZE
+    (PTVAULT_MAX_IMPORT_MB). It is larger than MAX_JSON_SIZE because an
+    engagement export, which has no size limit, must be restorable. At most
+    MAX_IMPORT_SIZE + 1 bytes are read here, before anything is parsed.
     """
     import json
-    data = file_storage.read(Config.MAX_JSON_SIZE + 1)
-    if len(data) > Config.MAX_JSON_SIZE:
-        raise JSONFileTooLarge(f'JSON files are limited to {Config.MAX_JSON_SIZE // (1024 * 1024)} MB')
+    limit = Config.MAX_IMPORT_SIZE
+    data = file_storage.read(limit + 1)
+    if len(data) > limit:
+        raise JSONFileTooLarge(f'JSON files are limited to {limit // (1024 * 1024)} MB '
+                               f'(set PTVAULT_MAX_IMPORT_MB to raise it)')
     try:
         return json.loads(data)
     except (ValueError, RecursionError) as e:          # RecursionError: nesting too deep

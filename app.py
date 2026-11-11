@@ -58,8 +58,9 @@ app = Flask(__name__,
             static_folder=os.path.join(BASE_DIR, 'static'))
 app.config.from_object(Config)
 
-# Set Flask's max content length to match our file size limit
-app.config['MAX_CONTENT_LENGTH'] = Config.MAX_FILE_SIZE
+# Multipart uploads: evidence files (MAX_FILE_SIZE, also checked in routes/evidence.py)
+# and JSON imports (MAX_IMPORT_SIZE, which PTVAULT_MAX_IMPORT_MB can raise past it)
+app.config['MAX_CONTENT_LENGTH'] = max(Config.MAX_FILE_SIZE, Config.MAX_IMPORT_SIZE)
 
 # Register blueprints
 register_blueprints(app)

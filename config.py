@@ -33,6 +33,15 @@ def env_flag(name):
     return os.environ.get(name, '').strip().lower() in ('1', 'true', 'yes')
 
 
+def env_megabytes(name, default_mb):
+    """A size in bytes from an environment variable given in MB; default_mb if unset or not a positive integer."""
+    try:
+        value = int(os.environ.get(name, '').strip())
+    except ValueError:
+        value = 0
+    return (value if value > 0 else default_mb) * 1024 * 1024
+
+
 def log_level():
     """DEBUG only with PTVAULT_DEBUG; INFO otherwise, whatever ENVIRONMENT says (L-18).
 
@@ -100,6 +109,10 @@ class Config:
     # Request bodies other than file uploads (JSON, forms): far below the upload
     # limit, which used to be the only one (L-19)
     MAX_JSON_SIZE = 16 * 1024 * 1024
+    # JSON documents uploaded as files (engagement restore, Navigator layers).
+    # An engagement export has no size limit, so its restore needs more than
+    # MAX_JSON_SIZE; parsing takes several times the file size in memory.
+    MAX_IMPORT_SIZE = env_megabytes('PTVAULT_MAX_IMPORT_MB', 250)
     ALLOWED_EXTENSIONS = {'.txt', '.xml', '.json', '.png', '.jpg', '.jpeg', '.pdf', '.html', '.log', '.pcap', '.nessus'}
 
 

@@ -298,6 +298,7 @@ Never load a script, stylesheet or font from a CDN: PTVault must run air-gapped,
 | `PTVAULT_DB_PASSPHRASE` | unset | Unlock the encrypted database at startup (the key is otherwise held in memory and unlocked at `/unlock`) |
 | `PTVAULT_STORE_KEY_FILE` | unset | `1` writes the derived key to `PTVAULT_ENCRYPTION_KEY_FILE` (default `encryption.key` beside the database), as older versions did |
 | `PTVAULT_UPLOAD_FOLDER` | `uploads` beside the database | Evidence files, encrypted with the database key |
+| `PTVAULT_MAX_IMPORT_MB` | `250` | Largest JSON file accepted by engagement restore and Navigator layer import (other JSON request bodies stay at 16 MB) |
 
 Copy `.env.example` to `.env` and customize for production. When running a second instance or a smoke test, point every data path (database, key, salt, uploads) somewhere else, or the instance can overwrite the real key.
 

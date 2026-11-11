@@ -111,13 +111,35 @@ def test_tool_detection_reads_only_the_root_element():
 # ------------------------------------------------------------------ JSON files (retest 2: M-18)
 
 @pytest.mark.parametrize('url, name', [('/api/engagements/import', 'e.json'), ('/api/testplans/layers/import', 'l.json')])
-def test_json_files_are_capped_before_they_are_parsed(live_app, url, name):
+def test_json_files_are_capped_before_they_are_parsed(live_app, monkeypatch, url, name):
     import io
     from config import Config
+    monkeypatch.setattr(Config, 'MAX_IMPORT_SIZE', 1024 * 1024)
     client = live_app.client_for('owner', active_engagement=ENGAGEMENT_A)
-    big = b'[' + b'{},' * ((Config.MAX_JSON_SIZE + 1_000_000) // 3) + b'{}]'
+    big = b'[' + b'{},' * ((Config.MAX_IMPORT_SIZE + 100_000) // 3) + b'{}]'
     resp = client.post(url, data={'file': (io.BytesIO(big), name)}, content_type='multipart/form-data')
     assert resp.status_code == 413, resp.get_json()
+    assert 'PTVAULT_MAX_IMPORT_MB' in resp.get_json()['error']
+
+
+def test_json_files_may_be_larger_than_json_bodies():
+    """An engagement export can exceed MAX_JSON_SIZE, so its restore must still be accepted."""
+    import io
+    from config import Config
+    from utils.request_limits import load_json_upload
+    assert Config.MAX_IMPORT_SIZE > Config.MAX_JSON_SIZE
+    doc = b'{"x": "' + b'a' * (Config.MAX_JSON_SIZE + 1) + b'"}'
+    assert len(load_json_upload(io.BytesIO(doc))['x']) == Config.MAX_JSON_SIZE + 1
+
+
+@pytest.mark.parametrize('value, expected_mb', [(None, 250), ('500', 500), ('0', 250), ('-5', 250), ('lots', 250)])
+def test_import_limit_comes_from_the_environment(monkeypatch, value, expected_mb):
+    from config import env_megabytes
+    if value is None:
+        monkeypatch.delenv('PTVAULT_MAX_IMPORT_MB', raising=False)
+    else:
+        monkeypatch.setenv('PTVAULT_MAX_IMPORT_MB', value)
+    assert env_megabytes('PTVAULT_MAX_IMPORT_MB', 250) == expected_mb * 1024 * 1024
 
 
 @pytest.mark.parametrize('url, name', [('/api/engagements/import', 'e.json'), ('/api/testplans/layers/import', 'l.json')])
