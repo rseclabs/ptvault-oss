@@ -17,6 +17,7 @@ copy it into the header; login and setup set it to the bound value.
 import hashlib
 import hmac
 import secrets
+from urllib.parse import urlsplit
 
 from flask import jsonify, request
 
@@ -52,6 +53,36 @@ def set_csrf_cookie(response, token):
     return response
 
 
+# Browsers send Secure cookies to these over plain http (a secure context)
+LOOPBACK_HOSTS = frozenset(['localhost', '127.0.0.1', '::1'])
+
+INSECURE_COOKIE_HINT = (
+    "CSRF token missing: your browser did not send PTVault's cookies. "
+    "This instance runs with ENVIRONMENT=production, so its cookies are marked Secure "
+    "and browsers only send them over HTTPS, which PTVault does not serve itself. "
+    "Put PTVault behind a TLS reverse proxy such as nginx and open it with https://, "
+    "or use http://localhost on the machine running it. "
+    "See \"Running behind HTTPS\" in the README."
+)
+
+
+def secure_cookies_dropped():
+    """True if this request came over plain http to a host the browser withholds Secure cookies from.
+
+    In production every PTVault cookie is Secure, and PTVault serves only http,
+    so a browser that opened http://<server-ip>:5000 never sends the cookies
+    back: login and setup then fail the CSRF check with no hint why. Loopback
+    is exempt (browsers treat it as secure), and so is https, including https
+    ended at a proxy when PTVAULT_TRUSTED_PROXIES makes request.is_secure true.
+    """
+    if Config.ENVIRONMENT != 'production' or request.is_secure:
+        return False
+    if request.headers.get('X-Forwarded-Proto', '').split(',')[0].strip().lower() == 'https':
+        return False                       # TLS at a proxy PTVault was not told to trust
+    host = (urlsplit('//' + (request.host or '')).hostname or '').lower()
+    return not (host in LOOPBACK_HOSTS or host.endswith('.localhost'))
+
+
 def csrf_protect():
     """before_request hook: refuse mutating API requests without a valid token."""
     if request.method in ('GET', 'HEAD', 'OPTIONS') or not request.path.startswith('/api/'):
@@ -64,6 +95,9 @@ def csrf_protect():
     else:
         expected = request.cookies.get(CSRF_COOKIE) or ''
 
+    if not expected and secure_cookies_dropped():
+        # The message is only a hint: the request is refused all the same
+        return jsonify({"error": INSECURE_COOKIE_HINT}), 403
     if not header or not expected:
         return jsonify({"error": "CSRF token missing"}), 403
     if not hmac.compare_digest(header, expected):

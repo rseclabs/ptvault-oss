@@ -59,6 +59,7 @@
 - [Overview](#overview)
 - [Features](#features)
 - [Installation](#installation)
+  - [Running behind HTTPS](#running-behind-https)
 - [Getting Started](#getting-started)
 - [User Guide](#user-guide)
   - [Engagements](#engagements)
@@ -151,13 +152,76 @@ docker compose up -d
 
 PTVault is now running at http://localhost:5000, with the database and uploads stored in `./data`. On macOS, port 5000 may be taken by AirPlay Receiver; change the port mapping in `docker-compose.yml` (for example `"5050:5000"`) if so.
 
-The container runs with `ENVIRONMENT=production`, so login cookies are marked Secure. Browsers accept them on `http://localhost`, but to reach the container from another machine put it behind HTTPS. The port is published on `127.0.0.1` only, and the app runs as an unprivileged user: if `./data` was created by an older image that ran as root, run `sudo chown -R 1000:1000 ./data` (or build with `PTVAULT_UID=$(id -u) PTVAULT_GID=$(id -g) docker compose build`).
+The container runs with `ENVIRONMENT=production`, so login cookies are marked Secure. Browsers accept them on `http://localhost`, but to reach the container from another machine put it behind HTTPS (see [Running behind HTTPS](#running-behind-https)). The port is published on `127.0.0.1` only, and the app runs as an unprivileged user: if `./data` was created by an older image that ran as root, run `sudo chown -R 1000:1000 ./data` (or build with `PTVAULT_UID=$(id -u) PTVAULT_GID=$(id -g) docker compose build`).
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for PyInstaller builds, systemd and reverse-proxy setups.
 
+### Running behind HTTPS
+
+**PTVault does not serve TLS itself.** It speaks plain HTTP, and in production mode (`ENVIRONMENT=production`, the Docker default) it marks its login and CSRF cookies `Secure`, so browsers only send them back over HTTPS. Opening PTVault at `http://<server-ip>:5000` from another machine therefore fails on the first login (or setup) with:
+
+> CSRF token missing: your browser did not send PTVault's cookies. This instance runs with ENVIRONMENT=production, ...
+
+Nothing is wrong with the account or the token; the browser dropped the cookies. Either:
+
+- use `http://localhost` on the machine running PTVault (browsers send Secure cookies to loopback), or
+- put a TLS reverse proxy such as nginx in front of it and open it with `https://`.
+
+Do not work around it by switching a shared instance to `ENVIRONMENT=development`: that sends session cookies over plain HTTP and turns on development behaviour.
+
+**nginx example** (on the same host as PTVault; the Docker port is published on `127.0.0.1:5000`, a source run on `127.0.0.1:5001`):
+
+```nginx
+server {
+    listen 80;
+    server_name ptvault.example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name ptvault.example.com;
+
+    ssl_certificate     /etc/nginx/ssl/ptvault.crt;
+    ssl_certificate_key /etc/nginx/ssl/ptvault.key;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+
+    # Evidence uploads and engagement imports go up to 250 MB (nginx's default is 1 MB)
+    client_max_body_size 250m;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;   # large imports and report exports
+    }
+}
+```
+
+Then tell PTVault there is one proxy in front of it, so it uses the forwarded client address for rate limits and sees the request as HTTPS. Add this to `.env` and restart PTVault:
+
+```env
+PTVAULT_TRUSTED_PROXIES=1
+```
+
+Set it only when PTVault is reachable through the proxy alone (as with the `127.0.0.1` port binding): otherwise a client could send `X-Forwarded-For` itself.
+
+**Certificate:** use one from your internal CA, or Let's Encrypt for a public name (`sudo certbot --nginx -d ptvault.example.com`). For a lab or an engagement laptop, a self-signed certificate works; browsers warn once, and the name or IP you browse to must be in it:
+
+```bash
+sudo mkdir -p /etc/nginx/ssl
+sudo openssl req -x509 -newkey rsa:4096 -nodes -days 825 \
+  -keyout /etc/nginx/ssl/ptvault.key -out /etc/nginx/ssl/ptvault.crt \
+  -subj "/CN=ptvault.example.com" \
+  -addext "subjectAltName=DNS:ptvault.example.com,IP:192.168.1.20"
+sudo nginx -t && sudo systemctl reload nginx
+```
+
 ### First-Time Setup
 
-1. Open `http://localhost:5001` (Docker: `http://localhost:5000`). With no users yet, you are taken to the setup wizard.
+1. Open `http://localhost:5001` (Docker: `http://localhost:5000`). With no users yet, you are taken to the setup wizard. From another machine, open it through HTTPS instead; over plain HTTP, setup and login fail with "CSRF token missing" (see [Running behind HTTPS](#running-behind-https)).
 2. Create the admin account: full name, email and a password of at least 12 characters. Your username is the part of the email before the `@` (for example `admin@example.com` gives `admin`). This step also encrypts the database.
 3. Log in with that email (or username) and password.
 4. Back up `data/encryption.salt` along with the database, and keep the setup password safe: it is also the **database passphrase**. The encryption key is held in memory only, so after every restart PTVault asks for this passphrase on an unlock page, and the database cannot be opened without it.
